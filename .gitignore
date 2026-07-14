@@ -55,3 +55,8 @@ out/
 # Secrets
 secrets/
 config/keys/
+
+
+git add .
+git commit -m "Add project structure and gitignore"
+git push
