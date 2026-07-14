@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,136 +8,272 @@
         :root {
             --primary: #1e3c72;
             --secondary: #2a5298;
-            --dark: #121212;
-            --light: #f4f4f9;
-            --accent: #ff9f43;
+            --bg-body: #f4f7f6;
+            --bg-card: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --border-color: #e2e8f0;
+            --accent: #dd6b20;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
         }
+
+        [data-theme="dark"] {
+            --primary: #2a5298;
+            --secondary: #1e3c72;
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: var(--light);
-            color: var(--dark);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            transition: var(--transition);
         }
+
         header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 2rem 1rem;
+            padding: 2.5rem 1rem;
             text-align: center;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
         }
+
+        /* Dark Mode Toggle Switch */
+        .theme-toggle-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+            backdrop-filter: blur(5px);
+            transition: var(--transition);
+        }
+
+        .theme-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 2rem auto;
-            padding: 0 1rem;
+            padding: 0 1.5rem;
         }
+
         .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 1.5rem;
+            background: var(--bg-card);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 2rem;
             margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
         }
+
         .hero-img {
             width: 100%;
-            max-height: 350px;
+            max-height: 380px;
             object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
         }
+
+        /* Interactive Search Input */
+        .search-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.15);
+        }
+
         .matchup-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 1rem;
-            margin-top: 1rem;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
-        @media(min-width: 600px) {
+
+        @media(min-width: 650px) {
             .matchup-grid { grid-template-columns: 1fr 1fr; }
         }
+
         .matchup-card {
-            background: #fafafa;
-            border-left: 5px solid var(--primary);
-            padding: 1rem;
-            border-radius: 6px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-left: 6px solid var(--primary);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
         }
-        .probability {
+
+        .matchup-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Probability Badge Style */
+        .probability-badge {
+            display: inline-block;
+            background: rgba(221, 107, 32, 0.1);
             color: var(--accent);
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 0.85rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            margin: 0.5rem 0;
         }
+
+        .update-stamp {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: -0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
         footer {
             text-align: center;
-            padding: 2rem;
-            font-size: 0.9rem;
-            color: #666;
+            padding: 3rem 1.5rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            margin-top: 4rem;
         }
     </style>
 </head>
 <body>
 
     <header>
+        <button class="theme-toggle-btn" id="theme-toggle">🌙 Dark Mode</button>
         <h1>SharpPlay Analytics</h1>
         <p>Predictive Modeling & Sports Simulations</p>
     </header>
 
     <div class="container">
-        <!-- Featured Home Run Derby Story Card -->
-        <div class="card" id="featured-card">
-            <img class="hero-img" src="http://googleusercontent.com/image_collection/image_retrieval/624253563297045835_0" alt="Jordan Walker hitting a home run">
-            <h2 id="featured-title">Loading Featured Story...</h2>
-            <p><strong id="featured-stat"></strong></p>
-            <p id="featured-desc"></p>
+        <div class="card">
+            <img class="hero-img" src="http://googleusercontent.com/image_collection/image_retrieval/624253563297045835_0" alt="Jordan Walker Matchup">
+            <h2 id="featured-title">Loading News...</h2>
+            <p><strong id="featured-stat" style="color: var(--accent);"></strong></p>
+            <p id="featured-desc" style="color: var(--text-muted); line-height: 1.6;"></p>
         </div>
 
-        <!-- Today's Live Projections Card -->
         <div class="card">
-            <h2>Today's Projected Matchups</h2>
-            <p style="font-size: 0.9rem; color: #777;">Last Generated: <span id="update-time">Loading...</span></p>
+            <h2>Today's Projections</h2>
+            <div class="update-stamp">Last Updated: <span id="update-time">Loading...</span></div>
+            
+            <div class="search-container">
+                <input type="text" class="search-bar" id="search-input" placeholder="Search team names...">
+            </div>
+
             <div class="matchup-grid" id="matchups-container">
-                <!-- Data will load here dynamically -->
                 <p>Loading simulated matchups...</p>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 SharpPlay Analytics. All rights reserved.</p>
+        <p>&copy; 2026 SharpPlay Analytics. Cloud automation active.</p>
     </footer>
 
     <script>
-        // Dynamically fetch the automated predictions from your data folder
+        let allMatchups = [];
+
+        // Fetch Dynamic Data from JSON output
         fetch('./data/today_matchups.json')
             .then(response => response.json())
             .then(data => {
-                // Update Update Time
                 document.getElementById('update-time').innerText = data.last_updated;
 
-                // Update Featured Story Card (Jordan Walker Derby Win)
+                // Feature Section Setup
                 document.getElementById('featured-title').innerText = data.featured_story.title;
                 document.getElementById('featured-stat').innerText = data.featured_story.stat;
                 document.getElementById('featured-desc').innerText = data.featured_story.desc;
 
-                // Build the Matchups Grid
-                const container = document.getElementById('matchups-container');
-                container.innerHTML = ''; // Clear loading text
-
-                data.matchups.forEach(matchup => {
-                    const card = document.createElement('div');
-                    card.className = 'matchup-card';
-                    card.innerHTML = `
-                        <h3>${matchup.away_team} @ ${matchup.home_team}</h3>
-                        <p><strong>Projected Winner:</strong> ${matchup.simulated_winner}</p>
-                        <p class="probability">Confidence: ${matchup.win_probability}</p>
-                        <p><strong>Run Line:</strong> ${matchup.run_line_proj}</p>
-                        <p><strong>Over/Under:</strong> ${matchup.total_runs_proj} runs</p>
-                    `;
-                    container.appendChild(card);
-                });
+                // Matchups Setup
+                allMatchups = data.matchups;
+                renderMatchups(allMatchups);
             })
             .catch(err => {
-                console.error("Error loading daily matchups: ", err);
-                document.getElementById('matchups-container').innerHTML = '<p>Error loading today\'s simulations. Please try again later.</p>';
+                console.error("Error loading matchups:", err);
+                document.getElementById('matchups-container').innerHTML = '<p>Error loading today\'s simulations.</p>';
             });
+
+        // Search Filter Logic
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const searchVal = e.target.value.toLowerCase();
+            const filtered = allMatchups.filter(matchup => 
+                matchup.away_team.toLowerCase().includes(searchVal) || 
+                matchup.home_team.toLowerCase().includes(searchVal)
+            );
+            renderMatchups(filtered);
+        });
+
+        // Render Matchup Grid
+        function renderMatchups(matchups) {
+            const container = document.getElementById('matchups-container');
+            container.innerHTML = '';
+
+            if(matchups.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-muted);">No matchups found matching your search.</p>';
+                return;
+            }
+
+            matchups.forEach(matchup => {
+                const card = document.createElement('div');
+                card.className = 'matchup-card';
+                card.innerHTML = `
+                    <h3 style="margin-top:0;">${matchup.away_team} <span style="font-size:0.8rem;color:var(--text-muted);">@</span> ${matchup.home_team}</h3>
+                    <p style="margin: 0.5rem 0;"><strong>Simulated Winner:</strong> ${matchup.simulated_winner}</p>
+                    <div class="probability-badge">Confidence: ${matchup.win_probability}</div>
+                    <div style="font-size:0.9rem; margin-top:0.5rem;">
+                        <div><strong>Run Line:</strong> ${matchup.run_line_proj}</div>
+                        <div><strong>Projected Total:</strong> ${matchup.total_runs_proj} runs</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Toggle Dark Mode Theme
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('click', () => {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', newTheme);
+            themeToggle.innerText = newTheme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode';
+        });
     </script>
 </body>
 </html>
