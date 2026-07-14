@@ -1,13 +1,12 @@
 name: Run Sports Analytics
 
 on:
-  schedule:
-    - cron: '0 8 * * *'
-    workflow_dispatch:
-
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
 permissions:
-  contents: write # Gives GitHub Actions permission to commit files
+  contents: write
 
 jobs:
   run-pipeline:
@@ -30,7 +29,6 @@ jobs:
     - name: Run Data Collector
       run: python data/data_collector.py
 
-    # Automatically saves and pushes the today_matchups.json file back to your repo
     - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Actions"
