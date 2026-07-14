@@ -1,160 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SharpPlay Analytics - AI-Powered Sports Insights</title>
-    <style>
-        /* Modern Sports Theme Styling */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            line-height: 1.6;
-        }
-        header {
-            background-color: #1e293b;
-            padding: 1.5rem;
-            text-align: center;
-            border-bottom: 3px solid #3b82f6;
-        }
-        header h1 {
-            font-size: 2rem;
-            color: #3b82f6;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        header p {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            margin-top: 0.25rem;
-        }
-        .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-        .hero-card {
-            background-color: #1e293b;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-            margin-bottom: 2rem;
-        }
-        .hero-img {
-            width: 100%;
-            height: auto;
-            display: block;
-            border-bottom: 4px solid #3b82f6;
-        }
-        .hero-content {
-            padding: 2rem;
-            text-align: center;
-        }
-        .hero-content h2 {
-            font-size: 1.75rem;
-            margin-bottom: 1rem;
-            color: #f1f5f9;
-        }
-        .hero-content p {
-            color: #94a3b8;
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
-        }
-        .badge {
-            background-color: #ef4444;
-            color: white;
-            padding: 0.35rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            text-transform: uppercase;
-            display: inline-block;
-            margin-bottom: 1rem;
-        }
-        .features-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-        @media (min-width: 600px) {
-            .features-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        .feature-box {
-            background-color: #1e293b;
-            padding: 1.5rem;
-            border-radius: 8px;
-            border-left: 4px solid #3b82f6;
-        }
-        .feature-box h3 {
-            color: #3b82f6;
-            margin-bottom: 0.5rem;
-            font-size: 1.2rem;
-        }
-        .feature-box p {
-            color: #94a3b8;
-            font-size: 0.95rem;
-        }
-        footer {
-            text-align: center;
-            padding: 3rem 1.5rem;
-            color: #64748b;
-            font-size: 0.85rem;
-            background-color: #0b0f19;
-            margin-top: 4rem;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharpPlay Analytics</title>
+    <style>
+        :root {
+            --primary: #1e3c72;
+            --secondary: #2a5298;
+            --dark: #121212;
+            --light: #f4f4f9;
+            --accent: #ff9f43;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--dark);
+        }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .hero-img {
+            width: 100%;
+            max-height: 350px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .matchup-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        @media(min-width: 600px) {
+            .matchup-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .matchup-card {
+            background: #fafafa;
+            border-left: 5px solid var(--primary);
+            padding: 1rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .probability {
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
 
-    <header>
-        <h1>SharpPlay Analytics</h1>
-        <p>Advanced Predictive Sports Modeling</p>
-    </header>
+    <header>
+        <h1>SharpPlay Analytics</h1>
+        <p>Predictive Modeling & Sports Simulations</p>
+    </header>
 
-    <div class="container">
-        <!-- Hero Section featuring the MLB Image -->
-        <div class="hero-card">
-            <img class="hero-img" src="[attachment_0](attachment)" alt="MLB player hitting home run">
-            <div class="hero-content">
-                <span class="badge">AI Engine Active</span>
-                <h2>Predicting Every Matchup, Player & Run</h2>
-                <p>Welcome to SharpPlay Analytics. We utilize neural networks and deep-learning simulations to analyze high-volume betting markets, historical player performance, and real-time matchup data.</p>
-            </div>
-        </div>
+    <div class="container">
+        <!-- Featured Home Run Derby Story Card -->
+        <div class="card" id="featured-card">
+            <img class="hero-img" src="http://googleusercontent.com/image_collection/image_retrieval/624253563297045835_0" alt="Jordan Walker hitting a home run">
+            <h2 id="featured-title">Loading Featured Story...</h2>
+            <p><strong id="featured-stat"></strong></p>
+            <p id="featured-desc"></p>
+        </div>
 
-        <!-- Features & Services -->
-        <div class="features-grid">
-            <div class="feature-box">
-                <h3>Matchup Analysis</h3>
-                <p>Head-to-head calculations taking stadium dimensions, weather factors, and defensive alignments into account.</p>
-            </div>
-            <div class="feature-box">
-                <h3>Player Performance</h3>
-                <p>Advanced tracking modeling expected outcomes, hitter/pitcher matchups, and hot-streak regressions.</p>
-            </div>
-            <div class="feature-box">
-                <h3>Simulations</h3>
-                <p>We run thousands of game simulations before the first pitch to calculate true probability margins.</p>
-            </div>
-            <div class="feature-box">
-                <h3>Market Insights</h3>
-                <p>Comparing projected probabilities against current sportsbook lines to identify high-value opportunities.</p>
-            </div>
-        </div>
-    </div>
+        <!-- Today's Live Projections Card -->
+        <div class="card">
+            <h2>Today's Projected Matchups</h2>
+            <p style="font-size: 0.9rem; color: #777;">Last Generated: <span id="update-time">Loading...</span></p>
+            <div class="matchup-grid" id="matchups-container">
+                <!-- Data will load here dynamically -->
+                <p>Loading simulated matchups...</p>
+            </div>
+        </div>
+    </div>
 
-    <footer>
-        <p>&copy; 2026 SharpPlay Analytics. All rights reserved.</p>
-    </footer>
+    <footer>
+        <p>&copy; 2026 SharpPlay Analytics. All rights reserved.</p>
+    </footer>
 
+    <script>
+        // Dynamically fetch the automated predictions from your data folder
+        fetch('data/today_matchups.json')
+            .then(response => response.json())
+            .then(data => {
+                // Update Update Time
+                document.getElementById('update-time').innerText = data.last_updated;
+
+                // Update Featured Story Card (Jordan Walker Derby Win)
+                document.getElementById('featured-title').innerText = data.featured_story.title;
+                document.getElementById('featured-stat').innerText = data.featured_story.stat;
+                document.getElementById('featured-desc').innerText = data.featured_story.desc;
+
+                // Build the Matchups Grid
+                const container = document.getElementById('matchups-container');
+                container.innerHTML = ''; // Clear loading text
+
+                data.matchups.forEach(matchup => {
+                    const card = document.createElement('div');
+                    card.className = 'matchup-card';
+                    card.innerHTML = `
+                        <h3>${matchup.away_team} @ ${matchup.home_team}</h3>
+                        <p><strong>Projected Winner:</strong> ${matchup.simulated_winner}</p>
+                        <p class="probability">Confidence: ${matchup.win_probability}</p>
+                        <p><strong>Run Line:</strong> ${matchup.run_line_proj}</p>
+                        <p><strong>Over/Under:</strong> ${matchup.total_runs_proj} runs</p>
+                    `;
+                    container.appendChild(card);
+                });
+            })
+            .catch(err => {
+                console.error("Error loading daily matchups: ", err);
+                document.getElementById('matchups-container').innerHTML = '<p>Error loading today\'s simulations. Please try again later.</p>';
+            });
+    </script>
 </body>
 </html>
-
