@@ -210,8 +210,9 @@
         let allMatchups = [];
 
         // Fetch Dynamic Data from JSON output
-        fetch('./data/today_matchups.json')
-            .then(response => response.json())
+        fetch('/SharpPlay-Analytics/data/today_matchups.json')
+
+            .then(response => response.json())
             .then(data => {
                 document.getElementById('update-time').innerText = data.last_updated;
 
