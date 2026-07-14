@@ -1,10 +1,32 @@
-class Player:
-    pass
+Players
+---------
+player_id
+name
+team
+position
 
 
-class Team:
-    pass
+Games
+---------
+game_id
+date
+home_team
+away_team
+pitchers
 
 
-class Game:
-    pass
+Stats
+---------
+player_id
+HR
+AVG
+OPS
+K%
+
+
+Odds
+---------
+game_id
+market
+line
+odds
