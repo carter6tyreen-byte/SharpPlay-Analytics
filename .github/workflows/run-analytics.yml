@@ -1,8 +1,6 @@
 name: Run Sports Analytics
 
 on:
-  schedule:
-    - cron: '0 8 * * *'
   workflow_dispatch:
 
 permissions:
@@ -21,11 +19,6 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
     - name: Run Data Collector
       run: python data/data_collector.py
 
@@ -33,6 +26,6 @@ jobs:
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
-        git add data/today_matchups.json
+        git add data/today_matchups.json || true
         git diff-index --quiet HEAD || git commit -m "Auto-updated MLB predictions data [skip ci]"
         git push
