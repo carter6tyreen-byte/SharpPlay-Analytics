@@ -1,9 +1,10 @@
 name: Run Sports Analytics
 
 on:
-  schedule:
-    - cron: '0 8 * * *'
-  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'
+    workflow_dispatch:
+
 
 permissions:
   contents: write # Gives GitHub Actions permission to commit files
