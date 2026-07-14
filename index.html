@@ -106,7 +106,7 @@
 
     <script>
         // Dynamically fetch the automated predictions from your data folder
-        fetch('data/today_matchups.json')
+        fetch('./data/today_matchups.json')
             .then(response => response.json())
             .then(data => {
                 // Update Update Time
