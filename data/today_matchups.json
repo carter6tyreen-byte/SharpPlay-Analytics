@@ -1,9 +1,18 @@
 {
-    "last_updated": "2026-07-15 01:48:18 UTC",
+    "last_updated": "2026-07-14 22:20:00 UTC",
     "featured_story": {
-        "title": "SharpPlay Analytics Active",
-        "stat": "System Online",
-        "desc": "The predictive engine is running. Data will populate as games are scheduled."
+        "title": "System Online",
+        "stat": "V2.2",
+        "desc": "Ready."
     },
-    "matchups": []
+    "matchups": [
+        {
+            "away_team": "Team A",
+            "home_team": "Team B",
+            "simulated_winner": "Team B",
+            "win_probability": "65%",
+            "run_line_proj": "-1.5",
+            "total_runs_proj": "8.5"
+        }
+    ]
 }
