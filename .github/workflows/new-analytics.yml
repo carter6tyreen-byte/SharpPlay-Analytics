@@ -1,34 +1,20 @@
-name: STARWORLD Analytics Pipeline
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
       - name: Install Dependencies
-        run: pip install requests numpy
+        run: pip install -r requirements.txt
 
-      - name: Stage 1 & 2 - Data Ingestion and Market Gate
-        run: python mlb_stats.py
+      - name: Stage 1 & 2 - Data Ingestion
+        run: python3 mlb_stats.py
 
       - name: Run Stage 5 (Quantum Consensus Audit)
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          echo "Verifying file structure:"
-          ls -R
-          python3 -c "import sys; print(sys.path); import audit.sharplays; print('Audit module imported successfully')"
-          python3 main.py
-
+        run: python3 main.py
