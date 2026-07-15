@@ -1,3 +1,10 @@
+name: STARWORLD Analytics Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
@@ -11,17 +18,12 @@ jobs:
           python-version: '3.10'
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt
+        run: pip install requests
 
-         - name: Stage 1 & 2 - Data Ingestion
-        # Change this:
-        # run: python3 backend/mlb_stats.py
-        # To this:
+      - name: Stage 1 & 2 - Data Ingestion
+        env:
+          MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
         run: python3 mlb_stats.py
 
       - name: Run Stage 5 (Quantum Consensus Audit)
-        # Change this:
-        # run: python3 backend/main.py
-        # To this:
         run: python3 main.py
- 
