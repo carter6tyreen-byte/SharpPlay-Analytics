@@ -1,18 +1,9 @@
 {
-    "last_updated": "2026-07-14 20:50:00 UTC",
+    "last_updated": "2026-07-15 00:51:15 UTC",
     "featured_story": {
-        "title": "Manual Override Successful",
-        "stat": "Connection Test",
-        "desc": "If you can see this, the file path is finally working correctly."
+        "title": "SharpPlay Analytics Active",
+        "stat": "System Online",
+        "desc": "The predictive engine is running. Data will populate as games are scheduled."
     },
-    "matchups": [
-        {
-            "away_team": "Manual Test Team A",
-            "home_team": "Manual Test Team B",
-            "simulated_winner": "Test Team B",
-            "win_probability": "100%",
-            "run_line_proj": "-1.0",
-            "total_runs_proj": "10"
-        }
-    ]
+    "matchups": []
 }
