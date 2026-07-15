@@ -5,6 +5,8 @@ on:
     branches:
       - main
   workflow_dispatch:
+  schedule:
+    - cron: '0 */3 * * *'  # Runs every 3 hours
 
 permissions:
   contents: write
@@ -15,24 +17,4 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: pip install requests # Add this if you are now using the requests library
-
-      - name: Run Data Collector
-        env:
-          API_KEY: ${{ secrets.SPORTS_API_KEY }}
-        run: python data/data_collector.py
-        
-on:
-  push:
-    branches:
-      - main
-  schedule:
-    # This runs at minute 0 of every 3rd hour (e.g., 00:00, 03:00, 06:00, etc.)
-    - cron: '0 */3 * * *'
+      # ... rest of your steps
