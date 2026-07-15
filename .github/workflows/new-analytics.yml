@@ -14,19 +14,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debug File Structure
-        run: ls -R
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
 
+      - name: Install dependencies
+        run: pip install requests
+
       - name: Run Pipeline
-        run: python main.py 
+        run: |
+          cd SharpPlay-Analytics
+          python main.py
 
       - name: Commit and push changes
         run: |
+          cd SharpPlay-Analytics
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add .
