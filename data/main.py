@@ -1,29 +1,26 @@
-import sys
-import os
+# main.py
+import logging
+from data.data_collector import fetch_all_data
+from simulations.simulator import run_monte_carlo
+# from decision.ai_engine import run_decision_layer  # Upcoming module
 
-# 1. ADD THIS: Tell Python to look in the parent folder (the repository root)
-# This allows the script to find the 'audit' folder even when inside 'data/'
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
-# 2. NOW you can import your modules normally
-from audit.sharplays import SharplaysAudit
-
-def main():
-    print("--- Quantum Consensus Audit Starting ---")
+def run_pipeline():
+    logging.info("Starting SharpPLAY Analytics Pipeline...")
     
-    # Initialize the audit class
-    audit_engine = SharplaysAudit()
+    # 1. Ingestion
+    raw_data = fetch_all_data()
     
-    # Example logic: Load your data (you might need to adjust the path if files are also in data/)
-    # For now, we pass empty data or a placeholder
-    sample_data = [] 
+    # 2. Simulation
+    simulation_results = run_monte_carlo(raw_data)
     
-    # Run the audit
-    audit_engine.run(data=sample_data)
+    # 3. Decision (Placeholder for future)
+    # recommendations = run_decision_layer(simulation_results)
     
-    print("--- Audit Process Finished ---")
+    # 4. Publication
+    # publish_to_dashboard(recommendations)
+    
+    logging.info("Pipeline completed successfully.")
 
 if __name__ == "__main__":
-    main()
+    logging.basicConfig(level=logging.INFO)
+    run_pipeline()
