@@ -1,19 +1,36 @@
 name: STARWORLD Analytics Pipeline
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
+    # This automatically sets the base path for all steps below
+    defaults:
+      run:
+        working-directory: . 
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-      - run: pip install requests
-      - name: Data Ingestion
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Stage 1 & 2 - Data Ingestion
         env:
           MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
+        # Explicit path based on your verified directory structure
         run: python3 data/mlb_stats.py
-      - name: Audit
+
+      - name: Run Stage 5 (Quantum Consensus Audit)
+        # Explicit path based on your verified directory structure
         run: python3 data/main.py
