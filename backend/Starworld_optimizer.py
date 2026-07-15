@@ -1,9 +1,4 @@
 def run_optimizer(data):
-    # ADD THIS LINE:
-    print(f"DEBUG: Raw data keys found: {data.keys()}")
-    
-    optimized_result = []
-    # ... your existing logic ...
-    
-    print(f"DEBUG: Optimized result count: {len(optimized_result)}")
-    return optimized_result
+    # Instead of filtering, just return the data structure you find
+    # This helps verify if the data is arriving at all
+    return data.get("dates", [])[0].get("games", [])
