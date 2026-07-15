@@ -1,3 +1,12 @@
+import sys
+import os
+
+# Add the project root directory to the Python path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Now the import will work
+from backend.Starworld_optimizer import run_optimizer
+
 import os
 import requests
 import json
