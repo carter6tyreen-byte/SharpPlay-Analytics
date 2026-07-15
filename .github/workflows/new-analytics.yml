@@ -23,8 +23,8 @@ jobs:
       - name: Run Pipeline
         env:
           MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
-        # This navigates through the nested structure to reach your files
         run: |
+          # Navigate into the nested directory structure
           cd SharpPlay-Analytics/data
           python3 mlb_stats.py
           python3 main.py
