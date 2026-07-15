@@ -1,12 +1,30 @@
+import requests
+import os
+from datetime import datetime, timedelta
+
+def fetch_mlb_data():
+    # Fetching tomorrow's date to account for the current All-Star break
+    tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+    url = f"https://statsapi.mlb.com/api/v1/schedule/live?sportId=1&date={tomorrow}"
+    
+    print(f"DEBUG: Fetching schedule for: {tomorrow}")
+    
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+    return None
+
 def update_html(data):
-    # 1. Safety Check: If data is None or empty, stop immediately
     if not data or "dates" not in data or not data["dates"]:
-        print("No valid game data received. Preserving current index.html.")
+        print("No game data found for tomorrow. Skipping update.")
         return
 
     output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'index.html'))
     
-    # 2. Extracting Data (Drilling down safely)
+    # Extracting game details
     try:
         game = data["dates"][0]["games"][0]
         away_team = game.get("teams", {}).get("away", {}).get("team", {}).get("name", "N/A")
@@ -15,11 +33,10 @@ def update_html(data):
         
         matchup = f"{away_team} @ {home_team}"
         result = status
-    except (KeyError, IndexError) as e:
-        print(f"Error parsing data: {e}")
-        return # Don't update the HTML if parsing fails
+    except (KeyError, IndexError):
+        return
 
-    # 3. Generating HTML
+    # Writing to index.html
     html_content = f"""
 <html>
 <body>
@@ -28,11 +45,15 @@ def update_html(data):
         <tr><th>Matchup</th><th>Result</th></tr>
         <tr><td>{matchup}</td><td>{result}</td></tr>
     </table>
-    <p>Last updated: 2026-07-15</p>
+    <p>Last updated: {datetime.now().strftime('%Y-%m-%d')}</p>
 </body>
 </html>
     """
     
     with open(output_path, "w") as f:
         f.write(html_content)
-    print(f"Successfully wrote data to {output_path}")
+    print("Successfully updated index.html with tomorrow's game.")
+
+if __name__ == "__main__":
+    data = fetch_mlb_data()
+    update_html(data)
