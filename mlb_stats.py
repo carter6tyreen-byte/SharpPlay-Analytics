@@ -2,25 +2,28 @@ import requests
 import sys
 
 def fetch_mlb_data():
-    try:
-        response = requests.get("YOUR_API_ENDPOINT", timeout=10)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        print(f"PIPELINE_ERROR: Stage 1 Ingestion failed: {e}")
-        return None
-
-def main():
-    data = fetch_mlb_data()
-    if not data:
-        sys.exit(1)
+    # Replace this with your actual secure API endpoint
+    API_URL = "https://api.sportsdata.io/v3/mlb/scores/json/GamesByDate/2026-07-15"
     
-    # Simple check for critical fields required by Stage 2
-    if 'no_vig_prob' not in data:
-        print("MARKET_GATE_ERROR: Missing no-vig probability.")
-        sys.exit(1)
+    # Optional: Include your API Key header if required
+    headers = {
+        "Ocp-Apim-Subscription-Key": "YOUR_API_KEY_HERE"
+    }
+
+    try:
+        response = requests.get(API_URL, headers=headers, timeout=10)
         
-    print("Stage 1 & 2: Pipeline clear for Quantum Encoding.")
+        # Raise an exception for bad status codes (4xx or 5xx)
+        response.raise_for_status()
+        
+        data = response.json()
+        print("Successfully ingested MLB data.")
+        return data
+
+    except requests.exceptions.RequestException as e:
+        print(f"PIPELINE_ERROR: Stage 1 Ingestion failed: {e}")
+        # Exiting with 1 ensures the GitHub Action fails as required
+        sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    fetch_mlb_data()
