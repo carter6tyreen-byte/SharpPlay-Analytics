@@ -1,51 +1,53 @@
-<style>
-    .matchup-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .matchup-table th, .matchup-table td { 
-        padding: 12px; 
-        text-align: left; 
-        border-bottom: 1px solid #ddd; 
-    }
-    .green-bg { background-color: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; }
-</style>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SharpPlay Analytics</title>
+    <style>
+        .matchup-table { width: 100%; border-collapse: collapse; }
+        .matchup-table th, .matchup-table td { padding: 10px; border: 1px solid #ccc; }
+        .green-bg { background-color: green; color: white; }
+    </style>
+</head>
+<body>
 
+    <div id="matchups-container"></div>
 
-function renderMatchups(matchups) {
-    const container = document.getElementById('matchups-container');
-    
-    // 1. Set up the table structure with the new header
-    container.innerHTML = `
-        <table class="matchup-table">
-            <thead>
-                <tr>
-                    <th>Matchup</th>
-                    <th>Winner</th>
-                    <th>Confidence</th>
-                    <th>BarrelScore</th>
-                </tr>
-            </thead>
-            <tbody id="matchup-body"></tbody>
-        </table>
-    `;
+    <script>
+        // THIS IS WHERE YOUR JAVASCRIPT GOES
+        function getCellColor(value, threshold) {
+            return value >= threshold ? 'green-bg' : '';
+        }
 
-    const tbody = document.getElementById('matchup-body');
+        function renderMatchups(matchups) {
+            const container = document.getElementById('matchups-container');
+            container.innerHTML = `
+                <table class="matchup-table">
+                    <thead>
+                        <tr>
+                            <th>Matchup</th>
+                            <th>Winner</th>
+                            <th>Confidence</th>
+                            <th>BarrelScore</th>
+                        </tr>
+                    </thead>
+                    <tbody id="matchup-body"></tbody>
+                </table>
+            `;
 
-    // 2. Loop through your data and build rows properly
-    matchups.forEach(m => {
-        const row = document.createElement('tr');
+            const tbody = document.getElementById('matchup-body');
+            matchups.forEach(m => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${m.away_team} @ ${m.home_team}</td>
+                    <td>${m.simulated_winner}</td>
+                    <td>${m.win_probability}</td>
+                    <td>${m.barrel_score || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
         
-        // Calculate the color class based on your probability logic
-        const probValue = parseInt(m.win_probability) || 0;
-        const colorClass = getCellColor(probValue, 60);
-
-        // 3. Construct the row with ALL columns included
-        row.innerHTML = `
-            <td>${m.away_team} @ ${m.home_team}</td>
-            <td>${m.simulated_winner}</td>
-            <td><span class="${colorClass}">${m.win_probability}</span></td>
-            <td>${m.barrel_score || 'N/A'}</td>
-        `;
-        
-        tbody.appendChild(row);
-    });
-}
-
+        // Add your fetch logic here to call renderMatchups(data)
+    </script>
+</body>
+</html>
