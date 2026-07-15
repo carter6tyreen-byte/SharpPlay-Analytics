@@ -1,23 +1,41 @@
-def update_html(data):
-    if not data or "dates" not in data:
-        print("No valid game data found.")
-        return
+<style>
+  body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
+  .dashboard { max-width: 800px; margin: auto; }
+  .card { 
+    background: rgba(255, 255, 255, 0.05); 
+    padding: 20px; border-radius: 15px; margin-bottom: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .pulse {
+    display: inline-block; width: 10px; height: 10px;
+    background: #22c55e; border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+  }
+</style>
 
-    # Drill down: dates -> [0] -> games -> [0]
-    dates = data.get("dates", [])
-    if not dates: return
-    
-    games = dates[0].get("games", [])
-    if not games: return
-    
-    game = games[0]
-    
-    # Correct key mapping for this specific API
-    away_team = game.get("teams", {}).get("away", {}).get("team", {}).get("name", "N/A")
-    home_team = game.get("teams", {}).get("home", {}).get("team", {}).get("name", "N/A")
-    game_status = game.get("status", {}).get("detailedState", "Scheduled")
-    
-    matchup = f"{away_team} @ {home_team}"
-    result = game_status
-    
-    # ... then write your HTML file as before ...
+<div class="dashboard">
+  <h1>Live Analytics</h1>
+  <p id="timestamp">Loading...</p>
+  <div id="game-container"></div>
+</div>
+
+<script>
+  fetch('data/today_matchups.json')
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById('timestamp').innerText = "Last Updated: " + data.last_updated;
+      const container = document.getElementById('game-container');
+      data.matchups.forEach(game => {
+        container.innerHTML += `
+          <div class="card">
+            <h3>${game.away} @ ${game.home} <span class="pulse"></span></h3>
+            <p>Status: ${game.status}</p>
+          </div>`;
+      });
+    });
+</script>
