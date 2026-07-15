@@ -1,3 +1,5 @@
+from audit.sharplays import SharplaysAudit
+
 # main.py
 from audit.sharplays import SharplaysAudit
 
