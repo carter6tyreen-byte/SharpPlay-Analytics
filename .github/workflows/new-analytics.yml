@@ -1,26 +1,33 @@
-name: STARWORLD Analytics Pipeline
-on: [push]
+import logging
+from data.data_collector import run_ingestion
+from data.results_collector import fetch_yesterdays_results
+from simulations.simulator import MonteCarloSimulator
+from analytics.matchup_engine import analyze_matchups
+from database.recorder import archive_prediction
+from analytics.tuner import tune_team_ratings
+from analytics.exporter import export_to_frontend
 
-jobs:
-  run-pipeline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install Dependencies
-        run: pip install requests
-
-      - name: Run Pipeline
-        run: python3 data/mlb_stats.py
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+def run_pipeline():
+    logging.info("--- Initiating Autonomous Analytics Cycle ---")
+    
+    # 1. AUDIT & TUNE (The Self-Learning Reflex)
+    # Learn from yesterday's performance before making new predictions
+    actuals = fetch_yesterdays_results()
+    if actuals:
+        adjustments = tune_team_ratings(previous_predictions, actuals)
+        apply_adjustments_to_ratings(adjustments) 
+    
+    # 2. INGEST & SIMULATE (The Predictive Engine)
+    data = run_ingestion()
+    simulator = MonteCarloSimulator(iterations=10000)
+    sim_results = simulator.run(data)
+    
+    # 3. DECIDE & ARCHIVE (The Decision Layer)
+    final_picks = analyze_matchups(sim_results)
+    for pick in final_picks:
+        archive_prediction(pick)
+        
+    # 4. PUBLISH (The Dashboard Update)
+    export_to_frontend()
+    
+    logging.info("--- Cycle Complete: System is Self-Corrected and Updated ---")
