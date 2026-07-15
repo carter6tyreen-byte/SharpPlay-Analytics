@@ -1,34 +1,29 @@
+name: STARWORLD Analytics Pipeline
+
 on:
+  push:
+    branches: [ main ]
   workflow_dispatch:
-  schedule:
-    - cron: '0 8 * * *'
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: pip install requests
 
-      - name: Run script
-        env:
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+      - name: Run Pipeline Stage 1 & 2
+        # This executes the mlb_stats script we fixed
         run: python mlb_stats.py
 
-      - name: Commit and push updated HTML
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add index.html
-          git commit -m "Update MLB stats table" || exit 0
-          git push
+      - name: Run Quantum Consensus Audit
+        # This executes your audit gate after the solver runs
+        run: python main.py
