@@ -7,7 +7,9 @@ key = os.getenv('RAPIDAPI_KEY')
 # 2. Fetch the data
 url = "https://your-api-endpoint.com/stats"
 headers = {"X-RapidAPI-Key": key}
-response = requests.get(url, headers=headers).json()
+response = requests.get(url, headers=headers, params=querystring)
+print("API Response:", response.json()) # This will show up in your Action logs
+
 
 # 3. Process the data (Example: assume response is a list of games)
 # You will need to loop through your API response to build the rows dynamically
