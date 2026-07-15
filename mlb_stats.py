@@ -1,36 +1,41 @@
 import os
 import requests
 
-# 1. Get the key
+# Get the key from environment
 key = os.getenv('RAPIDAPI_KEY')
 
-# 2. Fetch the data
-url = "https://your-api-endpoint.com/stats"
-headers = {"X-RapidAPI-Key": key}
+# API Setup
+url = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com/getMLBBatterVsPitcher"
+querystring = {"playerID": "592450"}
+headers = {
+    "x-rapidapi-host": "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com",
+    "x-rapidapi-key": key
+}
+
+# Fetch data
 response = requests.get(url, headers=headers, params=querystring)
-print("API Response:", response.json()) # This will show up in your Action logs
+data = response.json()
 
+# Extract specific data (adjust keys based on your API's JSON response)
+stats = data.get('body', {})
+matchup = stats.get('matchup', 'N/A')
+winner = stats.get('winner', 'N/A')
 
-# 3. Process the data (Example: assume response is a list of games)
-# You will need to loop through your API response to build the rows dynamically
-rows = ""
-for game in response:
-    rows += f"<tr><td>{game['matchup']}</td><td>{game['winner']}</td></tr>"
-
-# 4. Create the HTML string
+# Create HTML content
 html_content = f"""
 <html>
+<head><title>MLB Stats</title></head>
 <body>
-    <h1>Latest MLB Stats</h1>
+    <h1>Latest Batter vs Pitcher Stats</h1>
     <table border="1">
-        <tr><th>Matchup</th><th>Winner</th></tr>
-        {rows}
+        <tr><th>Matchup</th><th>Result</th></tr>
+        <tr><td>{matchup}</td><td>{winner}</td></tr>
     </table>
     <p>Last updated: 2026-07-15</p>
 </body>
 </html>
 """
 
-# 5. Overwrite index.html
+# Overwrite index.html
 with open("index.html", "w") as f:
     f.write(html_content)
