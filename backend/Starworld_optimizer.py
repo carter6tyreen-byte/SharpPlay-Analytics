@@ -1,25 +1,24 @@
 def run_optimizer():
     """
-    Calculates Blast-Contact Matrix v2.2 projections.
-    Returns a list of matchups with performance metrics.
+    Core engine: Analyzes matchups based on the Blast-Contact Matrix.
+    Returns a list of simulated results.
     """
-    # This list represents the data your model generates
-    # You can expand this with real calculations later
+    # Example simulated result structure
     return [
         {
-            "away": "TEST TEAM A",
-            "home": "TEST TEAM B",
-            "predicted_winner": "TEST TEAM A",
-            "prob": 0.85,
-            "spread": -2.5,
-            "total": 10.5,
-            "barrel_score": 77.3,
-            "zone_fit": 0.136,
-            "hr_form": 82
+            "away": "Team A",
+            "home": "Team B",
+            "predicted_winner": "Team B",
+            "prob": 0.65,
+            "spread": -1.5,
+            "total": 8.5
+        },
+        {
+            "away": "Team C",
+            "home": "Team D",
+            "predicted_winner": "Team C",
+            "prob": 0.55,
+            "spread": -0.5,
+            "total": 9.0
         }
     ]
-
-if __name__ == "__main__":
-    # This allows you to test the file individually by running:
-    # python backend/Starworld_optimizer.py
-    print(run_optimizer())
