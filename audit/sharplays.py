@@ -5,19 +5,15 @@ class SharplaysAudit:
         print("Audit engine initialized.")
             
     def run(self, data=None):
-        print("Running consensus audit...")
-        
-        # Check if data exists and is not empty
-        if not data or len(data) == 0:
-            print("PIPELINE_WARNING: No data received for audit. Skipping.")
+        if not data:
+            print("No data, skipping audit.")
             return
 
-        # Perform your logic here safely
-        try:
-            # Example: safely accessing the first game
-            first_game = data[0]
-            print(f"Auditing game: {first_game.get('GameID')}")
-        except IndexError:
-            print("PIPELINE_ERROR: Data format mismatch.")
+        print(f"Auditing {len(data)} games...")
+        
+        for game in data:
+            # Use .get() to avoid KeyError if the field is missing
+            game_id = game.get("GameID") or game.get("gameId") or "Unknown ID"
+            print(f"Processing game: {game_id}")
             
         print("Consensus audit complete.")
