@@ -1,12 +1,9 @@
 def run_optimizer(data):
-    """
-    Accepts the raw data from the API and processes it.
-    """
-    # Ensure your logic here uses the 'data' variable 
-    # instead of trying to fetch it globally.
+    # ADD THIS LINE:
+    print(f"DEBUG: Raw data keys found: {data.keys()}")
     
-    # Example structure:
     optimized_result = []
-    # Process your data...
+    # ... your existing logic ...
     
+    print(f"DEBUG: Optimized result count: {len(optimized_result)}")
     return optimized_result
