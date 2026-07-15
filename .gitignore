@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment variables (API keys, passwords)
+.env
+.env.*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Data files (keep large datasets off GitHub)
+data/raw/
+data/processed/
+*.csv
+*.json
+
+# Logs
+*.log
+logs/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+
+# Build files
+dist/
+build/
+*.egg-info/
+
+# Node / Frontend
+node_modules/
+.next/
+out/
+
+# Secrets
+secrets/
+config/keys/
+
+
+git add .
+git commit -m "Add project structure and gitignore"
+git push
