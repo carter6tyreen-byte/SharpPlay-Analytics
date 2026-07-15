@@ -1,52 +1,11 @@
 
 <html>
 <body>
-    <h1>Latest MLB Stats</h1>
-    <table border="1">
-        <tr><th>Matchup</th><th>Winner</th></tr>
-        <tr><td>Team A @ Team B</td><td>Home</td></tr>
-    </table>
-    <p>Last updated: 2026-07-15</p>
-</body>
-</html>
-import os
-import requests
-
-# 1. Get the key from the environment (ensure this is set in your repo secrets)
-key = os.getenv('RAPIDAPI_KEY')
-
-# 2. Set up the request
-url = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com/getMLBBatterVsPitcher"
-querystring = {"playerID": "592450"}
-headers = {
-    "x-rapidapi-host": "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com",
-    "x-rapidapi-key": key
-}
-
-# 3. Fetch the data
-response = requests.get(url, headers=headers, params=querystring)
-data = response.json()
-
-# 4. Extract data (Adjust these keys based on the API response structure)
-# This is a placeholder; you may need to inspect the 'data' variable to find the correct keys
-stats = data.get('body', {}) 
-matchup = stats.get('matchup', 'N/A')
-winner = stats.get('winner', 'N/A')
-
-# 5. Build the HTML
-html_content = f"""
-<html>
-<body>
     <h1>Latest Batter vs Pitcher Stats</h1>
     <table border="1">
         <tr><th>Matchup</th><th>Result</th></tr>
-        <tr><td>{matchup}</td><td>{winner}</td></tr>
+        <tr><td>N/A</td><td>N/A</td></tr>
     </table>
     <p>Last updated: 2026-07-15</p>
 </body>
 </html>
-"""
-
-# 6. Overwrite index.html
-with open("index.html", "w") as f:
-    f.write(html_content)
