@@ -41,3 +41,4 @@ with open("index.html", "w") as f:
 
 # Add this right after data = response.json()
 print("Full API Response:", data)
+
