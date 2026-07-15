@@ -23,10 +23,8 @@ jobs:
       - name: Install Dependencies
         run: pip install requests
 
-      - name: Stage 1 & 2 - Data Ingestion
-        env:
-          MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
-        run: python3 mlb_stats.py
+            - name: Stage 1 & 2 - Data Ingestion
+        run: python3 data/mlb_stats.py
 
       - name: Run Stage 5 (Quantum Consensus Audit)
-        run: python3 main.py
+        run: python3 data/main.py
