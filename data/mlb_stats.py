@@ -30,7 +30,6 @@ def fetch_espn_data():
 
 def update_html(data, source):
     matchup, status = "N/A", "N/A"
-    
     try:
         if source == "MLB":
             game = data["dates"][0]["games"][0]
@@ -43,10 +42,9 @@ def update_html(data, source):
             matchup = event["name"]
             status = event["status"]["type"]["description"]
     except (KeyError, IndexError):
-        print("Parsing error.")
         return
 
-    output_path = os.path.join(os.path.dirname(__file__), '..', 'index.html')
+    output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'index.html'))
     html = f"""<html><body><h1>Latest MLB Stats ({source})</h1>
     <table border="1"><tr><th>Matchup</th><th>Result</th></tr>
     <tr><td>{matchup}</td><td>{status}</td></tr></table>
@@ -54,17 +52,12 @@ def update_html(data, source):
     
     with open(output_path, "w") as f:
         f.write(html)
-    print(f"Successfully updated with {source} data.")
 
 if __name__ == "__main__":
-    # Primary attempt
-    mlb_data = fetch_mlb_api()
-    if mlb_data:
-        update_html(mlb_data, "MLB")
+    data = fetch_mlb_api()
+    if data:
+        update_html(data, "MLB")
     else:
-        # Fallback attempt
-        espn_data = fetch_espn_data()
-        if espn_data:
-            update_html(espn_data, "ESPN")
-        else:
-            print("All sources returned no data. Keeping existing file.")
+        data = fetch_espn_data()
+        if data:
+            update_html(data, "ESPN")
