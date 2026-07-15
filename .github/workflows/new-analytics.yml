@@ -14,13 +14,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: List files to find main.py
-        run: ls -R
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests
 
       - name: Run Pipeline
-        # We will try running main.py directly from the root.
-        # If this fails, the 'ls -R' above will show us the REAL folder name.
-        run: python main.py
+        run: |
+          MAIN_PATH=$(find . -name "main.py" -print -quit)
+          python $MAIN_PATH
 
       - name: Commit and push changes
         run: |
@@ -29,9 +34,3 @@ jobs:
           git add .
           git commit -m "Auto-update pipeline data" || exit 0
           git push
-               - name: Run Pipeline
-        run: |
-          # Find the directory containing main.py and execute it
-          MAIN_PATH=$(find . -name "main.py" -print -quit)
-          python $MAIN_PATH
- 
