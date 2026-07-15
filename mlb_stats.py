@@ -38,3 +38,6 @@ html_content = f"""
 # Overwrite index.html
 with open("index.html", "w") as f:
     f.write(html_content)
+
+# Add this right after data = response.json()
+print("Full API Response:", data)
