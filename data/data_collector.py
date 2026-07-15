@@ -1,31 +1,41 @@
-import json
-import sys
 import os
+import json
+import requests
+import sys
 
-# Set up path to import from the backend folder
+# Ensure backend can be imported
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from backend.Starworld_optimizer import run_optimizer
 
-def main():
-    # Fetch data from the optimizer
-    raw_data = run_optimizer()
+def fetch_live_matchups():
+    # Retrieve the secret from the environment (set in GitHub Actions YAML)
+    api_key = os.getenv("SPORTS_API_KEY")
     
-    # Process data to ensure keys match your index.html expectations
-    formatted_matchups = []
-    for game in raw_data:
-        formatted_matchups.append({
-            "away_team": game.get("away_team"),      # Ensure this matches 'away_team' in index.html
-            "home_team": game.get("home_team"),      # Ensure this matches 'home_team' in index.html
-            "simulated_winner": game.get("simulated_winner"), # Ensure this matches
-            "win_probability": game.get("win_probability", "0%"),
-            "barrel_score": game.get("barrel_score", "N/A")
-        })
+    # Example structure for an API request - update the URL to your provider's docs
+    url = "https://api.your-provider.com/v1/mlb/matchups"
+    headers = {"x-api-key": api_key}
+    
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status() # Check for HTTP errors
+        return response.json()
+    except Exception as e:
+        print(f"API Error: {e}")
+        return [] # Return empty list if fetch fails
 
-    # Save to JSON
-    output = {"matchups": formatted_matchups}
+def main():
+    # 1. Fetch live data
+    raw_api_data = fetch_live_matchups()
+    
+    # 2. Process data through your optimizer
+    # (Assuming run_optimizer can now take 'raw_api_data' as an argument)
+    optimized_data = run_optimizer(raw_api_data)
+    
+    # 3. Save the output
+    output = {"matchups": optimized_data}
     with open("data/today_matchups.json", "w") as f:
         json.dump(output, f, indent=4)
-    print("Pipeline Success: Data saved.")
+    print("Pipeline Success: Real-time data saved.")
 
 if __name__ == "__main__":
     main()
