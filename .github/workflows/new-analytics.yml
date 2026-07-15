@@ -1,29 +1,40 @@
-name: STARWORLD Analytics Pipeline
-on:
-  push:
-    branches: [ main ]
-  schedule:
-    - cron: '0 0 * * *' # Runs daily
+import logging
+import sys
 
-jobs:
-  run-pipeline:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write # Essential to push data updates back to the repo
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Install dependencies
-        run: pip install requests
-      - name: Run Pipeline
-        run: python main.py # Executes your orchestration script
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add .
-          git commit -m "Auto-update pipeline data" || exit 0
-          git push
+# Configure logging to see progress in GitHub logs
+logging.basicConfig(level=logging.INFO)
+
+# Imports
+from data.data_collector import run_ingestion
+from data.results_collector import fetch_yesterdays_results
+from simulations.simulator import MonteCarloSimulator
+from analytics.matchup_engine import analyze_matchups
+from database.recorder import archive_prediction
+from analytics.tuner import tune_team_ratings
+from analytics.exporter import export_to_frontend
+
+def run_pipeline():
+    logging.info("Starting STARWORLD Pipeline Cycle")
+    
+    # Audit & Tune
+    actuals = fetch_yesterdays_results()
+    if actuals:
+        # Assuming you have a way to store previous predictions
+        tune_team_ratings([], actuals) 
+    
+    # Ingest & Simulate
+    data = run_ingestion()
+    simulator = MonteCarloSimulator(iterations=10000)
+    sim_results = simulator.run(data)
+    
+    # Decide & Archive
+    final_picks = analyze_matchups(sim_results)
+    for pick in final_picks:
+        archive_prediction(pick)
+        
+    # Publish
+    export_to_frontend()
+    logging.info("Pipeline Cycle Complete")
+
+if __name__ == "__main__":
+    run_pipeline()
