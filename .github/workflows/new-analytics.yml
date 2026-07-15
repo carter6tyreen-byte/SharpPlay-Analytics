@@ -7,7 +7,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # CRITICAL: Allows the action to save index.html back to your repo
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,8 +32,3 @@ jobs:
           git add index.html
           git commit -m "Update MLB stats table"
           git push
-             - name: Run script
-        env:
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-        run: python mlb_stats.py
- 
