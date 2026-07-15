@@ -1,64 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>SharpPlay Analytics</title>
-    <style>
-        .green-bg { background-color: #d4edda; color: #155724; padding: 5px; border-radius: 4px; }
-        .red-bg { background-color: #f8d7da; color: #721c24; padding: 5px; border-radius: 4px; }
-        .yellow-bg { background-color: #fff3cd; color: #856404; padding: 5px; border-radius: 4px; }
-        .matchup-card { border: 1px solid #ccc; margin: 10px; padding: 15px; }
-    </style>
-</head>
-<body>
+function renderMatchups(matchups) {
+    const container = document.getElementById('matchups-container');
+    container.innerHTML = `
+        <table class="matchup-table">
+            <thead>
+                <tr>
+                    <th>Matchup</th>
+                    <th>Winner</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    `;
 
-    <header>
-        <h1>SharpPlay Analytics</h1>
-    </header>
+    const tbody = container.querySelector('tbody');
 
-    <div id="matchups-container">
-        <p>Loading simulations...</p>
-    </div>
-
-    <script>
-        // 1. Fetch the data
-        fetch('data/today_matchups.json', { cache: 'no-cache' })
-            .then(response => response.json())
-            .then(data => {
-                renderMatchups(data.matchups);
-            })
-            .catch(err => {
-                document.getElementById('matchups-container').innerHTML = '<p>No data available.</p>';
-            });
-
-        // 2. Logic to determine colors
-        function getCellColor(value, threshold) {
-            if (value > threshold) return 'green-bg';
-            if (value < threshold) return 'red-bg';
-            return 'yellow-bg';
-        }
-
-        // 3. Render the UI
-        function renderMatchups(matchups) {
-            const container = document.getElementById('matchups-container');
-            container.innerHTML = '';
-
-            matchups.forEach(m => {
-                const card = document.createElement('div');
-                card.className = 'matchup-card';
-                
-                // Example of applying logic dynamically:
-                const winProbVal = parseInt(m.win_probability);
-                const colorClass = getCellColor(winProbVal, 60);
-
-                card.innerHTML = `
-                    <h3>${m.away_team} @ ${m.home_team}</h3>
-                    <p>Winner: ${m.simulated_winner}</p>
-                    <p>Confidence: <span class="${colorClass}">${m.win_probability}</span></p>
-                `;
-                container.appendChild(card);
-            });
-        }
-    </script>
-</body>
-</html>
+    matchups.forEach(m => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${m.away_team} @ ${m.home_team}</td>
+            <td>${m.simulated_winner}</td>
+            <td><span class="${getCellColor(parseInt(m.win_probability), 60)}">${m.win_probability}</span></td>
+        `;
+        tbody.appendChild(row);
+    });
+}
