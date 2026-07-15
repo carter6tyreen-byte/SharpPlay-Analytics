@@ -13,8 +13,15 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
-      - name: Stage 1 & 2 - Data Ingestion
+         - name: Stage 1 & 2 - Data Ingestion
+        # Change this:
+        # run: python3 backend/mlb_stats.py
+        # To this:
         run: python3 mlb_stats.py
 
       - name: Run Stage 5 (Quantum Consensus Audit)
+        # Change this:
+        # run: python3 backend/main.py
+        # To this:
         run: python3 main.py
+ 
