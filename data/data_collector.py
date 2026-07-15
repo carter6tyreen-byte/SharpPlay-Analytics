@@ -2,26 +2,21 @@ import requests
 import os
 
 def run_ingestion():
-    """
-    Fetches raw data from the API.
-    """
-    print("DEBUG: Executing run_ingestion...")
-    
-    # Ensure you have your environment variables set in GitHub Secrets
-    url = os.getenv("API_ENDPOINT")
+    # Defensive programming: Strip all environment variables of hidden junk
+    raw_endpoint = os.getenv("API_ENDPOINT", "").strip().replace('\u2060', '')
+    raw_key = os.getenv("SPORTS_API_KEY", "").strip().replace('\u2060', '')
+    raw_host = os.getenv("API_HOST", "").strip().replace('\u2060', '')
+
+    if not raw_endpoint:
+        raise ValueError("API_ENDPOINT is not set or is empty.")
+
     headers = {
-        "x-rapidapi-key": os.getenv("SPORTS_API_KEY"),
-        "x-rapidapi-host": os.getenv("API_HOST")
+        "x-rapidapi-key": raw_key,
+        "x-rapidapi-host": raw_host
     }
     
-    # Perform the request
-    response = requests.get(url, headers=headers)
+    print(f"DEBUG: Connecting to {raw_host}...")
+    response = requests.get(raw_endpoint, headers=headers)
     response.raise_for_status()
     
-    # Return the data to be processed by main.py
     return response.json()
-
-# This ensures that if you run this file directly for testing, it works.
-if __name__ == "__main__":
-    data = run_ingestion()
-    print("Ingestion successful.")
