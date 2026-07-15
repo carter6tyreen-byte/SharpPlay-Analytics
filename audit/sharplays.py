@@ -2,17 +2,22 @@
 
 class SharplaysAudit:
     def __init__(self):
-        """Initializes the audit engine for the SharpPlay Analytics pipeline."""
         print("Audit engine initialized.")
             
-    def run(self):
-        """Executes the consensus audit logic."""
+    def run(self, data=None):
         print("Running consensus audit...")
         
-        # Add your core audit logic here.
-        # For example: 
-        # 1. Load the data from your JSON/CSV files
-        # 2. Perform your calculations
-        # 3. Output the result to the console or a log file
-        
+        # Check if data exists and is not empty
+        if not data or len(data) == 0:
+            print("PIPELINE_WARNING: No data received for audit. Skipping.")
+            return
+
+        # Perform your logic here safely
+        try:
+            # Example: safely accessing the first game
+            first_game = data[0]
+            print(f"Auditing game: {first_game.get('GameID')}")
+        except IndexError:
+            print("PIPELINE_ERROR: Data format mismatch.")
+            
         print("Consensus audit complete.")
