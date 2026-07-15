@@ -53,3 +53,16 @@
 </body>
 </html>
 
+// Add this after your table is rendered
+function applyHeatMap() {
+    const rows = document.querySelectorAll('#matchup-table tr');
+    rows.forEach(row => {
+        const score = parseFloat(row.cells[2].innerText); // Assuming BarrelScore is in the 3rd column
+        if (score >= 80) {
+            row.classList.add('high-score'); // Define .high-score { background-color: #d4edda; } in CSS
+        } else if (score < 50) {
+            row.classList.add('low-score');  // Define .low-score { background-color: #f8d7da; } in CSS
+        }
+    });
+}
+
