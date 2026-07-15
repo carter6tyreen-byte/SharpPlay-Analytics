@@ -23,10 +23,12 @@ jobs:
       - name: Stage 1 & 2 - Data Ingestion and Market Gate
         run: python mlb_stats.py
 
-      - name: Stage 5 - Quantum Consensus Audit
-        # This only runs if Stage 1 & 2 succeeded
-        run: python main.py
       - name: Run Stage 5 (Quantum Consensus Audit)
         env:
           PYTHONPATH: ${{ github.workspace }}
-        run: python3 main.py
+        run: |
+          echo "Verifying file structure:"
+          ls -R
+          python3 -c "import sys; print(sys.path); import audit.sharplays; print('Audit module imported successfully')"
+          python3 main.py
+
