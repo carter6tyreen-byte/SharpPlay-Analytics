@@ -1,4 +1,14 @@
 {
-    "last_updated": "2026-07-15 11:41 PM",
-    "matchups": []
+    "meta": {
+        "project_id": "MLB-Live-Analytics",
+        "timestamp": "2026-07-15 07:51 PM",
+        "status": "success"
+    },
+    "payload": {
+        "data_points": [],
+        "analysis_summary": {
+            "count": 0,
+            "is_active": false
+        }
+    }
 }
