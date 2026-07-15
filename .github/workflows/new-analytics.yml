@@ -29,3 +29,9 @@ jobs:
           git add .
           git commit -m "Auto-update pipeline data" || exit 0
           git push
+               - name: Run Pipeline
+        run: |
+          # Find the directory containing main.py and execute it
+          MAIN_PATH=$(find . -name "main.py" -print -quit)
+          python $MAIN_PATH
+ 
