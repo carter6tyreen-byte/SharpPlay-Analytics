@@ -15,5 +15,3 @@ def run_optimizer():
         }
     ]
 
-    ]
-
