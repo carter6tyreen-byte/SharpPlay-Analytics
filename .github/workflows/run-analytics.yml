@@ -1,4 +1,3 @@
-# Only one 'on' block at the top
 on:
   workflow_dispatch:
   schedule:
