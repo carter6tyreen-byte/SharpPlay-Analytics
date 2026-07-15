@@ -1,7 +1,12 @@
 import sys
 import os
 
-# Adds the parent directory to the system path so it can find the 'audit' folder
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Get the absolute path to the project root (one level up from 'data')
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+# Ensure the root is in the path
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+# Now it can find 'audit.sharplays'
 from audit.sharplays import SharplaysAudit
