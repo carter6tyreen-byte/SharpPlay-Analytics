@@ -8,11 +8,6 @@ on:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    # This automatically sets the base path for all steps below
-    defaults:
-      run:
-        working-directory: . 
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -25,12 +20,11 @@ jobs:
       - name: Install Dependencies
         run: pip install requests
 
-      - name: Stage 1 & 2 - Data Ingestion
+      - name: Run Pipeline
         env:
           MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
-        # Explicit path based on your verified directory structure
-        run: python3 data/mlb_stats.py
-
-      - name: Run Stage 5 (Quantum Consensus Audit)
-        # Explicit path based on your verified directory structure
-        run: python3 data/main.py
+        # This navigates through the nested structure to reach your files
+        run: |
+          cd SharpPlay-Analytics/data
+          python3 mlb_stats.py
+          python3 main.py
