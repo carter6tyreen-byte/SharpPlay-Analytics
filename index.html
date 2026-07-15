@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>SharpPlay Analytics</title>
     <style>
-        .matchup-table { width: 100%; border-collapse: collapse; }
-        .matchup-table th, .matchup-table td { padding: 10px; border: 1px solid #ccc; }
-        .green-bg { background-color: green; color: white; }
+        /* Add your CSS here to ensure the table styles are applied */
+        .matchup-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .matchup-table th, .matchup-table td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        .green-bg { background-color: #d4edda; color: #155724; }
     </style>
 </head>
 <body>
@@ -13,11 +15,7 @@
     <div id="matchups-container"></div>
 
     <script>
-        // THIS IS WHERE YOUR JAVASCRIPT GOES
-        function getCellColor(value, threshold) {
-            return value >= threshold ? 'green-bg' : '';
-        }
-
+        // Your logic MUST be inside this script tag to run
         function renderMatchups(matchups) {
             const container = document.getElementById('matchups-container');
             container.innerHTML = `
@@ -46,8 +44,12 @@
                 tbody.appendChild(row);
             });
         }
-        
-        // Add your fetch logic here to call renderMatchups(data)
+
+        // Add the fetch call here to actually get the JSON data
+        fetch('data/today_matchups.json')
+            .then(response => response.json())
+            .then(data => renderMatchups(data.matchups));
     </script>
 </body>
 </html>
+
