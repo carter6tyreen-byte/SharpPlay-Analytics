@@ -1,25 +1,30 @@
+import requests
+import os
+from datetime import datetime
+
 def fetch_mlb_data():
-    # 1. Public API (No headers)
-    url_public = "https://statsapi.mlb.com/api/v1/schedule/live?sportId=1"
+    # Use today's date to ensure we get active games
+    today = datetime.now().strftime("%Y-%m-%d")
+    url = f"https://statsapi.mlb.com/api/v1/schedule/live?sportId=1&date={today}"
     
-    # 2. Private API (Requires headers)
-    url_private = "YOUR_PRIVATE_API_ENDPOINT"
-    private_headers = {"Authorization": f"Bearer {os.getenv('SPORTS_API_KEY')}"}
-    
-    results = {"public": None, "private": None}
+    print(f"DEBUG: Fetching URL: {url}")
     
     try:
-        # Request for public API
-        resp_public = requests.get(url_public)
-        resp_public.raise_for_status()
-        results["public"] = resp_public.json()
+        response = requests.get(url)
+        print(f"DEBUG: Status Code: {response.status_code}")
         
-        # Request for private API
-        resp_private = requests.get(url_private, headers=private_headers)
-        resp_private.raise_for_status()
-        results["private"] = resp_private.json()
-        
+        if response.status_code == 200:
+            data = response.json()
+            # Verify if there is actually data in the response
+            if "dates" in data and len(data["dates"]) > 0:
+                print("DEBUG: Data found!")
+                return data
+            else:
+                print("DEBUG: API returned 200 but no games found for today.")
+        else:
+            print(f"DEBUG: API Error: {response.text}")
+            
     except Exception as e:
-        print(f"Error fetching data: {e}")
+        print(f"Error: {e}")
         
-    return results
+    return None
