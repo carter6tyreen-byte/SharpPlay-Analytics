@@ -1,41 +1,38 @@
 import os
-import json
 import requests
-import sys
+import json
+from datetime import date
 
-# Ensure backend can be imported
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from backend.Starworld_optimizer import run_optimizer
-
-def fetch_live_matchups():
-    # Retrieve the secret from the environment (set in GitHub Actions YAML)
-    api_key = os.getenv("SPORTS_API_KEY")
+def fetch_live_mlb_data():
+    # RapidAPI settings - update these based on your specific API provider's docs
+    # Example URL for a common MLB schedule endpoint
+    url = "https://mlb-college-baseball-api.p.rapidapi.com/mlb/matches" 
     
-    # Example structure for an API request - update the URL to your provider's docs
-    url = "https://api.your-provider.com/v1/mlb/matchups"
-    headers = {"x-api-key": api_key}
+    headers = {
+        "x-rapidapi-key": os.getenv("SPORTS_API_KEY"),
+        "x-rapidapi-host": "mlb-college-baseball-api.p.rapidapi.com"
+    }
     
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status() # Check for HTTP errors
-        return response.json()
-    except Exception as e:
-        print(f"API Error: {e}")
-        return [] # Return empty list if fetch fails
+    # Send the request for today's date
+    params = {"date": date.today().isoformat(), "limit": 20}
+    
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    return response.json()
 
 def main():
-    # 1. Fetch live data
-    raw_api_data = fetch_live_matchups()
-    
-    # 2. Process data through your optimizer
-    # (Assuming run_optimizer can now take 'raw_api_data' as an argument)
-    optimized_data = run_optimizer(raw_api_data)
-    
-    # 3. Save the output
-    output = {"matchups": optimized_data}
-    with open("data/today_matchups.json", "w") as f:
-        json.dump(output, f, indent=4)
-    print("Pipeline Success: Real-time data saved.")
+    try:
+        live_data = fetch_live_mlb_data()
+        
+        # Pass the 'live_data' to your existing optimizer
+        # You will need to ensure your optimizer processes this specific JSON structure
+        optimized_data = run_optimizer(live_data)
+        
+        with open("data/today_matchups.json", "w") as f:
+            json.dump(optimized_data, f, indent=4)
+        print("Successfully updated with live data.")
+    except Exception as e:
+        print(f"Error fetching live data: {e}")
 
 if __name__ == "__main__":
     main()
