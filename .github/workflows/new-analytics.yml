@@ -26,3 +26,7 @@ jobs:
       - name: Stage 5 - Quantum Consensus Audit
         # This only runs if Stage 1 & 2 succeeded
         run: python main.py
+      - name: Run Stage 5 (Quantum Consensus Audit)
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: python3 main.py
