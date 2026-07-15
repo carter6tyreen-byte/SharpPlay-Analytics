@@ -87,3 +87,20 @@ def save_and_verify(data):
 
 # Call this instead of your current save logic
 
+import sys
+import os
+import json
+
+# 1. ADD THIS: Point Python to the 'backend' folder
+# This enables the script to see Starworld_optimizer.py
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# 2. NOW IMPORT: This will now work without an 'ImportError'
+from backend.Starworld_optimizer import run_optimizer
+
+def main():
+    # 3. RUN: Call the function defined in your backend
+    results = run_optimizer()
+    
+    # ... proceed to map results to JSON ...
+
