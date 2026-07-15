@@ -1,5 +1,7 @@
 function renderMatchups(matchups) {
     const container = document.getElementById('matchups-container');
+    
+    // 1. Set up the table structure with the new header
     container.innerHTML = `
         <table class="matchup-table">
             <thead>
@@ -7,37 +9,32 @@ function renderMatchups(matchups) {
                     <th>Matchup</th>
                     <th>Winner</th>
                     <th>Confidence</th>
+                    <th>BarrelScore</th>
                 </tr>
             </thead>
-            <tbody></tbody>
+            <tbody id="matchup-body"></tbody>
         </table>
     `;
-// Update header
-<thead>
-    <tr>
-        <th>Matchup</th>
-        <th>Winner</th>
-        <th>Confidence</th>
-        <th>BarrelScore</th> </tr>
-</thead>
 
-// Update body
-row.innerHTML = `
-    <td>${m.away_team} @ ${m.home_team}</td>
-    <td>${m.simulated_winner}</td>
-    <td><span class="${getCellColor(parseInt(m.win_probability), 60)}">${m.win_probability}</span></td>
-    <td>${m.barrel_score}</td> `;
+    const tbody = document.getElementById('matchup-body');
 
-
-    const tbody = container.querySelector('tbody');
-
+    // 2. Loop through your data and build rows properly
     matchups.forEach(m => {
         const row = document.createElement('tr');
+        
+        // Calculate the color class based on your probability logic
+        const probValue = parseInt(m.win_probability) || 0;
+        const colorClass = getCellColor(probValue, 60);
+
+        // 3. Construct the row with ALL columns included
         row.innerHTML = `
             <td>${m.away_team} @ ${m.home_team}</td>
             <td>${m.simulated_winner}</td>
-            <td><span class="${getCellColor(parseInt(m.win_probability), 60)}">${m.win_probability}</span></td>
+            <td><span class="${colorClass}">${m.win_probability}</span></td>
+            <td>${m.barrel_score || 'N/A'}</td>
         `;
+        
         tbody.appendChild(row);
     });
 }
+
