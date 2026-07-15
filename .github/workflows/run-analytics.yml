@@ -32,3 +32,15 @@ jobs:
         git add data/today_matchups.json || true
         git diff-index --quiet HEAD || git commit -m "Auto-updated MLB predictions data [skip ci]"
         git push
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Data Collector
+        env:
+          # This maps your GitHub secret to an environment variable the script can read
+          API_KEY: ${{ secrets.SPORTS_API_KEY }} 
+        run: python data/data_collector.py
