@@ -1,30 +1,38 @@
-import requests
-import os
-from datetime import datetime
+def update_html(data):
+    # 1. Safety Check: If data is None or empty, stop immediately
+    if not data or "dates" not in data or not data["dates"]:
+        print("No valid game data received. Preserving current index.html.")
+        return
 
-def fetch_mlb_data():
-    # Use today's date to ensure we get active games
-    today = datetime.now().strftime("%Y-%m-%d")
-    url = f"https://statsapi.mlb.com/api/v1/schedule/live?sportId=1&date={today}"
+    output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'index.html'))
     
-    print(f"DEBUG: Fetching URL: {url}")
-    
+    # 2. Extracting Data (Drilling down safely)
     try:
-        response = requests.get(url)
-        print(f"DEBUG: Status Code: {response.status_code}")
+        game = data["dates"][0]["games"][0]
+        away_team = game.get("teams", {}).get("away", {}).get("team", {}).get("name", "N/A")
+        home_team = game.get("teams", {}).get("home", {}).get("team", {}).get("name", "N/A")
+        status = game.get("status", {}).get("detailedState", "Scheduled")
         
-        if response.status_code == 200:
-            data = response.json()
-            # Verify if there is actually data in the response
-            if "dates" in data and len(data["dates"]) > 0:
-                print("DEBUG: Data found!")
-                return data
-            else:
-                print("DEBUG: API returned 200 but no games found for today.")
-        else:
-            print(f"DEBUG: API Error: {response.text}")
-            
-    except Exception as e:
-        print(f"Error: {e}")
-        
-    return None
+        matchup = f"{away_team} @ {home_team}"
+        result = status
+    except (KeyError, IndexError) as e:
+        print(f"Error parsing data: {e}")
+        return # Don't update the HTML if parsing fails
+
+    # 3. Generating HTML
+    html_content = f"""
+<html>
+<body>
+    <h1>Latest MLB Stats</h1>
+    <table border="1">
+        <tr><th>Matchup</th><th>Result</th></tr>
+        <tr><td>{matchup}</td><td>{result}</td></tr>
+    </table>
+    <p>Last updated: 2026-07-15</p>
+</body>
+</html>
+    """
+    
+    with open(output_path, "w") as f:
+        f.write(html_content)
+    print(f"Successfully wrote data to {output_path}")
