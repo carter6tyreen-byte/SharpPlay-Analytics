@@ -31,4 +31,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+# Inside your loop in data_collector.py
+formatted_matchups.append({
+    "away_team": game.get("away"),
+    "home_team": game.get("home"),
+    "simulated_winner": game.get("predicted_winner"),
+    "win_probability": f"{int(game.get('prob', 0) * 100)}%",
+    "barrel_score": game.get("barrel_score") # Map it here
+})
 
