@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 def get_games_for_week():
     all_rows = []
-    # Loop through the next 7 days
+    # Loop through the next 7 days to ensure you capture games
     for i in range(7):
         target_date = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
         url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={target_date}"
@@ -25,8 +25,8 @@ def get_games_for_week():
 def update_html():
     rows = get_games_for_week()
     
-    # If no games are found for the whole week, show a helpful message
-    table_content = "".join(rows) if rows else "<tr><td colspan='2'>No games found this week.</td></tr>"
+    # Friendly message if no games are found
+    table_content = "".join(rows) if rows else "<tr><td colspan='2'>No upcoming games found.</td></tr>"
 
     html_content = f"""<html>
 <head><title>MLB Schedule</title></head>
@@ -40,8 +40,10 @@ def update_html():
 </body>
 </html>"""
 
+    # Ensure index.html is saved in the root
     with open("index.html", "w") as f:
         f.write(html_content)
+    print("Successfully updated index.html.")
 
 if __name__ == "__main__":
     update_html()
