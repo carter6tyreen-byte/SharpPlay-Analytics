@@ -21,4 +21,4 @@ jobs:
       - name: Run script
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-        run: python mlb_stats.py
+        run:
