@@ -1,4 +1,4 @@
-import os
+ import os
 import requests
 
 # Get the key from the environment
@@ -41,4 +41,8 @@ with open("index.html", "w") as f:
 
 # Add this right after data = response.json()
 print("Full API Response:", data)
+
+response = requests.get(url, headers=headers, params=querystring)
+data = response.json()
+print("DEBUG: API Response data:", data)  # This will show up in your Action logs
 
