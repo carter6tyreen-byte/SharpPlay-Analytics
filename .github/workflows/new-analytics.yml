@@ -1,28 +1,16 @@
-name: STARWORLD Analytics Pipeline
-
-on: [push]
-
-jobs:
-  run-pipeline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install Dependencies
-        run: pip install requests
-
       - name: Run Pipeline
         env:
           MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
         run: |
-          # Use find to locate the data directory regardless of nesting
           DATA_DIR=$(find . -type d -name "data" | head -n 1)
           cd "$DATA_DIR"
           python3 mlb_stats.py
+          # Note: If main.py is your primary entry point, ensure it is necessary.
+          # If mlb_stats.py already generates your index.html, you may not need main.py.
           python3 main.py
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: . # This assumes index.html is in the root after your script runs
