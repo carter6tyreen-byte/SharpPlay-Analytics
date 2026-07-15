@@ -1,40 +1,28 @@
-import requests
-import os
-from datetime import datetime, timedelta
+name: STARWORLD Analytics Pipeline
+on: [push]
 
-def get_games():
-    all_games = []
-    # Check 7 days to cover the break
-    for i in range(7):
-        target_date = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
-        url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={target_date}"
-        
-        try:
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("dates"):
-                    for game in data["dates"][0].get("games", []):
-                        away = game["teams"]["away"]["team"]["name"]
-                        home = game["teams"]["home"]["team"]["name"]
-                        all_games.append(f"<tr><td>{target_date}</td><td>{away} @ {home}</td></tr>")
-        except Exception:
-            continue
-    return all_games
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-def update_html():
-    rows = get_games()
-    # If no games found for the whole week, show a message
-    table_content = "".join(rows) if rows else "<tr><td colspan='2'>No games found this week.</td></tr>"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    html_content = f"""<html>
-<body><h1>MLB Schedule (Next 7 Days)</h1>
-<table border="1"><tr><th>Date</th><th>Matchup</th></tr>{table_content}</table>
-<p>Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}</p></body></html>"""
+      - name: Install Dependencies
+        run: pip install requests
 
-    # Saves index.html in the root
-    with open("index.html", "w") as f:
-        f.write(html_content)
+      - name: Run Pipeline
+        run: |
+          # This tells GitHub to run the script inside your 'data' folder
+          python3 data/mlb_stats.py
 
-if __name__ == "__main__":
-    update_html()
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
