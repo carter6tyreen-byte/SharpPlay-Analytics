@@ -81,3 +81,9 @@
     </script>
 </body>
 </html>
+
+function getCellColor(value, threshold) {
+    if (value > threshold) return 'green-bg'; // Assign a CSS class
+    if (value < threshold) return 'red-bg';
+    return 'yellow-bg';
+}
