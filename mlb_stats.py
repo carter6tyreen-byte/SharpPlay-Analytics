@@ -1,48 +1,27 @@
- import os
+import os
 import requests
 
-# Get the key from the environment
+# Get API Key
 key = os.getenv('RAPIDAPI_KEY')
 
-# API Setup
+# Define your API Call
 url = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com/getMLBBatterVsPitcher"
+headers = {"x-rapidapi-key": key, "x-rapidapi-host": "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"}
 querystring = {"playerID": "592450"}
-headers = {
-    "x-rapidapi-host": "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com",
-    "x-rapidapi-key": key
-}
 
-# Fetch data
-response = requests.get(url, headers=headers, params=querystring)
-data = response.json()
+# Execute call
+response = requests.get(url, headers=headers, params=querystring).json()
 
-# Extract data (Adjust keys based on your API's actual response structure)
-stats = data.get('body', {})
-matchup = stats.get('matchup', 'N/A')
-winner = stats.get('winner', 'N/A')
-
-# Create HTML content
+# Generate your HTML string (simplified example)
 html_content = f"""
 <html>
 <body>
-    <h1>Latest Batter vs Pitcher Stats</h1>
-    <table border="1">
-        <tr><th>Matchup</th><th>Result</th></tr>
-        <tr><td>{matchup}</td><td>{winner}</td></tr>
-    </table>
-    <p>Last updated: 2026-07-15</p>
+    <h1>Latest MLB Stats</h1>
+    <p>Data successfully updated!</p>
 </body>
 </html>
 """
 
-# Overwrite index.html
+# Write to index.html
 with open("index.html", "w") as f:
     f.write(html_content)
-
-# Add this right after data = response.json()
-print("Full API Response:", data)
-
-response = requests.get(url, headers=headers, params=querystring)
-data = response.json()
-print("DEBUG: API Response data:", data)  # This will show up in your Action logs
-
