@@ -3,13 +3,19 @@ on:
   push:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * *' # Daily at midnight
+    - cron: '0 0 * * *'
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Mapping secrets at the job level makes them available to all steps
+    env:
+      API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
+      SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
+      API_HOST: ${{ secrets.API_HOST }}
+      PYTHONPATH: .
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -23,21 +29,12 @@ jobs:
         run: pip install requests
 
       - name: Run Pipeline
-        run: |
-          # PYTHONPATH ensures Python finds modules in the root directory
-          export PYTHONPATH=$PYTHONPATH:.
-          python main.py
-        env:
-          # These map the GitHub Secrets to the environment variables your code uses
-          API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
-          SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
-          API_HOST: ${{ secrets.API_HOST }}
+        run: python main.py
 
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          # Only add/commit the JSON file to keep repo clean
           git add data/today_matchups.json
           git commit -m "Auto-update: Refreshing live baseball stats" || exit 0
           git push
