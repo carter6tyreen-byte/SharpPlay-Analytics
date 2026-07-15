@@ -28,4 +28,11 @@ jobs:
         with:
           name: stats-output
           path: output_file_name.json # Replace with the name of the file your script creates
+      - name: Commit and push updated HTML
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add index.html
+          git commit -m "Update MLB stats table"
+          git push
 
