@@ -3,7 +3,7 @@ import os
 from datetime import datetime, timedelta
 
 def fetch_mlb_api():
-    # Target tomorrow (July 16) to bypass the All-Star break empty data
+    # Targets tomorrow to bypass the All-Star break empty data
     tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={tomorrow}"
     print(f"DEBUG: Trying MLB API: {url}")
@@ -11,7 +11,6 @@ def fetch_mlb_api():
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
-            # Check if dates list contains games
             if data.get("dates") and data["dates"][0].get("games"):
                 return data
     except Exception as e:
@@ -59,15 +58,15 @@ def update_html(data, source):
     print(f"Successfully updated with {source} data.")
 
 if __name__ == "__main__":
-    # 1. Try MLB
+    # Attempt Primary MLB API
     data = fetch_mlb_api()
     if data:
         update_html(data, "MLB")
     else:
-        # 2. Fallback to ESPN
+        # Fallback to ESPN API
         print("MLB data missing, trying ESPN...")
         data = fetch_espn_data()
         if data:
             update_html(data, "ESPN")
         else:
-            print("Both sources returned no data. Skipping update.")
+            print("Both sources returned no data. Keeping existing index.html.")
