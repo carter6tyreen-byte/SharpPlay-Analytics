@@ -70,3 +70,29 @@
     </script>
 </body>
 </html>
+
+import os
+
+# 1. Get the data from your API (your existing logic here)
+# For example: data = fetch_mlb_data()
+
+# 2. Define the new HTML content
+new_html_content = f"""
+<html>
+<body>
+    <h1>Latest MLB Stats</h1>
+    <table>
+        <tr>
+            <th>Matchup</th>
+            <th>Winner</th>
+        </tr>
+        <!-- You would insert your dynamic data here -->
+    </table>
+    <p>Last updated: 2026-07-15</p>
+</body>
+</html>
+"""
+
+# 3. Overwrite the index.html file in your repo
+with open("index.html", "w") as f:
+    f.write(new_html_content)
