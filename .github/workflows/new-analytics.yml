@@ -1,18 +1,28 @@
+name: STARWORLD Analytics Pipeline
+
+on: [push]
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install requests
+
       - name: Run Pipeline
         env:
           MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
         run: |
-          # Dynamically find the directory containing main.py
+          # Use find to locate the data directory regardless of nesting
           DATA_DIR=$(find . -type d -name "data" | head -n 1)
-          
-          if [ -z "$DATA_DIR" ]; then
-            echo "Error: Could not find 'data' directory."
-            exit 1
-          fi
-          
-          echo "Found data directory at: $DATA_DIR"
           cd "$DATA_DIR"
-          
-          # Execute scripts
           python3 mlb_stats.py
           python3 main.py
