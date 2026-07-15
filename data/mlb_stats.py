@@ -3,14 +3,17 @@ import os
 from datetime import datetime, timedelta
 
 def fetch_mlb_api():
+    # Target tomorrow (July 16) to bypass the All-Star break empty data
     tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={tomorrow}"
-    print(f"DEBUG: Trying MLB API for: {tomorrow}")
+    print(f"DEBUG: Trying MLB API: {url}")
     try:
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
-            if data.get("dates"): return data
+            # Check if dates list contains games
+            if data.get("dates") and data["dates"][0].get("games"):
+                return data
     except Exception as e:
         print(f"MLB API Error: {e}")
     return None
@@ -18,12 +21,13 @@ def fetch_mlb_api():
 def fetch_espn_data():
     tomorrow_fmt = (datetime.now() + timedelta(days=1)).strftime("%Y%m%d")
     url = f"https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates={tomorrow_fmt}"
-    print(f"DEBUG: Trying ESPN API for: {tomorrow_fmt}")
+    print(f"DEBUG: Trying ESPN API: {url}")
     try:
         response = requests.get(url, timeout=10)
         if response.status_code == 200:
             data = response.json()
-            if data.get("events"): return data
+            if data.get("events"):
+                return data
     except Exception as e:
         print(f"ESPN API Error: {e}")
     return None
@@ -52,12 +56,18 @@ def update_html(data, source):
     
     with open(output_path, "w") as f:
         f.write(html)
+    print(f"Successfully updated with {source} data.")
 
 if __name__ == "__main__":
+    # 1. Try MLB
     data = fetch_mlb_api()
     if data:
         update_html(data, "MLB")
     else:
+        # 2. Fallback to ESPN
+        print("MLB data missing, trying ESPN...")
         data = fetch_espn_data()
         if data:
             update_html(data, "ESPN")
+        else:
+            print("Both sources returned no data. Skipping update.")
