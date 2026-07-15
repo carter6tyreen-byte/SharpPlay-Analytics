@@ -10,27 +10,21 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    # Mapping secrets at the job level makes them available to all steps
+    # The job level env block is the most reliable way to inject secrets
     env:
       API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
       SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
       API_HOST: ${{ secrets.API_HOST }}
-      PYTHONPATH: .
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.9'
-
-      - name: Install dependencies
-        run: pip install requests
-
+      - run: pip install requests
       - name: Run Pipeline
-        run: python main.py
-
+        run: |
+          export PYTHONPATH=$PYTHONPATH:.
+          python main.py
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions"
