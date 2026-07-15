@@ -2,7 +2,7 @@ name: STARWORLD Analytics Pipeline
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Added this so you can trigger it manually to test
+  workflow_dispatch:
 
 jobs:
   run-pipeline:
@@ -21,7 +21,16 @@ jobs:
           export PYTHONPATH=$PYTHONPATH:.
           python main.py
         env:
-          # Mapping them here explicitly
+          # This specifically maps secrets to environment variables 
+          # just for this step, which is the most reliable way in GitHub Actions
           API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
           SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
           API_HOST: ${{ secrets.API_HOST }}
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add data/today_matchups.json
+          git commit -m "Auto-update: Refreshing live baseball stats" || exit 0
+          git push
