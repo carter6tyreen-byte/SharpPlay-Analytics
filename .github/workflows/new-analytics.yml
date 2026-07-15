@@ -1,30 +1,18 @@
-name: STARWORLD Analytics Pipeline
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  run-pipeline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install Dependencies
-        run: pip install requests
-
       - name: Run Pipeline
         env:
           MLB_API_KEY: ${{ secrets.MLB_API_KEY }}
         run: |
-          # Navigate into the nested directory structure
-          cd SharpPlay-Analytics/data
+          # Dynamically find the directory containing main.py
+          DATA_DIR=$(find . -type d -name "data" | head -n 1)
+          
+          if [ -z "$DATA_DIR" ]; then
+            echo "Error: Could not find 'data' directory."
+            exit 1
+          fi
+          
+          echo "Found data directory at: $DATA_DIR"
+          cd "$DATA_DIR"
+          
+          # Execute scripts
           python3 mlb_stats.py
           python3 main.py
