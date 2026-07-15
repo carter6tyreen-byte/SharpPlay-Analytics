@@ -16,7 +16,7 @@ def fetch_and_write():
         # 2. Fetch data
         response = requests.get(URL, headers=HEADERS, params=QUERYSTRING)
         response.raise_for_status()
-        data = response.json()
+        data = response.json()print("DEBUG: API Response:", data)
         
         # DEBUG: This will appear in your GitHub Action logs. 
         # Look here to find the actual names of the fields!
