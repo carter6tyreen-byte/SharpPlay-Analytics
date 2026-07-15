@@ -3,36 +3,41 @@ import os
 import json
 
 def fetch_mlb_data():
-    # Use your known endpoint
+    # Use the correct secret from your repository settings
     url = "https://statsapi.mlb.com/api/v1/schedule/live?sportId=1"
-    headers = {"Authorization": f"Bearer {os.getenv('MLB_API_KEY')}"}
+    headers = {"Authorization": f"Bearer {os.getenv('SPORTS_API_KEY')}"}
     
     try:
         response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        data = response.json()
-        # This print will appear in your GitHub Action logs
-        print("DEBUG_JSON_DATA:", json.dumps(data, indent=2))
-        return data
+        # Log response for debugging if something goes wrong
+        if response.status_code != 200:
+            print(f"DEBUG: API returned {response.status_code}")
+            print(f"DEBUG: Response body: {response.text}")
+            return None
+            
+        return response.json()
     except Exception as e:
         print(f"Error fetching data: {e}")
         return None
 
 def update_html(data):
+    if not data:
+        print("No valid data received. Skipping HTML update to preserve current file.")
+        return
+
     output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'index.html'))
     
-    matchup = "No Games Found"
+    # Parsing logic
+    matchup = "No Games Scheduled"
     result = "N/A"
     
-    # Logic: Safely check for the path to the game data
-    if data and "dates" in data and len(data["dates"]) > 0:
+    if "dates" in data and len(data["dates"]) > 0:
         games = data["dates"][0].get("games", [])
         if games:
             game = games[0]
-            # Adjust these keys based on the DEBUG_JSON_DATA output
             away = game.get("teams", {}).get("away", {}).get("team", {}).get("name", "Away")
             home = game.get("teams", {}).get("home", {}).get("team", {}).get("name", "Home")
-            status = game.get("status", {}).get("detailedState", "Scheduled")
+            status = game.get("status", {}).get("abstractGameState", "Scheduled")
             
             matchup = f"{away} @ {home}"
             result = status
