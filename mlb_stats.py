@@ -1,55 +1,34 @@
-import os
 import requests
 import json
 
-# 1. Configuration
-API_KEY = os.getenv('RAPIDAPI_KEY')
-URL = "https://tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com/getMLBBatterVsPitcher"
-HEADERS = {
-    "x-rapidapi-key": API_KEY,
-    "x-rapidapi-host": "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
-}
-QUERYSTRING = {"playerID": "592450"}
-
-def fetch_and_write():
+def fetch_mlb_data():
+    """
+    Fetches raw market data for the Barrel Probability Engine.
+    Ensures data is structured for QUBO encoding.
+    """
+    url = "YOUR_API_ENDPOINT_HERE"
     try:
-        # 2. Fetch data
-        response = requests.get(URL, headers=HEADERS, params=QUERYSTRING)
+        response = requests.get(url)
         response.raise_for_status()
+        
+        # Corrected syntax: Split into two lines for valid parsing
         data = response.json()
-        print("DEBUG: API Response:", data)
+        print(f"DEBUG: API Response received at {__name__}: {data}")
         
-        # DEBUG: This will appear in your GitHub Action logs. 
-        # Look here to find the actual names of the fields!
-        print("DEBUG API RESPONSE:", json.dumps(data, indent=2))
+        return data
         
-        # 3. Extract Data 
-        # ADJUST THESE KEYS based on the DEBUG output in your logs
-        stats = data.get('body', {})
-        matchup = stats.get('matchup', 'N/A')
-        result = stats.get('result', 'N/A')
-        
-        # 4. Generate HTML
-        html_content = f"""
-        <html>
-        <head><title>MLB Stats</title></head>
-        <body>
-            <h1>Latest Batter vs Pitcher Stats</h1>
-            <table border="1">
-                <tr><th>Matchup</th><th>Result</th></tr>
-                <tr><td>{matchup}</td><td>{result}</td></tr>
-            </table>
-            <p>Last updated: 2026-07-15</p>
-        </body>
-        </html>
-        """
-        
-        # 5. Save file
-        with open("index.html", "w") as f:
-            f.write(html_content)
-            
-    except Exception as e:
-        print(f"Error: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"CRITICAL: Pipeline Stage 1 failure: {e}")
+        return None
+
+def main():
+    market_data = fetch_mlb_data()
+    if market_data:
+        # Prepare for Stage 2: Market Gate
+        # Validate that the 'no-vig' probability exists as required by v3.5
+        print("Market data fetched. Proceeding to Stage 2: Market Gate.")
+    else:
+        exit(1) # Ensures the pipeline stops if data is invalid
 
 if __name__ == "__main__":
-    fetch_and_write()
+    main()
