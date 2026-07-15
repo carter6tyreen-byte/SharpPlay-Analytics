@@ -1,7 +1,7 @@
 import os
 import requests
 
-# Get the key from environment
+# Get the key from the environment
 key = os.getenv('RAPIDAPI_KEY')
 
 # API Setup
@@ -16,7 +16,7 @@ headers = {
 response = requests.get(url, headers=headers, params=querystring)
 data = response.json()
 
-# Extract specific data (adjust keys based on your API's JSON response)
+# Extract data (Adjust keys based on your API's actual response structure)
 stats = data.get('body', {})
 matchup = stats.get('matchup', 'N/A')
 winner = stats.get('winner', 'N/A')
@@ -24,7 +24,6 @@ winner = stats.get('winner', 'N/A')
 # Create HTML content
 html_content = f"""
 <html>
-<head><title>MLB Stats</title></head>
 <body>
     <h1>Latest Batter vs Pitcher Stats</h1>
     <table border="1">
