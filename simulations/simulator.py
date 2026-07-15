@@ -1,31 +1,47 @@
-import random
+import numpy as np
+import logging
 
-def run_game(home_stats, away_stats):
-    """
-    Simulates one full game iteration based on team performance metrics.
-    home_stats: Dictionary containing batting/pitching averages, barrel rates, etc.
-    away_stats: Dictionary containing opponent metrics.
-    """
-    home_score = 0
-    away_score = 0
-    
-    # Simple logic: Generate score based on a normal distribution 
-    # centered on their season-average production.
-    # In a pro system, replace this with at-bat by at-bat simulation.
-    home_score = max(0, int(random.normalvariate(home_stats['avg_runs'], 1.5)))
-    away_score = max(0, int(random.normalvariate(away_stats['avg_runs'], 1.5)))
-    
-    return "HOME" if home_score > away_score else "AWAY"
+class MonteCarloSimulator:
+    def __init__(self, iterations=10000):
+        self.iterations = iterations
+        logging.basicConfig(level=logging.INFO)
 
-def run_monte_carlo(data, iterations=5000):
-    """
-    Runs the simulation loop and returns the win probability.
-    """
-    home_wins = 0
-    
-    for _ in range(iterations):
-        result = run_game(data['home'], data['away'])
-        if result == "HOME":
-            home_wins += 1
+    def _simulate_game(self, home_stats, away_stats):
+        """
+        Uses Poisson distribution to simulate runs based on team offensive 
+        production and defensive pitching strength.
+        """
+        # Calculate expected runs (lambda)
+        # Expected = (Offense Strength + Opponent Pitcher Weakness) / 2
+        home_exp = (home_stats['offense_rating'] + away_stats['pitcher_rating']) / 2
+        away_exp = (away_stats['offense_rating'] + home_stats['pitcher_rating']) / 2
+        
+        home_score = np.random.poisson(home_exp)
+        away_score = np.random.poisson(away_exp)
+        
+        return 1 if home_score > away_score else 0
+
+    def run(self, games_data):
+        """
+        Expects games_data to be a list of dictionaries containing home/away stats.
+        """
+        results = []
+        for game in games_data:
+            home_wins = 0
             
-    return home_wins / iterations
+            for _ in range(self.iterations):
+                home_wins += self._simulate_game(game['home'], game['away'])
+            
+            win_prob = home_wins / self.iterations
+            
+            results.append({
+                "game_id": game['game_id'],
+                "simulated_win_prob": win_prob,
+                "market_odds": game['market_odds']
+            })
+            
+        return results
+
+# Explanation of the math:
+# The Poisson distribution assumes events (runs) happen independently at a constant rate.
+# 
