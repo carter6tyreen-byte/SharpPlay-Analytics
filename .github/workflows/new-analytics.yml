@@ -9,7 +9,7 @@ jobs:
   run-pipeline:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write # Essential to push data updates back to the repo
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python
@@ -19,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: pip install requests
       - name: Run Pipeline
-        run: python main.py
+        run: python main.py # Executes your orchestration script
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions"
