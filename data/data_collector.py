@@ -5,43 +5,40 @@ from datetime import datetime
 def collect_data():
     print("Initializing MLB Data Collector...")
     
-    # 1. Structure the game data
+    # 1. Structured data
     data = {
         "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
         "featured_story": {
-            "title": "Jordan Walker Wins Historic 2026 Home Run Derby",
-            "stat": "12-11 over Kyle Schwarber",
-            "desc": "Jordan Walker hit 6 consecutive home runs on his final out to claim the title at Citizens Bank Park."
+            "title": "SharpPlay Analytics Active",
+            "stat": "System Online",
+            "desc": "The predictive engine is running. Data will populate as games are scheduled."
         },
         "matchups": [
-            {
-                "away_team": "New York Mets",
-                "home_team": "Philadelphia Phillies",
-                "simulated_winner": "Philadelphia Phillies",
-                "win_probability": "58.4%",
-                "run_line_proj": "-1.5 Phillies",
-                "total_runs_proj": "8.5"
-            },
-            {
-                "away_team": "Tampa Bay Rays",
-                "home_team": "Boston Red Sox",
-                "simulated_winner": "Boston Red Sox",
-                "win_probability": "52.1%",
-                "run_line_proj": "+1.5 Rays",
-                "total_runs_proj": "9.0"
-            }
+            # Example structure:
+            # {
+            #     "away_team": "Team Name",
+            #     "home_team": "Team Name",
+            #     "simulated_winner": "Team Name",
+            #     "win_probability": "0.0%",
+            #     "run_line_proj": "0.0",
+            #     "total_runs_proj": "0.0"
+            # }
         ]
     }
     
-    # 2. Write the data to a JSON file inside the repo
+    # Ensure the 'data' directory exists
     output_dir = "data"
-    os.makedirs(output_dir, exist_ok=True)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
     file_path = os.path.join(output_dir, "today_matchups.json")
     
+    # Write the JSON file
     with open(file_path, "w") as f:
         json.dump(data, f, indent=4)
         
-    print(f"Successfully generated and saved live data to {file_path}")
+    print(f"Successfully saved data to {file_path}")
 
 if __name__ == "__main__":
     collect_data()
+
