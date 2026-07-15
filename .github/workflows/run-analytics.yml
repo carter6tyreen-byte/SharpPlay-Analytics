@@ -22,3 +22,6 @@ jobs:
 env:
   RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
 
+on:
+  schedule:
+    - cron: '0 8 * * *' # Runs at 08:00 UTC every day
