@@ -1,3 +1,14 @@
+<style>
+    .matchup-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    .matchup-table th, .matchup-table td { 
+        padding: 12px; 
+        text-align: left; 
+        border-bottom: 1px solid #ddd; 
+    }
+    .green-bg { background-color: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; }
+</style>
+
+
 function renderMatchups(matchups) {
     const container = document.getElementById('matchups-container');
     
