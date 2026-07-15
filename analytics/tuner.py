@@ -1,19 +1,28 @@
-def adjust_team_ratings(brier_performance_data):
+import logging
+
+# Set a conservative learning rate (e.g., 0.5%)
+LEARNING_RATE = 0.005 
+
+def tune_team_ratings(previous_predictions, actual_results):
     """
-    If the Brier Score indicates consistent error, 
-    nudge the team ratings for the next day's simulation.
+    Calculates bias (Predicted vs Actual) and applies a weight adjustment
+    to team ratings for the next simulation cycle.
     """
-    for team, stats in brier_performance_data.items():
-        # If your prediction was too high (model is overestimating team strength)
-        if stats['avg_prediction_error'] > 0.1:
-            # Apply a 2% penalty to offensive rating
-            stats['offense_rating'] *= 0.98
-            logging.info(f"Calibration: Adjusted {team} offense rating down.")
+    adjustments = {}
+    
+    for pred in previous_predictions:
+        actual = next((a for a in actual_results if a['game_id'] == pred['game_id']), None)
+        
+        if actual:
+            actual_outcome = 1 if actual['winner'] == 'HOME' else 0
+            # Bias = how much we missed by
+            bias = pred['win_prob'] - actual_outcome
             
-        # If your prediction was too low (model is underestimating team strength)
-        elif stats['avg_prediction_error'] < -0.1:
-            # Boost offensive rating
-            stats['offense_rating'] *= 1.02
-            logging.info(f"Calibration: Adjusted {team} offense rating up.")
+            # Apply adjustment
+            # If bias is positive, we are overestimating: reduce home team rating
+            adjustment = -bias * LEARNING_RATE
+            adjustments[pred['home_team']] = adjustments.get(pred['home_team'], 0) + adjustment
             
-    return brier_performance_data
+            logging.info(f"Tuner: Adjusted {pred['home_team']} by {adjustment:.4f}")
+            
+    return adjustments
