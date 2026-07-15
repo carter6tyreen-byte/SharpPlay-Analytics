@@ -40,3 +40,12 @@ jobs:
           # The '|| exit 0' prevents the action from failing if no changes were made
           git commit -m "Update MLB stats table" || exit 0
           git push
+                - name: Commit and push updated HTML
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add index.html
+          # The || exit 0 tells Git: "If nothing changed, just exit successfully anyway"
+          git commit -m "Update MLB stats table" || exit 0
+          git push
+
