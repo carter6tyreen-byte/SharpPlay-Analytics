@@ -1,98 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>SharpPlay Analytics</title>
-    <style>
-        .matchup-table { width: 100%; border-collapse: collapse; margin-top: 20px; font-family: sans-serif; }
-        .matchup-table th, .matchup-table td { padding: 12px; border: 1px solid #ddd; }
-        
-        /* Heatmap Styles */
-        .high-score { background-color: #d4edda !important; font-weight: bold; }
-        .low-score { background-color: #f8d7da !important; }
-    </style>
-</head>
-<body>
 
-    <div id="matchups-container"></div>
-
-    <script>
-        // 1. Logic to apply the colors
-        function applyHeatMap() {
-            const rows = document.querySelectorAll('#matchup-body tr');
-            rows.forEach(row => {
-                const score = parseFloat(row.cells[3].innerText); 
-                if (!isNaN(score)) {
-                    if (score >= 80) row.classList.add('high-score');
-                    else if (score < 50) row.classList.add('low-score');
-                }
-            });
-        }
-
-        // 2. Logic to build the table
-        function renderMatchups(matchups) {
-            const container = document.getElementById('matchups-container');
-            container.innerHTML = `
-                <table class="matchup-table" id="matchup-table">
-                    <thead>
-                        <tr>
-                            <th>Matchup</th>
-                            <th>Winner</th>
-                            <th>Confidence</th>
-                            <th>BarrelScore</th>
-                        </tr>
-                    </thead>
-                    <tbody id="matchup-body"></tbody>
-                </table>
-            `;
-
-            const tbody = document.getElementById('matchup-body');
-            matchups.forEach(m => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${m.away_team} @ ${m.home_team}</td>
-                    <td>${m.simulated_winner}</td>
-                    <td>${m.win_probability}</td>
-                    <td>${m.barrel_score || '0'}</td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            // 3. IMPORTANT: Call heatmap AFTER table is built
-            applyHeatMap();
-        }
-
-        // 4. Load the JSON data
-        fetch('data/today_matchups.json')
-            .then(response => response.json())
-            .then(data => renderMatchups(data.matchups))
-            .catch(err => console.error("Error loading data:", err));
-    </script>
-</body>
-</html>
-
-import os
-
-# 1. Get the data from your API (your existing logic here)
-# For example: data = fetch_mlb_data()
-
-# 2. Define the new HTML content
-new_html_content = f"""
 <html>
 <body>
     <h1>Latest MLB Stats</h1>
-    <table>
-        <tr>
-            <th>Matchup</th>
-            <th>Winner</th>
-        </tr>
-        <!-- You would insert your dynamic data here -->
+    <table border="1">
+        <tr><th>Matchup</th><th>Winner</th></tr>
+        <tr><td>Team A @ Team B</td><td>Home</td></tr>
     </table>
     <p>Last updated: 2026-07-15</p>
 </body>
 </html>
-"""
-
-# 3. Overwrite the index.html file in your repo
-with open("index.html", "w") as f:
-    f.write(new_html_content)
