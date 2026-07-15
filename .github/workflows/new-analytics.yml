@@ -18,12 +18,11 @@ jobs:
           python-version: '3.10'
 
       - name: Install Dependencies
-        run: pip install requests
+        run: pip install requests numpy
 
-      - name: Run Pipeline Stage 1 & 2
-        # This executes the mlb_stats script we fixed
+      - name: Stage 1 & 2 - Data Ingestion and Market Gate
         run: python mlb_stats.py
 
-      - name: Run Quantum Consensus Audit
-        # This executes your audit gate after the solver runs
+      - name: Stage 5 - Quantum Consensus Audit
+        # This only runs if Stage 1 & 2 succeeded
         run: python main.py
