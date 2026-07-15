@@ -10,6 +10,7 @@ headers = {"x-rapidapi-key": key, "x-rapidapi-host": "tank01-mlb-live-in-game-re
 querystring = {"playerID": "592450"}
 
 response = requests.get(url, headers=headers, params=querystring).json()
+print("API DEBUG DATA:", data)
 
 # 3. Extract your data (This assumes the API returns a 'body' dictionary)
 # Note: Check your logs if this returns N/A to find the exact key names!
