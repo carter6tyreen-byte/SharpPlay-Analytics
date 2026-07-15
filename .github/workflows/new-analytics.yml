@@ -1,36 +1,9 @@
-name: STARWORLD Analytics Pipeline
-on:
-  push:
-    branches: [ main ]
-  schedule:
-    - cron: '0 0 * * *'
-
-jobs:
-  run-pipeline:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: pip install requests
-
       - name: Run Pipeline
         run: |
+          # Find the directory containing main.py
           MAIN_PATH=$(find . -name "main.py" -print -quit)
+          # Get the directory of that file
+          MAIN_DIR=$(dirname "$MAIN_PATH")
+          # Run python from the root of the repo, pointing to that file
+          export PYTHONPATH=$PYTHONPATH:.
           python $MAIN_PATH
-
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add .
-          git commit -m "Auto-update pipeline data" || exit 0
-          git push
