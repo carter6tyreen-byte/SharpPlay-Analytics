@@ -1,11 +1,18 @@
 {
     "matchups": [
         {
-            "away_team": "Team A",
-            "home_team": "Team B",
-            "simulated_winner": "Team B",
-            "win_probability": "65%",
-            "barrel_score": 77.3
+            "away_team": null,
+            "home_team": null,
+            "simulated_winner": null,
+            "win_probability": "0%",
+            "barrel_score": 79.5
+        },
+        {
+            "away_team": null,
+            "home_team": null,
+            "simulated_winner": null,
+            "win_probability": "0%",
+            "barrel_score": 78.5
         }
     ]
 }
