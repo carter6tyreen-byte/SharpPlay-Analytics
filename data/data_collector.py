@@ -65,3 +65,25 @@ def collect_data():
     # 3. Write to JSON as you were doing before
     # ...
 
+import json
+import os
+
+# ... (rest of your logic) ...
+
+def save_and_verify(data):
+    file_path = "data/today_matchups.json"
+    
+    # Save the data
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=4)
+        
+    # Verify the save
+    if os.path.exists(file_path):
+        print("SUCCESS: File created.")
+        with open(file_path, "r") as f:
+            print("CONTENT PREVIEW:", f.read())
+    else:
+        print("ERROR: File was not created.")
+
+# Call this instead of your current save logic
+
