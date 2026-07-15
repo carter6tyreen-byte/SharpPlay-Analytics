@@ -12,35 +12,19 @@ permissions:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-
-    - name: Run Data Collector
-      run: python data/data_collector.py
-
-    - name: Commit and push changes
-      run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git add data/today_matchups.json || true
-        git diff-index --quiet HEAD || git commit -m "Auto-updated MLB predictions data [skip ci]"
-        git push
-jobs:
-  run-pipeline:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: pip install requests # Add this if you are now using the requests library
 
       - name: Run Data Collector
         env:
-          # This maps your GitHub secret to an environment variable the script can read
-          API_KEY: ${{ secrets.SPORTS_API_KEY }} 
+          API_KEY: ${{ secrets.SPORTS_API_KEY }}
         run: python data/data_collector.py
