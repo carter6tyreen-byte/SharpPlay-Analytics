@@ -22,3 +22,9 @@ jobs:
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run:
+      - name: Upload result
+        uses: actions/upload-artifact@v3
+        with:
+          name: stats-output
+          path: output_file_name.json # Replace with the name of the file your script creates
+
