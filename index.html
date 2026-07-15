@@ -1,11 +1,23 @@
+def update_html(data):
+    if not data or "dates" not in data:
+        print("No valid game data found.")
+        return
 
-<html>
-<body>
-    <h1>Latest MLB Stats</h1>
-    <table border="1">
-        <tr><th>Matchup</th><th>Result</th></tr>
-        <tr><td>N/A</td><td>N/A</td></tr>
-    </table>
-    <p>Last updated: 2026-07-15</p>
-</body>
-</html>
+    # Drill down: dates -> [0] -> games -> [0]
+    dates = data.get("dates", [])
+    if not dates: return
+    
+    games = dates[0].get("games", [])
+    if not games: return
+    
+    game = games[0]
+    
+    # Correct key mapping for this specific API
+    away_team = game.get("teams", {}).get("away", {}).get("team", {}).get("name", "N/A")
+    home_team = game.get("teams", {}).get("home", {}).get("team", {}).get("name", "N/A")
+    game_status = game.get("status", {}).get("detailedState", "Scheduled")
+    
+    matchup = f"{away_team} @ {home_team}"
+    result = game_status
+    
+    # ... then write your HTML file as before ...
