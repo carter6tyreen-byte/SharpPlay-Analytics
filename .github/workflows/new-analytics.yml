@@ -11,8 +11,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -24,14 +23,14 @@ jobs:
 
       - name: Run Pipeline
         run: |
-          MAIN_PATH=$(find . -name "main.py" -print -quit)
+          # Set the PYTHONPATH so modules in current dir can be imported
           export PYTHONPATH=$PYTHONPATH:.
-          python $MAIN_PATH
+          python main.py
 
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-          git add .
+          git add data/today_matchups.json
           git commit -m "Auto-update pipeline data" || exit 0
           git push
