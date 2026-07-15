@@ -1,10 +1,9 @@
 import requests
-import json
 import os
 
 def fetch_mlb_data():
-    # Replace with your actual endpoint and headers
-    url = "YOUR_MLB_API_ENDPOINT" 
+    # Update this with your actual working MLB API endpoint
+    url = "https://statsapi.mlb.com/api/v1/schedule/live?sportId=1" 
     headers = {"Authorization": f"Bearer {os.getenv('MLB_API_KEY')}"}
     
     try:
@@ -16,17 +15,22 @@ def fetch_mlb_data():
         return None
 
 def update_html(data):
-    # Ensure we write to the root 'index.html' from within the 'data/' folder
     output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'index.html'))
     
-    # Simple logic to parse the first game for demonstration
-    matchup = "No Game Today"
+    matchup = "No Games"
     result = "N/A"
     
-    if data and "games" in data and len(data["games"]) > 0:
-        game = data["games"][0]
-        matchup = f"{game.get('away_team')} @ {game.get('home_team')}"
-        result = game.get('status', 'Final')
+    # Updated parsing logic based on standard MLB Stats API structure
+    if data and "dates" in data and len(data["dates"]) > 0:
+        games = data["dates"][0].get("games", [])
+        if len(games) > 0:
+            game = games[0]
+            away = game.get("teams", {}).get("away", {}).get("team", {}).get("name", "Away")
+            home = game.get("teams", {}).get("home", {}).get("team", {}).get("name", "Home")
+            status = game.get("status", {}).get("abstractGameState", "Scheduled")
+            
+            matchup = f"{away} @ {home}"
+            result = status
 
     html_content = f"""
 <html>
