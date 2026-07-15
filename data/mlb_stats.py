@@ -13,24 +13,20 @@ def get_games_for_week():
             response = requests.get(url, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                # Check if games exist for this specific date
                 if data.get("dates"):
                     for game in data["dates"][0].get("games", []):
                         away = game["teams"]["away"]["team"]["name"]
                         home = game["teams"]["home"]["team"]["name"]
                         all_rows.append(f"<tr><td>{target_date}</td><td>{away} @ {home}</td></tr>")
         except Exception:
-            continue # If an API call fails, just keep looping
+            continue
     return all_rows
 
 def update_html():
     rows = get_games_for_week()
     
     # If no games are found for the whole week, show a helpful message
-    if not rows:
-        table_content = "<tr><td colspan='2'>No games found this week.</td></tr>"
-    else:
-        table_content = "".join(rows)
+    table_content = "".join(rows) if rows else "<tr><td colspan='2'>No games found this week.</td></tr>"
 
     html_content = f"""<html>
 <head><title>MLB Schedule</title></head>
@@ -44,10 +40,8 @@ def update_html():
 </body>
 </html>"""
 
-    # Saves to index.html in the root directory
     with open("index.html", "w") as f:
         f.write(html_content)
-    print("Successfully updated index.html.")
 
 if __name__ == "__main__":
     update_html()
