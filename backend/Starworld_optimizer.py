@@ -1,4 +1,17 @@
 def run_optimizer():
+    # Temporary test data
+    return [
+        {
+            "away": "TEST TEAM A",
+            "home": "TEST TEAM B",
+            "predicted_winner": "TEST TEAM A",
+            "prob": 0.85,
+            "spread": -2.5,
+            "total": 10.5
+        }
+    ]
+
+def run_optimizer():
     """
     Core engine: Analyzes matchups based on the Blast-Contact Matrix v2.2.
     Returns a list of simulated results.
