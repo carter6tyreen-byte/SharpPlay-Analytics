@@ -50,6 +50,92 @@
             .then(response => response.json())
             .then(data => renderMatchups(data.matchups));
     </script>
+<style>
+    /* Define the look for your "heatmap" colors */
+    .high-score {
+        background-color: #d4edda !important; /* Soft green */
+        font-weight: bold;
+    }
+    .low-score {
+        background-color: #f8d7da !important; /* Soft red */
+    }
+    
+    /* Ensure the table looks nice */
+    #matchup-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #matchup-table td, #matchup-table th {
+        padding: 8px;
+        border: 1px solid #ddd;
+    }
+</style>
+
+<script>
+    function applyHeatMap() {
+        // Find the table body rows
+        const rows = document.querySelectorAll('#matchup-table tbody tr');
+        
+        rows.forEach(row => {
+            // Change [2] to the index of your 'BarrelScore' column (0-indexed)
+            const scoreCell = row.cells[2]; 
+            const score = parseFloat(scoreCell.innerText);
+            
+            // Apply colors based on your BarrelScore logic
+            if (score >= 80) {
+                row.classList.add('high-score');
+            } else if (score < 50) {
+                row.classList.add('low-score');
+            }
+        });
+    }
+
+    // Run the function after your page loads
+    window.onload = applyHeatMap;
+</script><style>
+    /* Define the look for your "heatmap" colors */
+    .high-score {
+        background-color: #d4edda !important; /* Soft green */
+        font-weight: bold;
+    }
+    .low-score {
+        background-color: #f8d7da !important; /* Soft red */
+    }
+    
+    /* Ensure the table looks nice */
+    #matchup-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    #matchup-table td, #matchup-table th {
+        padding: 8px;
+        border: 1px solid #ddd;
+    }
+</style>
+
+<script>
+    function applyHeatMap() {
+        // Find the table body rows
+        const rows = document.querySelectorAll('#matchup-table tbody tr');
+        
+        rows.forEach(row => {
+            // Change [2] to the index of your 'BarrelScore' column (0-indexed)
+            const scoreCell = row.cells[2]; 
+            const score = parseFloat(scoreCell.innerText);
+            
+            // Apply colors based on your BarrelScore logic
+            if (score >= 80) {
+                row.classList.add('high-score');
+            } else if (score < 50) {
+                row.classList.add('low-score');
+            }
+        });
+    }
+
+    // Run the function after your page loads
+    window.onload = applyHeatMap;
+</script>
+
 </body>
 </html>
 
