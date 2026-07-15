@@ -33,3 +33,13 @@ def run_optimizer():
 if __name__ == "__main__":
     # Test call
     print(run_optimizer())
+# Example of the data structure you need to feed your frontend
+{
+    "player_name": "Rafael Devers",
+    "barrel_score": 77.3,
+    "matchup_score": 59.0,
+    "zone_fit": 0.136,
+    "hr_form": 82, # percentage
+    "hist_pitches": 14626
+}
+
