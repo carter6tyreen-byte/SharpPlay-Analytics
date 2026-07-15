@@ -14,8 +14,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Debug Structure
-        run: ls -R  # This helps us identify the exact location of your files
+      - name: Debug File Structure
+        run: ls -R
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -23,8 +23,6 @@ jobs:
           python-version: '3.9'
 
       - name: Run Pipeline
-        # If your files are at the root, this will work. 
-        # If 'ls -R' shows they are in a subfolder, we adjust this.
         run: python main.py 
 
       - name: Commit and push changes
