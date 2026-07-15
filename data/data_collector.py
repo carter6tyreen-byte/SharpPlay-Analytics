@@ -1,114 +1,34 @@
 import json
-import os
-from datetime import datetime
-
-def collect_data():
-    print("Initializing MLB Data Collector...")
-    
-    # 1. Structured data
-    data = {
-        "last_updated": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
-        "featured_story": {
-            "title": "SharpPlay Analytics Active",
-            "stat": "System Online",
-            "desc": "The predictive engine is running. Data will populate as games are scheduled."
-        },
-        "matchups": [
-            # Example structure:
-            # {
-            #     "away_team": "Team Name",
-            #     "home_team": "Team Name",
-            #     "simulated_winner": "Team Name",
-            #     "win_probability": "0.0%",
-            #     "run_line_proj": "0.0",
-            #     "total_runs_proj": "0.0"
-            # }
-        ]
-    }
-    
-    # Ensure the 'data' directory exists
-    output_dir = "data"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    
-    file_path = os.path.join(output_dir, "today_matchups.json")
-    
-    # Write the JSON file
-    with open(file_path, "w") as f:
-        json.dump(data, f, indent=4)
-        
-    print(f"Successfully saved data to {file_path}")
-
-if __name__ == "__main__":
-    collect_data()
-
 import sys
 import os
 
-# Add the backend folder to your path so Python can find the optimizer
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend')))
-
-from Starworld_optimizer import run_optimizer # Assuming this is your main function
-
-def collect_data():
-    # 1. Run the Starworld Optimizer to get the latest SHADOW values
-    print("Running Starworld Optimizer...")
-    prediction_results = run_optimizer() 
-    
-    # 2. Format these results into the JSON structure your site needs
-    # (Example mapping logic)
-    formatted_data = {
-        "last_updated": ..., 
-        "matchups": prediction_results
-    }
-    
-    # 3. Write to JSON as you were doing before
-    # ...
-
-import json
-import os
-
-# ... (rest of your logic) ...
-
-def save_and_verify(data):
-    file_path = "data/today_matchups.json"
-    
-    # Save the data
-    with open(file_path, "w") as f:
-        json.dump(data, f, indent=4)
-        
-    # Verify the save
-    if os.path.exists(file_path):
-        print("SUCCESS: File created.")
-        with open(file_path, "r") as f:
-            print("CONTENT PREVIEW:", f.read())
-    else:
-        print("ERROR: File was not created.")
-
-# Call this instead of your current save logic
-
-import sys
-import os
-import json
-
-# 1. ADD THIS: Point Python to the 'backend' folder
-# This enables the script to see Starworld_optimizer.py
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# 2. NOW IMPORT: This will now work without an 'ImportError'
 from backend.Starworld_optimizer import run_optimizer
 
 def main():
-    # 3. RUN: Call the function defined in your backend
-    results = run_optimizer()
+    raw_data = run_optimizer()
     
-    # ... proceed to map results to JSON ...
-# Inside data_collector.py, update the mapping:
-formatted_matchups.append({
-    "away_team": game.get("away"),
-    "home_team": game.get("home"),
-    "barrel_score": game.get("barrel_score"), # Add these extra fields
-    "zone_fit": game.get("zone_fit"),
-    # ... etc
-})
+    # Map raw engine data to your JSON structure
+    formatted_matchups = []
+    for game in raw_data:
+        formatted_matchups.append({
+            "away_team": game.get("away"),
+            "home_team": game.get("home"),
+            "simulated_winner": game.get("predicted_winner"),
+            "win_probability": f"{int(game.get('prob', 0) * 100)}%",
+            "run_line_proj": str(game.get("spread")),
+            "total_runs_proj": str(game.get("total"))
+        })
+
+    output = {
+        "last_updated": "2026-07-14 22:20:00 UTC",
+        "featured_story": {"title": "System Online", "stat": "V2.2", "desc": "Ready."},
+        "matchups": formatted_matchups
+    }
+
+    with open("data/today_matchups.json", "w") as f:
+        json.dump(output, f, indent=4)
+
+if __name__ == "__main__":
+    main()
 
