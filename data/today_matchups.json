@@ -1,0 +1,18 @@
+{
+    "last_updated": "2026-07-14 20:50:00 UTC",
+    "featured_story": {
+        "title": "Manual Override Successful",
+        "stat": "Connection Test",
+        "desc": "If you can see this, the file path is finally working correctly."
+    },
+    "matchups": [
+        {
+            "away_team": "Manual Test Team A",
+            "home_team": "Manual Test Team B",
+            "simulated_winner": "Test Team B",
+            "win_probability": "100%",
+            "run_line_proj": "-1.0",
+            "total_runs_proj": "10"
+        }
+    ]
+}
