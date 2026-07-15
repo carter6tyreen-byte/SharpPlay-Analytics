@@ -103,4 +103,12 @@ def main():
     results = run_optimizer()
     
     # ... proceed to map results to JSON ...
+# Inside data_collector.py, update the mapping:
+formatted_matchups.append({
+    "away_team": game.get("away"),
+    "home_team": game.get("home"),
+    "barrel_score": game.get("barrel_score"), # Add these extra fields
+    "zone_fit": game.get("zone_fit"),
+    # ... etc
+})
 
