@@ -32,3 +32,8 @@ jobs:
           git add index.html
           git commit -m "Update MLB stats table"
           git push
+             - name: Run script
+        env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+        run: python mlb_stats.py
+ 
