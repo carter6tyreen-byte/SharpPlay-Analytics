@@ -14,4 +14,3 @@ def run_optimizer():
             "barrel_score": 77.3
         }
     ]
-
