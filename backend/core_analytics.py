@@ -12,12 +12,12 @@ def check_alert_threshold(games_data):
     """
     alerts = []
     
-    # Iterate through each game object in the list
+    # Ensure we are iterating through the list correctly
     for game in games_data:
-        # Now 'game' is a dictionary, so .get() will work
+        # Now 'game' is an individual dictionary, so .get() will work
         analytics = game.get("analytics", {})
         
-        # Example logic: check for high intensity
+        # Check for your specific threshold logic
         if analytics.get("intensity", 0) > 80:
             alerts.append(game)
             
