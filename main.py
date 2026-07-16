@@ -3,12 +3,11 @@ import os
 import logging
 import json
 
-# Ensure the script can find its sibling files in any environment
+# Force the directory into the system path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
-# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 from api_client import fetch_sports_data, fetch_market_odds
@@ -27,10 +26,17 @@ def save_data(data, filename='final_data.json'):
 
 def main():
     logging.info("--- Pipeline Started ---")
+    
+    # Retrieve the API key from the environment
+    api_key = os.getenv('RAPIDAPI_KEY')
+    if not api_key:
+        logging.error("RAPIDAPI_KEY not found. Please set the environment variable.")
+        return
 
     # 1. Pipeline Logic
-    raw_data = fetch_sports_data()
-    market_odds = fetch_market_odds()
+    raw_data = fetch_sports_data(api_key=api_key)
+    market_odds = fetch_market_odds(api_key=api_key)
+    
     clean_df = process_raw_api_data(raw_data)
     
     if not clean_df.empty:
