@@ -1,0 +1,36 @@
+def calculate_ev(prob, odds):
+    """
+    Calculates Expected Value: (Probability * Payout) - (Loss Probability * Stake)
+    """
+    # Convert American odds to decimal
+    if odds > 0:
+        decimal_odds = (odds / 100) + 1
+    else:
+        decimal_odds = (100 / abs(odds)) + 1
+        
+    payout = prob * decimal_odds
+    ev = payout - 1
+    return ev
+
+def get_optimal_bets(predictions, market_odds):
+    """
+    Filters predictions based on positive EV.
+    'predictions' is your engine's output.
+    'market_odds' is a dictionary of {player_name: odds}
+    """
+    optimal_bets = []
+    
+    for player, prob in predictions.items():
+        if player in market_odds:
+            odds = market_odds[player]
+            ev = calculate_ev(prob, odds)
+            
+            # Only recommend bets with positive EV
+            if ev > 0:
+                optimal_bets.append({
+                    "player": player,
+                    "ev": round(ev, 4),
+                    "suggested_bet": "YES"
+                })
+                
+    return sorted(optimal_bets, key=lambda x: x['ev'], reverse=True)
