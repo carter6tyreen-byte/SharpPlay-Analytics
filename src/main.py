@@ -1,10 +1,19 @@
-# Import your scraper function (adjust the import based on your filename)
-from src.matchup_scraper import fetch_matchup_data 
+import sys
+import os
+
+# Ensure the root directory is in the path to find the 'analytics' package
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# Imports corrected for running from inside src/
+from matchup_scraper import fetch_matchup_data
+from analytics.matchup_engine import AnalyticsEngine
+from analytics.tuner import StarworldOptimizer
+from analytics.exporter import save_analytics
 
 def run_pipeline():
     print("Starting SharpPLAY Pipeline...")
     
-    # 1. Fetch Data: This creates the 'raw_data' variable
+    # 1. Fetch Data
     print("Phase 1: Fetching matchups...")
     raw_data = fetch_matchup_data() 
     
@@ -21,3 +30,6 @@ def run_pipeline():
     # 4. Export for Dashboard
     save_analytics(portfolio)
     print("Pipeline completed successfully.")
+
+if __name__ == "__main__":
+    run_pipeline()
