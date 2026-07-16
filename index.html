@@ -2,47 +2,38 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Starworld Live Analytics</title>
+    <title>Dashboard</title>
     <style>
         body { font-family: sans-serif; background: #0b1420; color: #e0e6ed; padding: 20px; }
-        .card { background: #1c2a3d; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
-        .error { color: #ff6b6b; padding: 20px; border: 1px solid #ff6b6b; }
+        .error { color: #ff6b6b; padding: 15px; border: 1px solid #ff6b6b; }
     </style>
 </head>
 <body>
     <h1>Live Analytics</h1>
-    <div id="status">Loading data...</div>
-    <div id="game-container"></div>
+    <div id="debug-info">Fetching data...</div>
+    <div id="container"></div>
 
     <script>
-        // Dynamically build the path based on the current page location
-        // This ensures it works whether hosted at root or a sub-path
-        const baseUrl = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/'));
-        const dataUrl = `${baseUrl}/data/today_matchups.json`;
+        const debug = document.getElementById('debug-info');
+        
+        // This is the absolute path to your file
+        const dataPath = '/SharpPlay-Analytics/data/today_matchups.json';
+        
+        debug.innerHTML = "Attempting to fetch: " + dataPath;
 
-        fetch(dataUrl)
+        fetch(dataPath)
             .then(res => {
-                if (!res.ok) throw new Error(`HTTP ${res.status}: Could not find ${dataUrl}`);
+                if (!res.ok) throw new Error("HTTP Error " + res.status);
                 return res.json();
             })
             .then(data => {
-                document.getElementById('status').style.display = 'none';
-                // Assuming data structure has a 'payload' or 'data_points' key
-                const games = data.payload?.data_points || data.data_points || [];
-                
-                const gameContainer = document.getElementById('game-container');
-                gameContainer.innerHTML = games.length > 0 
-                    ? games.map(game => `
-                        <div class="card">
-                            <h3>${game.awayTeam} vs ${game.homeTeam}</h3>
-                            <p>Intensity: ${game.analytics?.intensity || 'N/A'}</p>
-                        </div>
-                    `).join('')
-                    : "<p>No data found in JSON.</p>";
+                debug.innerHTML = "Data loaded successfully!";
+                // Render your data here
+                document.getElementById('container').innerText = JSON.stringify(data, null, 2);
             })
             .catch(err => {
-                document.getElementById('status').innerHTML = 
-                    `<div class="error">Error: ${err.message}</div>`;
+                debug.innerHTML = `<div class="error">Fetch failed: ${err.message}. 
+                <br>Make sure the repository name in the path is correct.</div>`;
             });
     </script>
 </body>
