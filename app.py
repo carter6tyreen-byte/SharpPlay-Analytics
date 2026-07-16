@@ -1,37 +1,47 @@
 import streamlit as st
 import pandas as pd
 import requests
+from datetime import datetime
 
-# --- CORRECTED: Define your raw data URL here ---
-# Ensure you use your actual GitHub username and repository name
-[https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/main/today_matchups.json](https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/main/today_matchups.json)⁠
+# Configuration
+DATA_URL = "https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/main/today_matchups.json"
 
+st.set_page_config(page_title="SharpPLAY Analytics", layout="wide")
+
+@st.cache_data(ttl=3600)  # Caches data for 1 hour to reduce network load
 def load_data():
     try:
-        response = requests.get(DATA_URL)
-        response.raise_for_status() # Check for errors
+        response = requests.get(DATA_URL, timeout=10)
+        response.raise_for_status()
         data = response.json()
         
-        matchups = []
-        # Update this path if your JSON structure differs
-        for game in data.get('dates', [{}])[0].get('games', []):
-            home = game['teams']['home']
-            away = game['teams']['away']
-            
-            matchups.append({
-                "Matchup": f"{away['team']['name']} vs {home['team']['name']}",
-                "Home Pitcher": home.get('pitcher_stats', {}).get('name', 'N/A'),
-                "Away Pitcher": away.get('pitcher_stats', {}).get('name', 'N/A'),
-                "Status": game['status']['detailedState']
-            })
-        return pd.DataFrame(matchups)
+        # Use json_normalize to flatten any nested objects (e.g., team stats)
+        df = pd.json_normalize(data)
+        return df
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return None
 
-st.title("SharpPLAY Analytics Dashboard")
+st.title("⚾ SharpPLAY Analytics Dashboard")
+
+# Refresh mechanism
+if st.button("🔄 Refresh Data"):
+    st.cache_data.clear()
+    st.rerun()
+
 df = load_data()
 
-if df is not None:
-    st.write("### ⚾ Today's Matchups")
-    st.dataframe(df, use_container_width=True, hide_index=True)
+if df is not None and not df.empty:
+    st.write(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    
+    # Display the dataframe with interactive features
+    st.dataframe(
+        df, 
+        use_container_width=True, 
+        hide_index=True,
+        column_config={
+            # You can add custom formatting here if column names are known
+        }
+    )
+else:
+    st.warning("No matchup data available at the moment.")
