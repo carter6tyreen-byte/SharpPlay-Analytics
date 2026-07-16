@@ -1,23 +1,28 @@
-# backend/core_analytics.py
-
-def get_closeness(home_score, away_score):
-    return abs(home_score - away_score)
-
-def get_pace(total_runs, inning):
-    return round(total_runs / inning, 2) if inning > 0 else 0
-
-def check_alert_threshold(games_data):
+def check_alert_threshold(data_input):
     """
-    Analyzes a list of games to check for high intensity.
+    Analyzes game data to check for high intensity.
+    Corrects for data structure variations (list vs dict).
     """
     alerts = []
     
-    # Ensure we are iterating through the list correctly
-    for game in games_data:
-        # Now 'game' is an individual dictionary, so .get() will work
+    # 1. Normalize data: Ensure we are always working with a list
+    # This prevents the 'AttributeError' by ensuring we can always iterate.
+    if isinstance(data_input, dict):
+        # If passed a dict, check if it's the wrapper or the object
+        data_to_process = data_input.get("data_points", [data_input])
+    elif isinstance(data_input, list):
+        data_to_process = data_input
+    else:
+        # Fallback for unexpected types
+        return []
+
+    # 2. Iterate safely
+    for game in data_to_process:
+        # Access nested analytics dict safely
+        # .get() on a dictionary is now safe because 'game' is guaranteed to be a dict
         analytics = game.get("analytics", {})
         
-        # Check for your specific threshold logic
+        # Check threshold
         if analytics.get("intensity", 0) > 80:
             alerts.append(game)
             
