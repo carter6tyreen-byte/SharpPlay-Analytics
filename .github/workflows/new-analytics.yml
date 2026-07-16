@@ -25,7 +25,8 @@ jobs:
 
       - name: Run Pipeline
         env:
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          # This line tells Python that your repository root is a package directory
           PYTHONPATH: ${{ github.workspace }}
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: |
           python main.py
