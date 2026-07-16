@@ -1,0 +1,43 @@
+import pandas as pd
+import glob
+import os
+
+def consolidate_data(input_folder='data', output_file='data/master_historical_data.csv'):
+    """
+    Reads all CSVs from the input folder and merges them into one master file.
+    """
+    # 1. Find all CSVs
+    all_files = glob.glob(os.path.join(input_folder, "*.csv"))
+    
+    if not all_files:
+        print(f"No CSV files found in {input_folder}. Please ensure files are present.")
+        return
+
+    # 2. Load and merge
+    df_list = []
+    for filename in all_files:
+        # Skip the output file if it already exists to avoid duplication
+        if os.path.basename(filename) == os.path.basename(output_file):
+            continue
+        df = pd.read_csv(filename)
+        df_list.append(df)
+        print(f"Loaded: {filename}")
+            
+    if not df_list:
+        return
+
+    master_df = pd.concat(df_list, axis=0, ignore_index=True)
+    
+    # 3. Sort chronologically
+    if 'date' in master_df.columns:
+        master_df['date'] = pd.to_datetime(master_df['date'])
+        master_df = master_df.sort_values('date')
+    
+    # 4. Save
+    master_df.to_csv(output_file, index=False)
+    print(f"---")
+    print(f"Master file created: {output_file}")
+    print(f"Total records consolidated: {len(master_df)}")
+
+if __name__ == "__main__":
+    consolidate_data()
