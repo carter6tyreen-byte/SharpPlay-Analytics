@@ -3,10 +3,15 @@ import json
 import sys
 from datetime import datetime, timedelta
 
-# Import analytical tools from your new package structure
-from backend import run_ingestion, run_optimizer, check_alert_threshold
+# Import your tools from the backend package
+# Ensure these files exist in your backend/ directory
+from backend.Starworld_optimizer import run_optimizer
+from backend.core_analytics import check_alert_threshold
+# Replace 'data_collector' with the actual filename where your ingestion logic resides
+from backend.data_collector import run_ingestion 
 
 def get_timestamp():
+    # Adjusted for your local environment
     local_time = datetime.utcnow() - timedelta(hours=4)
     return local_time.strftime("%Y-%m-%d %I:%M %p")
 
@@ -22,7 +27,7 @@ def main():
         raw_data = run_ingestion()
         optimized_data = run_optimizer(raw_data)
         
-        # 3. Alerting Logic (The "Active" Monitor)
+        # 3. Alerting Logic
         alerts = [game for game in optimized_data if check_alert_threshold(game)]
         
         # 4. Constructing the Unified Schema
