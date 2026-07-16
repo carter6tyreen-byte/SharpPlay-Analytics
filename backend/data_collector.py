@@ -1,6 +1,2 @@
-def run_ingestion():
-    # TEMPORARY TEST: Bypass the API to verify the rest of your pipeline
-    return [
-        {"match_id": "test_001", "team_a": "Team A", "team_b": "Team B", "intensity": 88},
-        {"match_id": "test_002", "team_a": "Team C", "team_b": "Team D", "intensity": 95}
-    ]
+# Add this line before your requests.get() call
+print(f"DEBUG: Constructing Request to URL: {endpoint}")
