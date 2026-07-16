@@ -4,7 +4,7 @@ import requests
 
 # --- CORRECTED: Define your raw data URL here ---
 # Ensure you use your actual GitHub username and repository name
-DATA_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/SharpPlay-Analytics/main/today_matchups.json"
+[https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/main/today_matchups.json](https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/main/today_matchups.json)⁠
 
 def load_data():
     try:
