@@ -1,32 +1,13 @@
-name: Run SharpPLAY Pipeline
+# main.py
+from api_client import fetch_sports_data, fetch_market_odds
+from data_processor import process_raw_api_data
+from prediction_engine import run_hr_prediction_model
+from optimizer import get_optimal_bets
 
-on:
-  push:
-    branches: [ main ]
-  schedule:
-    - cron: '0 6 * * *'
+def main():
+    print("--- Pipeline Started ---")
+    # Your logic
+    print("--- Execution Complete ---")
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pandas requests
-
-      - name: Run Pipeline
-        env:
-          # This tells Python to include the root directory in its search path
-          PYTHONPATH: ${{ github.workspace }}
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-        run: |
-          python main.py
+if __name__ == "__main__":
+    main()
