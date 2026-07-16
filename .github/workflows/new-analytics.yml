@@ -25,13 +25,12 @@ jobs:
       - name: Install dependencies
         run: pip install requests
         
-      - name: Run Analytics Pipeline
-        run: python main.py # We will adjust this after seeing the "List files" output
+      name: Run Analytics Pipeline
+       run: python main.py # We will adjust th
         
       - name: Commit and push changes
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add data/
-          git commit -m "Update match data" || echo "No changes to commit"
-          git push
+r        run: git config --global user.name "github-actions"
+              git config --global user.email "github-actions@github.com"
+              git add data/
+              git commit -m "Update match data" || echo "No changes to commit"
+              git push
