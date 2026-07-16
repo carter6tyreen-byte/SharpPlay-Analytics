@@ -1,71 +1,34 @@
-import sys
-import os
+# --- Corrected main.py Logic ---
 
-# Ensure the root directory is in the path to find the 'analytics' package
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# 1. First, extract the names from your API data structure
+away_name = game['teams']['away']['team']['name']
+home_name = game['teams']['home']['team']['name']
 
-# Imports
-from matchup_scraper import fetch_matchup_data
-from analytics.matchup_engine import AnalyticsEngine
-from analytics.tuner import StarworldOptimizer
-from analytics.exporter import save_analytics
+# 2. Then, define the pitcher data (example paths; adjust to your API source)
+home_pitcher = game['teams']['home'].get('pitcher', {})
+away_pitcher = game['teams']['away'].get('pitcher', {})
 
-def run_pipeline():
-    print("Starting SharpPLAY Pipeline...")
-    
-    # 1. Fetch Data
-    print("Phase 1: Fetching matchups...")
-    raw_data = fetch_matchup_data() 
-    
-    # Diagnostic Check: Ensure data exists before proceeding
-    if raw_data is None:
-        print("ERROR: fetch_matchup_data() returned None. Check your scraper!")
-        return 
-        
-    print(f"DEBUG: Successfully fetched {len(raw_data)} records.")
-    
-    # 2. Process Analytics
-    print("Phase 2: Processing analytics...")
-    engine = AnalyticsEngine(raw_data)
-    edges = engine.analyze_matchups(raw_data)
-    
-    # 3. STARWORLD Optimization
-    print("Phase 3: Running STARWORLD Engine...")
-    tuner = StarworldOptimizer(risk_tolerance=0.5, max_picks=3)
-    portfolio = tuner.optimize_portfolio(edges)
-    
-    # 4. Export for Dashboard
-    save_analytics(portfolio)
-    print("Pipeline completed successfully.")
-
-if __name__ == "__main__":
-    run_pipeline()
-
-# Example logic for main.py
-# After fetching game info, for each team (home/away):
-# pitcher_stats = fetch_pitcher_data(pitcher_id) 
-
+# 3. Now construct the dictionary using the defined variables
 game_data = {
     "matchup": f"{away_name} vs {home_name}",
     "teams": {
         "home": {
             "name": home_name,
             "pitcher_stats": {
-                "name": home_pitcher_name,
-                "era": home_era,
-                "whip": home_whip,
-                "k_per_9": home_k9
+                "name": home_pitcher.get('fullName', 'N/A'),
+                "era": home_pitcher.get('era', '0.00'),
+                "whip": home_pitcher.get('whip', '0.00'),
+                "k_per_9": home_pitcher.get('kPer9', '0.0')
             }
         },
         "away": {
             "name": away_name,
             "pitcher_stats": {
-                "name": away_pitcher_name,
-                "era": away_era,
-                "whip": away_whip,
-                "k_per_9": away_k9
+                "name": away_pitcher.get('fullName', 'N/A'),
+                "era": away_pitcher.get('era', '0.00'),
+                "whip": away_pitcher.get('whip', '0.00'),
+                "k_per_9": away_pitcher.get('kPer9', '0.0')
             }
         }
     }
 }
-# Write this to today_matchups.json
