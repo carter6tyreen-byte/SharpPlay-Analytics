@@ -1,4 +1,5 @@
 name: SharpPLAY Analytics Pipeline
+
 on:
   push:
     branches: [main]
@@ -8,18 +9,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: {python-version: '3.x'}
-      - run: pip install requests
-      
-      - name: Run python src/main.py
-      env:
-        PYTHONPATH: ${{ github.workspace }}/src
-      run: python src/main.py
+      - name: Checkout code
+        uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run python src/main.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: python src/main.py
+
+      - name: Commit and push data
+        run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           git add data/
-          git commit -m "Update data" || echo "No changes"
+          git commit -m "Update data" || echo "No changes to commit"
           git push
