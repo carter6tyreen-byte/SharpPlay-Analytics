@@ -26,9 +26,7 @@ jobs:
       - name: Run Pipeline
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-        # This working-directory points to the root of your repo
-        working-directory: .
+          # This forces Python to look in the current directory for imports
+          PYTHONPATH: ${{ github.workspace }}
         run: |
-          echo "Verifying file structure:"
-          ls -F
           python main.py
