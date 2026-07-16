@@ -1,23 +1,14 @@
-from src.api_client import fetch_sports_data
-from src.data_processor import process_raw_api_data
-from src.prediction_engine import run_hr_prediction_model
+from src.optimizer import get_optimal_bets
 
-def main():
-    print("--- Starting SharpPLAY Daily Workflow ---")
-    
-    # 1. Fetch
-    raw_data = fetch_sports_data()
-    
-    if raw_data:
-        # 2. Process (The step you just added)
-        clean_data = process_raw_api_data(raw_data)
-        print("Data processed successfully.")
-        
-        # 3. Predict
-        results = run_hr_prediction_model(clean_data)
-        print(f"Prediction complete: {results}")
-    else:
-        print("Failure: Could not retrieve data.")
+# ... inside your main() function ...
+# 1. Prediction
+predictions = run_hr_prediction_model(clean_data)
 
-if __name__ == "__main__":
-    main()
+# 2. Optimization
+# You will need to fetch market_odds from your API alongside your clean_data
+market_odds = fetch_market_odds() 
+final_plays = get_optimal_bets(predictions, market_odds)
+
+print("--- SharpPLAY Optimized Plays ---")
+for play in final_plays:
+    print(f"Player: {play['player']} | Edge: {play['ev']*100}%")
