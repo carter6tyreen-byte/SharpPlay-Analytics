@@ -1,36 +1,39 @@
 name: STARWORLD Analytics Pipeline
+
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.9'
-      - run: pip install requests
-      
-      - name: Run Pipeline
+          python-version: '3.10'
+
+      - name: Install dependencies
         run: |
-          export PYTHONPATH=$PYTHONPATH:.
-          python main.py
+          pip install requests
+
+      - name: Run Pipeline
         env:
-          # This specifically maps secrets to environment variables 
-          # just for this step, which is the most reliable way in GitHub Actions
           API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
           SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
           API_HOST: ${{ secrets.API_HOST }}
+          # This is the critical fix to resolve ModuleNotFoundError
+          PYTHONPATH: ${{ github.workspace }}
+        run: python main.py
 
       - name: Commit and push changes
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add data/today_matchups.json
-          git commit -m "Auto-update: Refreshing live baseball stats" || exit 0
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data" && git push)
