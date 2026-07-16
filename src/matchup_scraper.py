@@ -1,40 +1,25 @@
-import logging
-import requests # Assuming you use requests to scrape
+import json
 
-def fetch_today_matchups():
+def fetch_matchup_data():
     """
-    Fetches MLB matchup data.
-    
-    Returns:
-        dict: The raw data scraped from the source.
+    Fetches raw baseball matchup data from your chosen API or source.
+    Returns a list of dictionaries containing 'name', 'simulated_win_prob', and 'market_odds'.
     """
-    logging.info("Initiating scrape...")
-    
     try:
-        # Replace this logic with your actual scraping implementation
-        # Example: response = requests.get("https://api.example.com/games")
-        # response.raise_for_status()
-        # raw_data = response.json()
+        # REPLACE THIS SECTION WITH YOUR ACTUAL SCRAPING LOGIC
+        # Example structure:
+        data = [
+            {"name": "Team A vs Team B", "simulated_win_prob": 0.58, "market_odds": -120},
+            {"name": "Team C vs Team D", "simulated_win_prob": 0.45, "market_odds": 110}
+        ]
         
-        # Temporary mock data for testing
-        raw_data = {
-            "game_id_101": {"team_a": "NYY", "team_b": "BOS", "time": "7:00 PM"},
-            "game_id_102": {"team_a": "LAD", "team_b": "SF", "time": "10:00 PM"}
-        }
+        # Verify that we actually received data
+        if not data:
+            print("Warning: Scraper returned an empty list.")
+            return None
+            
+        return data
         
-        logging.info(f"Successfully scraped {len(raw_data)} matchups.")
-        return raw_data
-
     except Exception as e:
-        logging.error(f"Scraping failed: {e}")
-        # Raising the error ensures main.py stops execution and exits with status 1
-        raise
-# Because you are already inside src, Python sees models as a top-level folder
-from models.snapshot import PreGameSnapshot
-
-
-def fetch_data():
-    # ... logic to get raw data ...
-    # Package it into your standard object
-    snapshot = PreGameSnapshot(game_id="123", date="2026-07-16", player="Aaron Judge", features={...})
-    return snapshot
+        print(f"ERROR: Scraper failed to fetch data: {e}")
+        return None
