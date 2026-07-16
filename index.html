@@ -1,15 +1,16 @@
-// Replace your existing fetch block in index.html
-fetch('data/today_matchups.json')
-    .then(response => response.json())
+// Force a unique timestamp to ensure you aren't seeing a cached blank version
+fetch('data/today_matchups.json?t=' + new Date().getTime())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('HTTP error ' + response.status);
+        }
+        return response.json();
+    })
     .then(data => {
-        document.getElementById('status').style.display = 'none';
-        
-        // This will print the raw data to your dashboard
-        const container = document.getElementById('game-container');
-        container.innerHTML = `<pre style="color: #00ff00; background: #1a1a1a; padding: 10px;">
-            RAW DATA: ${JSON.stringify(data, null, 2)}
-        </pre>`;
+        console.log("Data successfully loaded:", data);
+        // ... rest of your display logic
     })
     .catch(err => {
+        console.error("Fetch error:", err);
         document.getElementById('game-container').innerText = "Error loading data: " + err;
     });
