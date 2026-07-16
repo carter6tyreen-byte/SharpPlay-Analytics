@@ -1,1 +1,1 @@
-{"payload": {"alerts": [], "data_points": []}}
+{"payload": {"alerts": [{"team": "Test Alpha", "analytics": {"intensity": 95}}, {"team": "Test Beta", "analytics": {"intensity": 40}}], "data_points": [{"team": "Test Alpha", "analytics": {"intensity": 95}}, {"team": "Test Beta", "analytics": {"intensity": 40}}]}}
