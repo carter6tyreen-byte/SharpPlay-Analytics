@@ -82,3 +82,34 @@ def run_backtest(data_path, initial_bankroll=1000):
 def calculate_max_drawdown(series):
     return ((series.cummax() - series) / series.cummax()).max() * 100
 
+def run_backtest(data_path, initial_bankroll=1000):
+    df = pd.read_csv(data_path)
+    df['date'] = pd.to_datetime(df['date'])
+    
+    bankroll = initial_bankroll
+    portfolio_history = []
+    
+    for date in sorted(df['date'].unique()):
+        daily_data = df[df['date'] == date]
+        
+        # 1. Strategy execution
+        bets = get_optimal_bets_with_sizing(daily_data, daily_data)
+        
+        # 2. Performance Tracking
+        pnl = calculate_daily_pnl(bets)
+        bankroll += pnl
+        
+        portfolio_history.append({'date': date, 'bankroll': bankroll})
+
+    # 3. Calculate Performance Metrics
+    results = pd.DataFrame(portfolio_history)
+    total_roi = ((results['bankroll'].iloc[-1] - initial_bankroll) / initial_bankroll) * 100
+    max_drawdown = calculate_max_drawdown(results['bankroll'])
+    
+    print(f"Total ROI: {total_roi:.2f}%")
+    print(f"Max Drawdown: {max_drawdown:.2f}%")
+    
+    return results
+
+def calculate_max_drawdown(series):
+    return ((series.cummax() - series) / series.cummax()).max() * 100
