@@ -1,18 +1,18 @@
-import os
-import sys
-
-# Ensure root is in path
-sys.path.append(os.getcwd())
-
-# Use absolute imports
-from src import api_client, data_processor, prediction_engine, optimizer
+# main.py
+# Import directly from the files now in your root directory
+from api_client import fetch_sports_data, fetch_market_odds
+from data_processor import process_raw_api_data
+from prediction_engine import run_hr_prediction_model
+from optimizer import get_optimal_bets
 
 def main():
-    print("--- SharpPLAY Pipeline Started ---")
-    # Example usage:
-    # data = api_client.fetch_sports_data()
-    # clean = data_processor.process_raw_api_data(data)
-    print("Imports successful. Pipeline is ready.")
+    print("--- Pipeline Started (Flattened Structure) ---")
+    
+    # Your logic here
+    # Example:
+    # raw_data = fetch_sports_data(os.getenv("RAPIDAPI_KEY"))
+    
+    print("--- Execution Successful ---")
 
 if __name__ == "__main__":
     main()
