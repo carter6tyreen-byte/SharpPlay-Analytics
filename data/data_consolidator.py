@@ -43,3 +43,23 @@ def consolidate_player_metrics(input_folder='data', output_file='data/master_pla
 
 if __name__ == "__main__":
     consolidate_player_metrics()
+
+# snippet to add to your consolidator.py
+def consolidate_granular_metrics(df):
+    """
+    Groups and aggregates metrics by player and pitch type.
+    This prevents 'blurring' of data across different pitch planes.
+    """
+    # Ensure player_id, date, and pitch_type are your primary keys
+    cols_to_group = ['player_id', 'date', 'pitch_type']
+    
+    # Calculate means for performance metrics within these groups
+    master_df = df.groupby(cols_to_group).agg({
+        'exit_velocity': 'mean',
+        'hard_hit_rate': 'mean',
+        'launch_angle': 'mean'
+        # Add other metrics here as needed
+    }).reset_index()
+    
+    return master_df
+
