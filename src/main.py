@@ -1,33 +1,23 @@
-import sys
-import os
-import json
-
-# Fix: Point Python to the root directory so it can find the 'analytics' package
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from analytics.matchup_engine import AnalyticsEngine
-from analytics.tuner import StarworldOptimizer
-from analytics.exporter import save_analytics
+# Import your scraper function (adjust the import based on your filename)
+from src.matchup_scraper import fetch_matchup_data 
 
 def run_pipeline():
     print("Starting SharpPLAY Pipeline...")
     
-    # 1. Fetch Data (Assume your scraper logic is already here)
-    # raw_data = ... 
+    # 1. Fetch Data: This creates the 'raw_data' variable
+    print("Phase 1: Fetching matchups...")
+    raw_data = fetch_matchup_data() 
     
     # 2. Process Analytics
+    print("Phase 2: Processing analytics...")
     engine = AnalyticsEngine(raw_data)
     edges = engine.analyze_matchups(raw_data)
     
     # 3. STARWORLD Optimization
-    # Tuner selects the best combination based on risk and edge
+    print("Phase 3: Running STARWORLD Engine...")
     tuner = StarworldOptimizer(risk_tolerance=0.5, max_picks=3)
     portfolio = tuner.optimize_portfolio(edges)
     
     # 4. Export for Dashboard
-    # This saves to data/analytics_data.json
     save_analytics(portfolio)
     print("Pipeline completed successfully.")
-
-if __name__ == "__main__":
-    run_pipeline()
