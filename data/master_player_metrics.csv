@@ -1,0 +1,20 @@
+import pandas as pd
+import os
+
+# Define the path for your master metrics file
+output_path = 'data/master_player_metrics.csv'
+
+# Create an empty DataFrame with the required structure if it doesn't exist
+columns = [
+    'player_id', 'player_name', 'pitch_type', 
+    'exit_velocity', 'launch_angle', 'is_hard_hit'
+]
+
+# Ensure the 'data' directory exists
+os.makedirs('data', exist_ok=True)
+
+# Create and save the empty master file
+master_df = pd.DataFrame(columns=columns)
+master_df.to_csv(output_path, index=False)
+
+print(f"Initialized {output_path} successfully.")
