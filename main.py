@@ -33,3 +33,19 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+import json
+import logging
+
+def save_data(data, filename='final_data.json'):
+    try:
+        with open(filename, 'w') as f:
+            json.dump(data, f, indent=4)
+        logging.info(f"Successfully saved results to {filename}")
+    except Exception as e:
+        logging.error(f"Failed to save data: {e}")
+
+# In your main() function:
+# ... after optimal_bets = get_optimal_bets(...)
+save_data(optimal_bets)
+
