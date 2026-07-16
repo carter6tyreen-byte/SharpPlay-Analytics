@@ -1,3 +1,6 @@
+# Temporarily add this print statement to see what the API actually sends
+print(f"DEBUG: Raw data received: {data_input}")
+
 def check_alert_threshold(data_input):
     """
     Analyzes game data to check for high intensity.
