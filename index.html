@@ -2,45 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Starworld Live Analytics</title>
+    <title>Starworld Debug Dashboard</title>
     <style>
         body { font-family: sans-serif; background: #0b1420; color: #e0e6ed; padding: 20px; }
-        .card { background: #1c2a3d; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
-        .error { color: #ff6b6b; padding: 20px; border: 1px solid #ff6b6b; }
+        pre { background: #1c2a3d; padding: 15px; border-radius: 8px; overflow: auto; }
+        .error { color: #ff6b6b; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Live Analytics</h1>
-    <div id="debug-log">Loading data...</div>
-    <div id="game-container"></div>
+    <h1>Live Analytics Diagnostic</h1>
+    <div id="output">Attempting to fetch data...</div>
 
     <script>
-        // 1. Fetch the data file. Ensure the path is correct for your repo.
+        const output = document.getElementById('output');
+        
+        // Fetch the JSON file
         fetch('./data/today_matchups.json')
             .then(res => {
-                if (!res.ok) throw new Error("Could not find data/today_matchups.json");
+                if (!res.ok) throw new Error("HTTP Status " + res.status);
                 return res.json();
             })
             .then(data => {
-                const debugLog = document.getElementById('debug-log');
-                debugLog.style.display = 'none'; // Hide loading message
-                
-                // 2. Safely access the data structure
-                const payload = data.payload || data; 
-                const games = payload.data_points || [];
-                
-                const gameContainer = document.getElementById('game-container');
-                gameContainer.innerHTML = games.map(game => `
-                    <div class="card">
-                        <h3>${game.awayTeam} vs ${game.homeTeam}</h3>
-                        <p>Intensity Score: ${game.analytics?.intensity || 'N/A'}</p>
-                    </div>
-                `).join('');
+                // If this runs, the file was found and is valid JSON
+                output.innerHTML = "<h3>Data Found Successfully:</h3><pre>" + JSON.stringify(data, null, 2) + "</pre>";
             })
             .catch(err => {
-                // 3. This will show the error on your phone screen if it fails
-                document.getElementById('debug-log').innerHTML = 
-                    `<div class="error">ERROR: ${err.message}. Please check if the file exists in the 'data' folder.</div>`;
+                // If this runs, we know exactly why it's failing
+                output.innerHTML = "<p class='error'>Fetch Error: " + err.message + "</p>" +
+                                   "<p>Tip: Ensure 'data/today_matchups.json' is committed to the main branch.</p>";
             });
     </script>
 </body>
