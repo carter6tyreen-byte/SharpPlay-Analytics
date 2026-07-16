@@ -24,11 +24,10 @@ jobs:
         run: |
           pip install pandas
 
-      - name: Run Analytics Script
+      - name: Debug file location
         run: |
-          # Navigate into the nested folder before running the script
-          cd SharpPlay-Analytics
-          python main.py
+          ls -R
+
 
       - name: Commit and push data
         run: |
