@@ -24,8 +24,8 @@ jobs:
         run: pip install requests
         
       - name: Run Analytics Pipeline
-        working-directory: src
-        run: python main.py
+        # We run from the root, explicitly pointing to the file in src/
+        run: python src/main.py
         
       - name: Commit and push changes
         run: |
