@@ -1,3 +1,34 @@
+name: SharpPLAY Analytics Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install pandas
+
+      - name: Run Analytics Script
+        run: |
+          python $(find . -name "main.py" | head -n 1)
+
       - name: Commit and push data
         env:
           TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
