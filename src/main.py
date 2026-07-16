@@ -40,3 +40,32 @@ def run_pipeline():
 
 if __name__ == "__main__":
     run_pipeline()
+
+# Example logic for main.py
+# After fetching game info, for each team (home/away):
+# pitcher_stats = fetch_pitcher_data(pitcher_id) 
+
+game_data = {
+    "matchup": f"{away_name} vs {home_name}",
+    "teams": {
+        "home": {
+            "name": home_name,
+            "pitcher_stats": {
+                "name": home_pitcher_name,
+                "era": home_era,
+                "whip": home_whip,
+                "k_per_9": home_k9
+            }
+        },
+        "away": {
+            "name": away_name,
+            "pitcher_stats": {
+                "name": away_pitcher_name,
+                "era": away_era,
+                "whip": away_whip,
+                "k_per_9": away_k9
+            }
+        }
+    }
+}
+# Write this to today_matchups.json
