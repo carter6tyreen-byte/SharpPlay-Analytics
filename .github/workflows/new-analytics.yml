@@ -1,22 +1,32 @@
+name: SharpPLAY Analytics Pipeline
+
+# THIS IS THE PART THAT WAS MISSING
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 12 * * *' # Runs every day at 12:00 UTC
+  workflow_dispatch: # Allows you to run it manually from the Actions tab
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+        
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
-
+          
       - name: Install dependencies
         run: pip install requests
-
+        
       - name: Run Analytics Pipeline
-        # We use -m to run main as a module within the src package
         run: python -m src.main
-
+        
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions"
