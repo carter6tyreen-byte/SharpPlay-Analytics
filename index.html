@@ -5,57 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Starworld Live Analytics</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0b1420; color: #e0e6ed; padding: 20px; line-height: 1.6; }
-        h1 { border-bottom: 2px solid #1c2a3d; padding-bottom: 10px; }
+        body { font-family: sans-serif; background: #0b1420; color: #e0e6ed; padding: 20px; }
+        .alert-banner { background: #e63946; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #ff6b6b; }
         .card { background: #1c2a3d; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #2a5298; }
-        .card h3 { margin-top: 0; color: #ffffff; }
-        .analytics-box { background: #0e1a29; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; border: 1px solid #2a3f5a; }
-        .intensity-high { border-left-color: #e63946; }
-        .intensity-high .intensity-text { color: #ff6b6b; font-weight: bold; }
-        #timestamp { font-size: 0.8em; color: #8892b0; margin-bottom: 20px; }
+        .analytics-box { background: #0e1a29; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; }
     </style>
 </head>
 <body>
     <h1>Live Analytics</h1>
-    <div id="timestamp">Loading...</div>
+    <div id="alert-container"></div>
     <div id="game-container"></div>
 
     <script>
         fetch('data/today_matchups.json')
             .then(res => res.json())
             .then(data => {
-                const meta = data.meta || {};
-                const payload = data.payload || {};
+                const alerts = data.payload?.alerts || [];
+                const games = data.payload?.data_points || [];
                 
-                document.getElementById('timestamp').innerText = "Last Updated: " + (meta.timestamp || "N/A");
-
-                const container = document.getElementById('game-container');
-                const games = payload.data_points || [];
-
-                if (games.length === 0) {
-                    container.innerHTML = "<p>No live games to display.</p>";
-                    return;
-                }
-
-                container.innerHTML = games.map(game => {
-                    const isHigh = game.analytics?.intensity === 'High';
-                    return `
-                        <div class="card ${isHigh ? 'intensity-high' : ''}">
-                            <h3>${game.awayTeam} @ ${game.homeTeam}</h3>
-                            <p>Status: ${game.status}</p>
-                            <div class="analytics-box">
-                                <strong>Insights:</strong><br>
-                                Closeness: ${game.analytics.closeness} | 
-                                Pace: ${game.analytics.pace} runs/inn<br>
-                                Intensity: <span class="intensity-text">${game.analytics.intensity}</span>
-                            </div>
+                // Render Alerts
+                const alertContainer = document.getElementById('alert-container');
+                if (alerts.length > 0) {
+                    alertContainer.innerHTML = `
+                        <div class="alert-banner">
+                            <strong>High Intensity Games:</strong> ${alerts.map(a => `${a.awayTeam} vs ${a.homeTeam}`).join(', ')}
                         </div>
                     `;
-                }).join('');
-            })
-            .catch(err => {
-                console.error("Fetch error:", err);
-                document.getElementById('timestamp').innerText = "Data unavailable.";
+                }
+
+                // Render Games
+                const gameContainer = document.getElementById('game-container');
+                gameContainer.innerHTML = games.map(game => `
+                    <div class="card">
+                        <h3>${game.awayTeam} @ ${game.homeTeam}</h3>
+                        <p>Status: ${game.status}</p>
+                        <div class="analytics-box">
+                            Intensity: <strong>${game.analytics.intensity}</strong> | Pace: ${game.analytics.pace}
+                        </div>
+                    </div>
+                `).join('');
             });
     </script>
 </body>
