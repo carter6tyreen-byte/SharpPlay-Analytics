@@ -1,6 +1,17 @@
 import sys
 import os
 
+# This adds the current directory (where main.py lives) to the search path
+sys.path.append(os.getcwd())
+
+# Now the imports will work because 'src' is inside the current directory
+from src.api_client import fetch_sports_data, fetch_market_odds
+from src.data_processor import process_raw_api_data
+from src.prediction_engine import run_hr_prediction_model
+from src.optimizer import get_optimal_bets
+import sys
+import os
+
 # 1. Ensure the root directory is in the path so 'src' is found
 sys.path.append(os.getcwd())
 
