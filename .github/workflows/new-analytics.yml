@@ -1,36 +1,21 @@
 name: SharpPLAY Analytics Pipeline
-
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      # ADD THIS STEP TO SEE WHERE FILES ARE
-      - name: List files
-        run: ls -R
-        
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-          
-      - name: Install dependencies
-        run: pip install requests
-        
-      name: Run Analytics Pipeline
-       run: python main.py # We will adjust th
-        
-      - name: Commit and push changes
-r        run: git config --global user.name "github-actions"
-              git config --global user.email "github-actions@github.com"
-              git add data/
-              git commit -m "Update match data" || echo "No changes to commit"
-              git push
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.x'}
+      - run: pip install requests
+      - run: python src/main.py
+      - run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add data/
+          git commit -m "Update data" || echo "No changes"
+          git push
