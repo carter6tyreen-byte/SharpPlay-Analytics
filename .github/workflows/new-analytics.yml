@@ -24,9 +24,8 @@ jobs:
         run: pip install requests
         
       - name: Run Analytics Pipeline
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: python -m src.main
+        working-directory: src
+        run: python main.py
         
       - name: Commit and push changes
         run: |
