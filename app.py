@@ -2,29 +2,36 @@ import streamlit as st
 import pandas as pd
 import requests
 
-# ... (Previous imports and setup)
+# --- CORRECTED: Define your raw data URL here ---
+# Ensure you use your actual GitHub username and repository name
+DATA_URL = "https://raw.githubusercontent.com/YOUR_USERNAME/SharpPlay-Analytics/main/today_matchups.json"
 
 def load_data():
-    # Fetch your JSON (ensure this uses the 'today_matchups.json' path)
-    response = requests.get(DATA_URL)
-    data = response.json()
-    
-    matchups = []
-    for game in data['dates'][0]['games']:
-        # Extract pitcher stats from the new JSON structure
-        home = game['teams']['home']
-        away = game['teams']['away']
+    try:
+        response = requests.get(DATA_URL)
+        response.raise_for_status() # Check for errors
+        data = response.json()
         
-        matchups.append({
-            "Matchup": f"{away['team']['name']} vs {home['team']['name']}",
-            "Home Pitcher (ERA)": f"{home['pitcher_stats']['name']} ({home['pitcher_stats']['era']})",
-            "Away Pitcher (ERA)": f"{away['pitcher_stats']['name']} ({away['pitcher_stats']['era']})",
-            "Status": game['status']['detailedState']
-        })
-    return pd.DataFrame(matchups)
+        matchups = []
+        # Update this path if your JSON structure differs
+        for game in data.get('dates', [{}])[0].get('games', []):
+            home = game['teams']['home']
+            away = game['teams']['away']
+            
+            matchups.append({
+                "Matchup": f"{away['team']['name']} vs {home['team']['name']}",
+                "Home Pitcher": home.get('pitcher_stats', {}).get('name', 'N/A'),
+                "Away Pitcher": away.get('pitcher_stats', {}).get('name', 'N/A'),
+                "Status": game['status']['detailedState']
+            })
+        return pd.DataFrame(matchups)
+    except Exception as e:
+        st.error(f"Error loading data: {e}")
+        return None
 
+st.title("SharpPLAY Analytics Dashboard")
 df = load_data()
 
 if df is not None:
-    st.write("### ⚾ Today's SharpPLAY Matchups & Pitching")
+    st.write("### ⚾ Today's Matchups")
     st.dataframe(df, use_container_width=True, hide_index=True)
