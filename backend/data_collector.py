@@ -1,12 +1,18 @@
 import requests
+import json
 
 def run_ingestion():
-    # 1. Define the variables here, inside the function
-    endpoint = "https://your-api-url-here.com/endpoint" 
+    # Variables defined inside the function scope
+    endpoint = "https://your-api-url-here.com/data" 
     headers = {"Authorization": "Bearer YOUR_TOKEN"}
     
-    # 2. Now 'endpoint' and 'headers' are defined and can be used
-    response = requests.get(endpoint, headers=headers)
-    
-    # ... rest of your code ...
-    return response.json()
+    try:
+        response = requests.get(endpoint, headers=headers)
+        response.raise_for_status()
+        
+        # Add a print for debugging in your next run
+        print(f"DEBUG: Data successfully fetched: {len(response.text)} bytes.")
+        return response.json()
+    except Exception as e:
+        print(f"DEBUG: Error during ingestion: {e}")
+        return []
