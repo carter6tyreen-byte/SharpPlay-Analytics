@@ -22,13 +22,18 @@ jobs:
         run: |
           pip install requests
 
+      # DEBUG STEP: This will show us the exact file structure 
+      # in the logs to confirm where 'backend' is located.
+      - name: Verify file structure
+        run: ls -R
+
       - name: Run Pipeline
         env:
           API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
           SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
           API_HOST: ${{ secrets.API_HOST }}
-          # This is the critical fix to resolve ModuleNotFoundError
           PYTHONPATH: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
         run: python main.py
 
       - name: Commit and push changes
