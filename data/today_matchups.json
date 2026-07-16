@@ -1,1 +1,1 @@
-{"payload": {"alerts": [{"match_id": "test_001", "team_a": "Team A", "team_b": "Team B", "intensity": 88}, {"match_id": "test_002", "team_a": "Team C", "team_b": "Team D", "intensity": 95}], "data_points": [{"match_id": "test_001", "team_a": "Team A", "team_b": "Team B", "intensity": 88}, {"match_id": "test_002", "team_a": "Team C", "team_b": "Team D", "intensity": 95}]}}
+{"payload": {"alerts": [], "data_points": []}}
