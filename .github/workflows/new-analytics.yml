@@ -38,7 +38,10 @@ jobs:
           git remote set-url origin https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git
           git fetch origin main
           git reset --hard origin/main
-          find . -name "analytics_data.json" -exec git add {} +
+          
+          # Force add to bypass .gitignore
+          git add -f analytics_data.json
+          
           if ! git diff --quiet --exit-code; then
             git commit -m "Update analytics_data.json [skip ci]"
             git push origin main
