@@ -1,3 +1,8 @@
-def check_alert_threshold(games_data):
-    # Temporarily bypass the filter to see if ANY data appears
-    return games_data  # Returns all games fetched from the API
+def run_ingestion():
+    # ... after response = requests.get(...)
+    data = response.json()
+    
+    # Check if the API returned an envelope (e.g., {"results": [], "errors": None})
+    print(f"DEBUG: Full API response: {data}") 
+    
+    return data
