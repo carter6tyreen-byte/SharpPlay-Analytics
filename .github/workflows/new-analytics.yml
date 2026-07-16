@@ -25,7 +25,6 @@ jobs:
 
       - name: Run Pipeline
         env:
-          # This tells Python to include the root directory in its search path
           PYTHONPATH: ${{ github.workspace }}
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: |
