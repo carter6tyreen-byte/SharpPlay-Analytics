@@ -1,5 +1,20 @@
 import os
 import json
+import os
+import sys
+
+# --- ADD THIS BLOCK ---
+# This forces the current directory to be recognized as a package root
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '.')))
+# -----------------------
+
+import json
+from datetime import datetime, timedelta
+
+from backend.Starworld_optimizer import run_optimizer
+from backend.core_analytics import check_alert_threshold
+from backend.data_collector import run_ingestion
+
 import sys
 from datetime import datetime, timedelta
 
