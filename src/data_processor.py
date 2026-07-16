@@ -2,17 +2,23 @@ import pandas as pd
 
 def process_raw_api_data(raw_data):
     """
-    Converts raw JSON into a clean Pandas DataFrame.
-    This makes it easy to perform math on the stats.
+    Takes raw JSON data from the API and cleans it for analysis.
     """
-    # Assuming 'raw_data' is a list of player stats
+    # Check if raw_data is empty
+    if not raw_data:
+        return pd.DataFrame()
+    
+    # Convert list of dicts to a DataFrame
     df = pd.DataFrame(raw_data)
     
-    # 1. Handle missing values
-    df = df.fillna(0)
+    # Ensure numeric columns exist (convert where necessary)
+    numeric_cols = ['at_bats', 'hr_count']
+    for col in numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
     
-    # 2. Select only the columns you need for the HR model
-    cols_to_keep = ['player_name', 'hr_count', 'at_bats', 'launch_angle']
-    clean_df = df[cols_to_keep]
+    # Feature Engineering: Calculate Home Run Rate
+    # We add a small constant to prevent division by zero
+    df['hr_rate'] = df['hr_count'] / (df['at_bats'] + 1)
     
-    return clean_df
+    return df
