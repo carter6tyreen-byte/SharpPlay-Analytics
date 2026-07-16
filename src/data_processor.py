@@ -1,39 +1,23 @@
 import logging
 
-def process_matchup_data(data):
+def process_matchup_data(raw_data):
     """
-    Processes raw matchup data.
-    
-    Args:
-        data (dict): The raw data returned from the scraper.
-        
-    Returns:
-        list: A list of processed insights or status messages.
-        
-    Raises:
-        ValueError: If the input data is invalid or empty.
+    Transforms raw scraped data into a structured dictionary of features.
     """
-    if not data:
-        raise ValueError("No data provided to the processor.")
+    logging.info("Transforming raw data into features...")
+    processed_features = {}
     
-    logging.info(f"Processing {len(data)} items...")
+    # Example logic: ensure raw_data is iterable
+    if not isinstance(raw_data, dict):
+        raise ValueError("Raw data must be a dictionary.")
+
+    for game_id, details in raw_data.items():
+        # Clean and extract features here
+        processed_features[game_id] = {
+            "player": details.get("player", "unknown"),
+            "opponent": details.get("opponent", "unknown"),
+            "odds": details.get("odds", 0.0),
+            "status": "processed"
+        }
     
-    processed_results = []
-    
-    try:
-        # Example logic: Iterate through games and extract/transform info
-        for game_id, details in data.items():
-            # Add your transformation logic here
-            # Example: insights = analyze_game(details)
-            insight = f"Analyzed {game_id}: {details}"
-            processed_results.append(insight)
-            
-        logging.info("Data processing transformation complete.")
-        return processed_results
-        
-    except KeyError as e:
-        logging.error(f"Data format error: Missing expected key {e}")
-        raise
-    except Exception as e:
-        logging.error(f"Unexpected error during processing: {e}")
-        raise
+    return processed_features
