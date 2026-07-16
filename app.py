@@ -2,21 +2,21 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.set_page_config(page_title="SharpPLAY Analytics", layout="wide")
-
 st.title("📊 SharpPLAY Analytics Dashboard")
 
-# Define the file path
-data_file = "analytics_data.json"
+# Improved search logic: look for the file in the current directory and subdirectories
+def find_data_file(filename):
+    for root, dirs, files in os.walk("."):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
 
-# Check if data exists, then load it
-if os.path.exists(data_file):
-    df = pd.read_json(data_file)
-    
+data_path = find_data_file("analytics_data.json")
+
+if data_path:
+    df = pd.read_json(data_path)
     st.write("### Latest Data Summary")
     st.dataframe(df, use_container_width=True)
-    
-    st.write("### Visual Trends")
     st.line_chart(df)
 else:
-    st.warning(f"Waiting for data... '{data_file}' not found yet.")
+    st.warning("Data file not found. Ensure the pipeline ran successfully and the file exists.")
