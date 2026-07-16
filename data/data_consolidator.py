@@ -3,63 +3,42 @@ import glob
 import os
 
 def consolidate_player_metrics(input_folder='data', output_file='data/master_player_metrics.csv'):
-    """
-    Consolidates player performance files into a master CSV.
-    Aligns metrics across different data sources.
-    """
     all_files = glob.glob(os.path.join(input_folder, "*.csv"))
-    
-    # 1. Filter out the master file if it exists to avoid infinite appending
     files_to_process = [f for f in all_files if os.path.basename(f) != os.path.basename(output_file)]
     
     if not files_to_process:
-        print("No player metric files found to consolidate.")
+        print("No files found.")
         return
 
     df_list = []
     for filename in files_to_process:
-        try:
-            df = pd.read_csv(filename)
-            # 2. Standardize column names (e.g., ensure 'wrc_plus' vs 'wRC+' are mapped)
-            df.columns = [col.lower().replace(' ', '_').replace('+', '') for col in df.columns]
-            df_list.append(df)
-            print(f"Processed: {filename}")
-        except Exception as e:
-            print(f"Error processing {filename}: {e}")
+        df = pd.read_csv(filename)
+        
+        # 1. Calculate 'is_hard_hit' dynamically if exit_velocity exists
+        if 'exit_velocity' in df.columns:
+            df['is_hard_hit'] = (df['exit_velocity'] >= 95).astype(int)
+        
+        df_list.append(df)
             
-    # 3. Concatenate and clean
+    # 2. Concatenate all data
     master_df = pd.concat(df_list, axis=0, ignore_index=True)
     
-    # Ensure standard date formatting for longitudinal player tracking
-    if 'date' in master_df.columns:
-        master_df['date'] = pd.to_datetime(master_df['date'])
-        master_df = master_df.sort_values(['player_id', 'date'])
+    # 3. Aggregate by player and pitch type
+    # This creates the granular view needed for your Trend Scanner
+    groupby_cols = ['player_id', 'pitch_type']
+    
+    agg_df = master_df.groupby(groupby_cols).agg({
+        'exit_velocity': 'mean',
+        'is_hard_hit': 'mean',  # This now represents your HardHit%
+        'launch_angle': 'mean'
+    }).reset_index()
+    
+    # Rename columns for clarity
+    agg_df.rename(columns={'is_hard_hit': 'hard_hit_rate'}, inplace=True)
     
     # 4. Save
-    master_df.to_csv(output_file, index=False)
-    print(f"---")
-    print(f"Master Player Metrics created: {output_file}")
-    print(f"Total records: {len(master_df)}")
+    agg_df.to_csv(output_file, index=False)
+    print(f"Master file updated with granular pitch data: {output_file}")
 
 if __name__ == "__main__":
     consolidate_player_metrics()
-
-# snippet to add to your consolidator.py
-def consolidate_granular_metrics(df):
-    """
-    Groups and aggregates metrics by player and pitch type.
-    This prevents 'blurring' of data across different pitch planes.
-    """
-    # Ensure player_id, date, and pitch_type are your primary keys
-    cols_to_group = ['player_id', 'date', 'pitch_type']
-    
-    # Calculate means for performance metrics within these groups
-    master_df = df.groupby(cols_to_group).agg({
-        'exit_velocity': 'mean',
-        'hard_hit_rate': 'mean',
-        'launch_angle': 'mean'
-        # Add other metrics here as needed
-    }).reset_index()
-    
-    return master_df
-
