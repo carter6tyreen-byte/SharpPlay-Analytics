@@ -19,3 +19,11 @@ def store_pre_game_snapshot(data):
 def store_post_game_result(game_id, player, hr_hit):
     # Only store outcome data after the game concludes
     pass
+def insert_pre_game_features(snapshot):
+    # CRITICAL: Add a check here
+    # If the current time is AFTER the game's start time,
+    # the system MUST reject this data to prevent look-ahead bias.
+    if is_game_already_started(snapshot.game_id):
+        raise ValueError("Cannot insert features: Game has already begun!")
+    
+    # Proceed with database insertion...
