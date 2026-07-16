@@ -1,8 +1,8 @@
 import pandas as pd
 import logging
 
-# Set up logging to track data issues in your GitHub Action logs
-logging.basicConfig(level=logging.INFO)
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def process_raw_api_data(raw_json):
     """
@@ -16,18 +16,40 @@ def process_raw_api_data(raw_json):
         df = pd.DataFrame(raw_json)
         
         # 1. Basic Cleaning
-        df = df.dropna(how='all') # Remove rows that are entirely empty
+        df = df.dropna(how='all')
         
-        # 2. Example: Convert a column to datetime if it exists
+        # 2. Date conversion
         if 'date' in df.columns:
             df['date'] = pd.to_datetime(df['date'])
             
-        # 3. Example: Fill missing values for specific numeric columns
-        # df['odds'] = df['odds'].fillna(0)
-        
         logging.info(f"Successfully processed DataFrame with {len(df)} rows.")
         return df
 
     except Exception as e:
         logging.error(f"Error processing API data: {e}")
         return pd.DataFrame()
+
+def filter_starworld_criteria(df):
+    """
+    Filters the DataFrame based on strict Starworld quality thresholds.
+    """
+    if df.empty:
+        return df
+
+    initial_count = len(df)
+    
+    # Apply strict validation filters
+    mask = (
+        (df['lineup_confirmed'] == True) &
+        (df['injury_status'] == "Healthy") &
+        (df['projected_plate_appearances'] >= 4) &
+        (df['confidence'] >= 0.70) &
+        (df['data_quality'] >= 0.90)
+    )
+    
+    filtered_df = df[mask].copy()
+    
+    dropped_count = initial_count - len(filtered_df)
+    logging.info(f"Starworld Filter: Dropped {dropped_count} entries. {len(filtered_df)} remain.")
+    
+    return filtered_df
