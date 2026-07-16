@@ -22,6 +22,7 @@ jobs:
 
       - name: Run python src/main.py
         env:
+          # This forces Python to treat 'src' as the root package directory
           PYTHONPATH: ${{ github.workspace }}/src
         run: python src/main.py
 
