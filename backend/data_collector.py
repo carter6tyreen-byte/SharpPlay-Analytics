@@ -1,18 +1,11 @@
-import requests
-import json
+# backend/data_collector.py
 
 def run_ingestion():
-    # Variables defined inside the function scope
-    endpoint = "https://your-api-url-here.com/data" 
-    headers = {"Authorization": "Bearer YOUR_TOKEN"}
+    # ... your existing setup ...
+    response = requests.get(endpoint, headers=headers)
     
-    try:
-        response = requests.get(endpoint, headers=headers)
-        response.raise_for_status()
-        
-        # Add a print for debugging in your next run
-        print(f"DEBUG: Data successfully fetched: {len(response.text)} bytes.")
-        return response.json()
-    except Exception as e:
-        print(f"DEBUG: Error during ingestion: {e}")
-        return []
+    # ADD THESE LOGGING LINES:
+    print(f"DEBUG: Status Code: {response.status_code}")
+    print(f"DEBUG: Response Preview: {response.text[:200]}") # Shows first 200 chars
+    
+    # ... existing return ...
