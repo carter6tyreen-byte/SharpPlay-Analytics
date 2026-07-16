@@ -1,19 +1,12 @@
 import requests
 
 def run_ingestion():
-    """
-    Fetches live data from the API endpoint.
-    """
-    # Ensure these are defined inside the function or globally
-    endpoint = "https://api.example.com/data"  # Replace with your actual endpoint
+    endpoint = "https://api.example.com/data" # Update with your endpoint
     headers = {"Authorization": "Bearer YOUR_TOKEN"}
-    
     try:
         response = requests.get(endpoint, headers=headers)
         response.raise_for_status()
-        data = response.json()
-        print("DEBUG: Successfully ingested data from API.")
-        return data
+        return response.json()
     except Exception as e:
-        print(f"DEBUG: Error during API ingestion: {e}")
+        print(f"DEBUG: Error during ingestion: {e}")
         return []
