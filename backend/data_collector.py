@@ -1,13 +1,12 @@
-# backend/data_collector.py
-
 import requests
 
 def run_ingestion():
-    # ... your existing code ...
+    # 1. Define the variables here, inside the function
+    endpoint = "https://your-api-url-here.com/endpoint" 
+    headers = {"Authorization": "Bearer YOUR_TOKEN"}
+    
+    # 2. Now 'endpoint' and 'headers' are defined and can be used
     response = requests.get(endpoint, headers=headers)
     
-    # This print will appear in your GitHub Action logs
-    print(f"DEBUG: API status code: {response.status_code}")
-    print(f"DEBUG: API response: {response.text}")
-    
+    # ... rest of your code ...
     return response.json()
