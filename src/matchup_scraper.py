@@ -29,7 +29,9 @@ def fetch_today_matchups():
         logging.error(f"Scraping failed: {e}")
         # Raising the error ensures main.py stops execution and exits with status 1
         raise
+# Because you are already inside src, Python sees models as a top-level folder
 from models.snapshot import PreGameSnapshot
+
 
 def fetch_data():
     # ... logic to get raw data ...
