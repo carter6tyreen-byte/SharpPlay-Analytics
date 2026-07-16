@@ -1,21 +1,22 @@
 import streamlit as st
 import pandas as pd
+import os
 
-# 1. Title of your app
-st.title("SharpPLAY Analytics Dashboard")
+st.set_page_config(page_title="SharpPLAY Analytics", layout="wide")
 
-# 2. Logic to load the data
-# We use st.cache_data so the app doesn't re-load the file every time you click something
-@st.cache_data
-def load_data():
-    return pd.read_json("analytics_data.json")
+st.title("📊 SharpPLAY Analytics Dashboard")
 
-data = load_data()
+# Define the file path
+data_file = "analytics_data.json"
 
-# 3. Logic to display the data
-st.write("Here is the latest data from our automated pipeline:")
-st.dataframe(data)
-
-# 4. Logic to draw a chart (assuming your JSON has columns like 'Date' and 'Value')
-st.subheader("Trends")
-st.line_chart(data)
+# Check if data exists, then load it
+if os.path.exists(data_file):
+    df = pd.read_json(data_file)
+    
+    st.write("### Latest Data Summary")
+    st.dataframe(df, use_container_width=True)
+    
+    st.write("### Visual Trends")
+    st.line_chart(df)
+else:
+    st.warning(f"Waiting for data... '{data_file}' not found yet.")
