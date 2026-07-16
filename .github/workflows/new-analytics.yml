@@ -26,8 +26,8 @@ jobs:
         run: pip install pandas
 
       - name: Run Analytics Script
-        # Set to the folder where your scripts are located
-        working-directory: ./analytics
+        # Files are in the root, so we remove the /analytics folder reference
+        working-directory: .
         run: python main.py
 
       - name: Commit and push data
@@ -41,8 +41,8 @@ jobs:
           git fetch origin main
           git reset --hard origin/main
           
-          # This assumes the file is generated in the analytics/ folder
-          git add analytics/analytics_data.json
+          # Since the file is in the root, we remove the analytics/ prefix here too
+          git add analytics_data.json
           
           if ! git diff --quiet --exit-code; then
             git commit -m "Update analytics_data.json [skip ci]"
