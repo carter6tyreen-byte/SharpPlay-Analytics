@@ -1,16 +1,3 @@
-// Force a unique timestamp to ensure you aren't seeing a cached blank version
-fetch('data/today_matchups.json?t=' + new Date().getTime())
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('HTTP error ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log("Data successfully loaded:", data);
-        // ... rest of your display logic
-    })
-    .catch(err => {
-        console.error("Fetch error:", err);
-        document.getElementById('game-container').innerText = "Error loading data: " + err;
-    });
+// Try these one at a time to see which one gets a 200 OK in the Network tab:
+fetch('/today_matchups.json') // If file is in the root
+fetch('./data/today_matchups.json') // If file is in a data folder
