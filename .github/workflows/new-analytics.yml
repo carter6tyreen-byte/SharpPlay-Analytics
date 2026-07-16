@@ -35,6 +35,43 @@ jobs:
           # This command uses the path found by the 'find' command
           python $(find . -name "main.py" | head -n 1)
 
+   name: SharpPLAY Analytics Pipeline
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install pandas
+
+      - name: Run Analytics Script
+        run: |
+          echo "--- Current Directory Contents ---"
+          ls -R
+          echo "--- Attempting to find main.py ---"
+          find . -name "main.py"
+          echo "--- Running main.py ---"
+          # This command uses the path found by the 'find' command
+          python $(find . -name "main.py" | head -n 1)
+
       - name: Commit and push data
         env:
           TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
@@ -51,3 +88,4 @@ jobs:
           else
             echo "No changes to commit."
           fi
+
