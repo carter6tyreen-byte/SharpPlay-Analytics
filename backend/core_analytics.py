@@ -1,21 +1,22 @@
-import requests
-
-def run_ingestion():
-    # If the endpoint fails or returns no data, we can swap this 
-    # to mock data to prove the pipeline works.
-    endpoint = "https://api.example.com/data" 
-    headers = {"Authorization": "Bearer YOUR_TOKEN"}
-    try:
-        response = requests.get(endpoint, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except Exception as e:
-        print(f"DEBUG: Error during ingestion: {e}")
-        # Return a sample to see if the frontend picks it up
-        return [{"team": "Test Match", "analytics": {"intensity": 90}}]
 def check_alert_threshold(data_to_process):
-    # DISABLED THRESHOLD: Returning all data to visualize what is arriving.
+    """
+    Debug mode: Bypasses intensity threshold to visualize all incoming data.
+    """
     if not isinstance(data_to_process, list):
+        print("DEBUG: Data is not a list. Returning empty list.")
         return []
-    print(f"DEBUG: Processing {len(data_to_process)} items.")
+        
+    print(f"DEBUG: Pipeline received {len(data_to_process)} items.")
+    
+    # Bypass logic: Return everything so we can see the data structure 
+    # on your dashboard's green RAW DATA block.
     return data_to_process
+
+def get_intensity_score(game_item):
+    """
+    Helper to extract intensity once we identify the correct key.
+    Currently used as a placeholder.
+    """
+    # Once data appears, look for the correct key (e.g., 'intensity', 'score')
+    # and update this return statement accordingly.
+    return game_item.get("intensity", 0)
