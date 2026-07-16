@@ -37,3 +37,21 @@ def run_pipeline():
 
 if __name__ == "__main__":
     run_pipeline()
+
+# main.py workflow snippet
+from analytics.matchup_engine import AnalyticsEngine
+from analytics.tuner import StarworldOptimizer
+from analytics.exporter import save_analytics
+
+# 1. Fetch Data
+# 2. engine = AnalyticsEngine()
+# 3. edges = engine.analyze_matchups(sim_results)
+
+# 4. STARWORLD Tuner
+tuner = StarworldOptimizer(risk_tolerance=0.5, max_picks=3)
+portfolio = tuner.optimize_portfolio(edges)
+
+# 5. Export for Dashboard
+save_analytics(portfolio)
+
+    
