@@ -1,11 +1,6 @@
-# backend/data_collector.py
-
 def run_ingestion():
-    # ... your existing setup ...
-    response = requests.get(endpoint, headers=headers)
-    
-    # ADD THESE LOGGING LINES:
-    print(f"DEBUG: Status Code: {response.status_code}")
-    print(f"DEBUG: Response Preview: {response.text[:200]}") # Shows first 200 chars
-    
-    # ... existing return ...
+    # Temporarily return dummy data to test the rest of the pipeline
+    return [
+        {"match_id": "test_001", "team_a": "Team A", "team_b": "Team B", "intensity": 88},
+        {"match_id": "test_002", "team_a": "Team C", "team_b": "Team D", "intensity": 95}
+    ]
