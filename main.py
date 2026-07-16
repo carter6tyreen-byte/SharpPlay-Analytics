@@ -1,5 +1,14 @@
 import sys
 import os
+
+# Dynamically adds the directory containing main.py to the Python path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from api_client import fetch_sports_data, fetch_market_odds
+from data_processor import process_raw_api_data
+# ... rest of your imports
+import sys
+import os
 import logging
 
 # Path Management
