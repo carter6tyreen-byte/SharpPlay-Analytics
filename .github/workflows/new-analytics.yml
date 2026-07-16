@@ -31,3 +31,10 @@ jobs:
           # Remove residual cache that causes import conflicts
           find . -type d -name "__pycache__" -exec rm -rf {} +
           python main.py
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add data/master_player_metrics.csv
+          git commit -m "Update master metrics" || echo "No changes to commit"
+          git push
