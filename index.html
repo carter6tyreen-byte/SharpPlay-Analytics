@@ -2,48 +2,45 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Starworld Live Analytics</title>
     <style>
         body { font-family: sans-serif; background: #0b1420; color: #e0e6ed; padding: 20px; }
-        .alert-banner { background: #e63946; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #ff6b6b; }
-        .card { background: #1c2a3d; border-radius: 12px; padding: 20px; margin-bottom: 15px; border-left: 5px solid #2a5298; }
-        .analytics-box { background: #0e1a29; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 0.9em; }
+        .card { background: #1c2a3d; padding: 15px; margin-bottom: 10px; border-radius: 8px; }
+        .error { color: #ff6b6b; padding: 20px; border: 1px solid #ff6b6b; }
     </style>
 </head>
 <body>
     <h1>Live Analytics</h1>
-    <div id="alert-container"></div>
+    <div id="debug-log">Loading data...</div>
     <div id="game-container"></div>
 
     <script>
-        fetch('data/today_matchups.json')
-            .then(res => res.json())
+        // 1. Fetch the data file. Ensure the path is correct for your repo.
+        fetch('./data/today_matchups.json')
+            .then(res => {
+                if (!res.ok) throw new Error("Could not find data/today_matchups.json");
+                return res.json();
+            })
             .then(data => {
-                const alerts = data.payload?.alerts || [];
-                const games = data.payload?.data_points || [];
+                const debugLog = document.getElementById('debug-log');
+                debugLog.style.display = 'none'; // Hide loading message
                 
-                // Render Alerts
-                const alertContainer = document.getElementById('alert-container');
-                if (alerts.length > 0) {
-                    alertContainer.innerHTML = `
-                        <div class="alert-banner">
-                            <strong>High Intensity Games:</strong> ${alerts.map(a => `${a.awayTeam} vs ${a.homeTeam}`).join(', ')}
-                        </div>
-                    `;
-                }
-
-                // Render Games
+                // 2. Safely access the data structure
+                const payload = data.payload || data; 
+                const games = payload.data_points || [];
+                
                 const gameContainer = document.getElementById('game-container');
                 gameContainer.innerHTML = games.map(game => `
                     <div class="card">
-                        <h3>${game.awayTeam} @ ${game.homeTeam}</h3>
-                        <p>Status: ${game.status}</p>
-                        <div class="analytics-box">
-                            Intensity: <strong>${game.analytics.intensity}</strong> | Pace: ${game.analytics.pace}
-                        </div>
+                        <h3>${game.awayTeam} vs ${game.homeTeam}</h3>
+                        <p>Intensity Score: ${game.analytics?.intensity || 'N/A'}</p>
                     </div>
                 `).join('');
+            })
+            .catch(err => {
+                // 3. This will show the error on your phone screen if it fails
+                document.getElementById('debug-log').innerHTML = 
+                    `<div class="error">ERROR: ${err.message}. Please check if the file exists in the 'data' folder.</div>`;
             });
     </script>
 </body>
