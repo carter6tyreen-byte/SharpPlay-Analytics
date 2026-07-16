@@ -33,3 +33,23 @@ def run_pipeline():
 
 if __name__ == "__main__":
     run_pipeline()
+
+def run_pipeline():
+    print("Starting SharpPLAY Pipeline...")
+    
+    # 1. Fetch Data
+    print("Phase 1: Fetching matchups...")
+    raw_data = fetch_matchup_data() 
+    
+    # Diagnostic Check: Ensure data exists before proceeding
+    if raw_data is None:
+        print("ERROR: fetch_matchup_data() returned None. Check your scraper!")
+        return # Stop the pipeline if there is no data to process
+        
+    print(f"DEBUG: Successfully fetched {len(raw_data)} records.")
+    
+    # 2. Process Analytics
+    print("Phase 2: Processing analytics...")
+    engine = AnalyticsEngine(raw_data)
+    # ... rest of the pipeline
+
