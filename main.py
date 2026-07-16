@@ -1,4 +1,29 @@
+import sys
+import os
+# This forces Python to recognize the root directory
+sys.path.append(os.getcwd())
+
+# Now your existing imports will work
+from src.api_client import fetch_sports_data, fetch_market_odds
 from src.data_processor import process_raw_api_data
+from src.prediction_engine import run_hr_prediction_model
+from src.optimizer import get_optimal_bets
+
+# ... rest of your main logic ...
+
+import sys
+import os
+# This forces Python to recognize the root directory
+sys.path.append(os.getcwd())
+
+# Now your existing imports will work
+from src.api_client import fetch_sports_data, fetch_market_odds
+from src.data_processor import process_raw_api_data
+from src.prediction_engine import run_hr_prediction_model
+from src.optimizer import get_optimal_bets
+
+# ... rest of your main logic ...
+rom src.data_processor import process_raw_api_data
 import os
 from src.api_client import fetch_sports_data, fetch_market_odds
 from src.data_processor import process_raw_api_data
