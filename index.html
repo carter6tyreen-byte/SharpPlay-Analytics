@@ -1,8 +1,15 @@
-// Replace your existing .then(data => ...) block with this:
-.then(data => {
-    document.getElementById('status').style.display = 'none';
-    
-    // DEBUG: Print the raw structure to the screen
-    document.getElementById('game-container').innerHTML = 
-        `<pre style="color: white;">${JSON.stringify(data, null, 2)}</pre>`;
-})
+// Replace your existing fetch block in index.html
+fetch('data/today_matchups.json')
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('status').style.display = 'none';
+        
+        // This will print the raw data to your dashboard
+        const container = document.getElementById('game-container');
+        container.innerHTML = `<pre style="color: #00ff00; background: #1a1a1a; padding: 10px;">
+            RAW DATA: ${JSON.stringify(data, null, 2)}
+        </pre>`;
+    })
+    .catch(err => {
+        document.getElementById('game-container').innerText = "Error loading data: " + err;
+    });
