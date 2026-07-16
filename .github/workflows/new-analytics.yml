@@ -26,8 +26,8 @@ jobs:
       - name: Run Pipeline
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-          # Force Python to look in the root directory for modules
-          PYTHONPATH: .
+          # This forces Python to look in the workspace root for modules
+          PYTHONPATH: ${{ github.workspace }}
         run: python main.py
 
       - name: Save Results
