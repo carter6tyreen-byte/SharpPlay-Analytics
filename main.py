@@ -1,37 +1,36 @@
 import sys
 import os
 
-# This adds the current directory (where main.py lives) to the search path
-sys.path.append(os.getcwd())
+# Ensure the project root is in the path so 'src' is discoverable
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.append(project_root)
 
-# Now the imports will work because 'src' is inside the current directory
-from src.api_client import fetch_sports_data, fetch_market_odds
-from src.data_processor import process_raw_api_data
-from src.prediction_engine import run_hr_prediction_model
-from src.optimizer import get_optimal_bets
-import sys
-import os
-
-# 1. Ensure the root directory is in the path so 'src' is found
-sys.path.append(os.getcwd())
-
-# 2. Imports from your src/ folder
-from src.api_client import fetch_sports_data, fetch_market_odds
-from src.data_processor import process_raw_api_data
-from src.prediction_engine import run_hr_prediction_model
-from src.optimizer import get_optimal_bets
+# Now these imports will resolve correctly
+try:
+    from src.api_client import fetch_sports_data, fetch_market_odds
+    from src.data_processor import process_raw_api_data
+    from src.prediction_engine import run_hr_prediction_model
+    from src.optimizer import get_optimal_bets
+except ImportError as e:
+    print(f"Import Error: {e}")
+    print(f"Current sys.path: {sys.path}")
+    sys.exit(1)
 
 def main():
-    print("Starting SharpPLAY Pipeline...")
+    print("Pipeline initialized successfully.")
     
-    # Example flow:
+    # 1. Fetch
     # raw_data = fetch_sports_data()
-    # clean_data = process_raw_api_data(raw_data)
-    # predictions = run_hr_prediction_model(clean_data)
-    # optimal_bets = get_optimal_bets(predictions)
+    # odds = fetch_market_odds()
     
-    # print("Pipeline execution complete.")
-    print("Imports successful! Pipeline is ready for data logic.")
+    # 2. Process
+    # clean_data = process_raw_api_data(raw_data)
+    
+    # 3. Predict & Optimize
+    # ... logic here ...
+    
+    print("Pipeline execution complete.")
 
 if __name__ == "__main__":
     main()
