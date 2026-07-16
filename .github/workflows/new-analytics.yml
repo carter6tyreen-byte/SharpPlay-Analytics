@@ -1,17 +1,17 @@
-name: STARWORLD Analytics Pipeline
+name: Run SharpPLAY Pipeline
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main ]
+  schedule:
+    - cron: '0 6 * * *' # Runs at 6:00 AM daily
 
 jobs:
-  run-pipeline:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -20,25 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests
-
-      # DEBUG STEP: This will show us the exact file structure 
-      # in the logs to confirm where 'backend' is located.
-      - name: Verify file structure
-        run: ls -R
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Run Pipeline
         env:
-          API_ENDPOINT: ${{ secrets.API_ENDPOINT }}
-          SPORTS_API_KEY: ${{ secrets.SPORTS_API_KEY }}
-          API_HOST: ${{ secrets.API_HOST }}
-          PYTHONPATH: ${{ github.workspace }}
-        working-directory: ${{ github.workspace }}
-        run: python main.py
-
-      - name: Commit and push changes
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/today_matchups.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data" && git push)
+          python main.py
