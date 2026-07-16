@@ -3,6 +3,29 @@ import os
 import logging
 import json
 
+# Force diagnostic pathing
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, current_dir)
+
+# DIAGNOSTIC: Print exactly what's in the directory
+logging.info(f"Looking for modules in: {current_dir}")
+logging.info(f"Directory contents: {os.listdir(current_dir)}")
+
+try:
+    import data_processor
+    logging.info(f"data_processor location: {data_processor.__file__}")
+    logging.info(f"Available attributes: {dir(data_processor)}")
+except Exception as e:
+    logging.error(f"Failed to import data_processor: {e}")
+
+from api_client import fetch_sports_data, fetch_market_odds
+from data_processor import process_raw_api_data
+# ... (rest of your code)
+import sys
+import os
+import logging
+import json
+
 # Path fix for GitHub Actions
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
