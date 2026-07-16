@@ -1,40 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <style>
-        body { font-family: sans-serif; background: #0b1420; color: #e0e6ed; padding: 20px; }
-        .error { color: #ff6b6b; padding: 15px; border: 1px solid #ff6b6b; }
-    </style>
-</head>
-<body>
-    <h1>Live Analytics</h1>
-    <div id="debug-info">Fetching data...</div>
-    <div id="container"></div>
-
-    <script>
-        const debug = document.getElementById('debug-info');
-        
-        // This is the absolute path to your file
-        const dataPath = '/SharpPlay-Analytics/data/today_matchups.json';
-        
-        debug.innerHTML = "Attempting to fetch: " + dataPath;
-
-        fetch(dataPath)
-            .then(res => {
-                if (!res.ok) throw new Error("HTTP Error " + res.status);
-                return res.json();
-            })
-            .then(data => {
-                debug.innerHTML = "Data loaded successfully!";
-                // Render your data here
-                document.getElementById('container').innerText = JSON.stringify(data, null, 2);
-            })
-            .catch(err => {
-                debug.innerHTML = `<div class="error">Fetch failed: ${err.message}. 
-                <br>Make sure the repository name in the path is correct.</div>`;
-            });
-    </script>
-</body>
-</html>
+// Replace your existing .then(data => ...) block with this:
+.then(data => {
+    document.getElementById('status').style.display = 'none';
+    
+    // DEBUG: Print the raw structure to the screen
+    document.getElementById('game-container').innerHTML = 
+        `<pre style="color: white;">${JSON.stringify(data, null, 2)}</pre>`;
+})
