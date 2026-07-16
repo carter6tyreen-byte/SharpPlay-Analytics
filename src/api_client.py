@@ -2,19 +2,37 @@ import requests
 import os
 
 def fetch_sports_data():
-    # ... your existing code ...
+    # Your existing logic for player stats
     pass
 
-# ADD THIS FUNCTION:
 def fetch_market_odds():
     """
-    Fetches betting odds from your API.
+    Fetches betting odds from the Odds API or similar service.
     """
-    # Replace this with your actual API endpoint and key logic
-    # Example:
-    # url = "https://api-example.com/odds"
-    # response = requests.get(url, headers={"x-api-key": os.getenv("RAPIDAPI_KEY")})
-    # return response.json()
+    url = "https://api.the-odds-api.com/v4/sports/baseball_mlb/odds"
+    params = {
+        'apiKey': os.getenv('RAPIDAPI_KEY'), # Using your stored secret
+        'regions': 'us',
+        'markets': 'h2h',
+        'oddsFormat': 'american',
+    }
     
-    # Placeholder return for now to get your pipeline to pass:
-    return {"Aaron Judge": 150, "Shohei Ohtani": 200}
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Transform the API response into a simple {player: odds} dictionary
+        # This is a placeholder structure; adjust based on your specific API's JSON schema
+        odds_map = {}
+        for event in data:
+            # Example parsing logic
+            for bookmaker in event['bookmakers']:
+                for market in bookmaker['markets']:
+                    for outcome in market['outcomes']:
+                        odds_map[outcome['name']] = outcome['price']
+        return odds_map
+        
+    except Exception as e:
+        print(f"Error fetching odds: {e}")
+        return {}
