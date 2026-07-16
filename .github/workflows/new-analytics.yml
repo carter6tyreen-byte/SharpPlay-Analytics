@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Pipeline
         env:
-          # This sets the workspace as a path for Python to find modules
+          # Sets the root directory as a search path for Python modules
           PYTHONPATH: ${{ github.workspace }}
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: |
