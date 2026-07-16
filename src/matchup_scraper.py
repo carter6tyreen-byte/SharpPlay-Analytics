@@ -29,3 +29,10 @@ def fetch_today_matchups():
         logging.error(f"Scraping failed: {e}")
         # Raising the error ensures main.py stops execution and exits with status 1
         raise
+from models.snapshot import PreGameSnapshot
+
+def fetch_data():
+    # ... logic to get raw data ...
+    # Package it into your standard object
+    snapshot = PreGameSnapshot(game_id="123", date="2026-07-16", player="Aaron Judge", features={...})
+    return snapshot
