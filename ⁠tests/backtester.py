@@ -1,13 +1,51 @@
 import sys
 import os
+import pandas as pd
 
-# 1. Dynamically get the root directory path
+# Setup path to import project modules
 root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-# 2. Add root to path so 'import' knows where to look
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
-# 3. NOW you can import your project modules safely
 from processor import filter_starworld_criteria
 from Starworld_optimizer import get_optimal_bets_with_sizing
+
+def run_backtest(data_path, initial_bankroll=1000):
+    # 1. Load historical dataset
+    df = pd.read_csv(data_path)
+    df['date'] = pd.to_datetime(df['date'])
+    
+    results = []
+    current_bankroll = initial_bankroll
+    
+    # 2. Iterate through historical dates
+    for date in sorted(df['date'].unique()):
+        daily_data = df[df['date'] == date].copy()
+        
+        # Apply Starworld Filter
+        validated_data = filter_starworld_criteria(daily_data)
+        
+        if validated_data.empty:
+            continue
+            
+        # Optimize bets (using your logic from main.py)
+        # Note: Ensure daily_data contains market_odds and volatility
+        optimal_bets = get_optimal_bets_with_sizing(validated_data, daily_data)
+        
+        if not optimal_bets.empty:
+            # 3. Calculate P&L: (Size * Odds) if HR occurred, else -Size
+            # Assuming 'actual_hr' (1/0) is in your CSV
+            pnl = optimal_bets.apply(
+                lambda x: (x['bet_size'] * (x['decimal_odds'] - 1)) if x['actual_hr'] == 1 
+                else -x['bet_size'], axis=1
+            ).sum()
+            
+            current_bankroll += pnl
+            results.append({'date': date, 'bankroll': current_bankroll})
+            
+    return pd.DataFrame(results)
+
+if __name__ == "__main__":
+    # Point this to your prepared CSV file
+    report = run_backtest('data/historical_mlb_data.csv')
+    print(report)
