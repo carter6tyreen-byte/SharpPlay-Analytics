@@ -1,12 +1,12 @@
-import requests  # <--- THIS IS THE CRITICAL LINE YOU ARE MISSING
+import requests # 1. This must be at the very top
 
 def run_ingestion():
-    endpoint = "YOUR_ACTUAL_API_URL_HERE" # Put your real URL here
-    headers = {"Authorization": "YOUR_TOKEN_HERE"} # Replace with your real token
+    # 2. Use your real API URL here, prefixed with https://
+    endpoint = "https://api.your-provider.com/v1/matches" 
+    headers = {"Authorization": "YOUR_TOKEN"}
     
+    # 3. Print now happens inside the function where 'endpoint' exists
     print(f"DEBUG: Constructing Request to URL: {endpoint}")
     
     response = requests.get(endpoint, headers=headers)
-    
-    # ... rest of your code
     return response.json()
