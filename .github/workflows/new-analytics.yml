@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-  schedule:
-    - cron: '0 12 * * *'
   workflow_dispatch:
 
 jobs:
@@ -14,6 +12,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        
+      # ADD THIS STEP TO SEE WHERE FILES ARE
+      - name: List files
+        run: ls -R
         
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -24,8 +26,7 @@ jobs:
         run: pip install requests
         
       - name: Run Analytics Pipeline
-        # We run from the root, explicitly pointing to the file in src/
-        run: python src/main.py
+        run: python main.py # We will adjust this after seeing the "List files" output
         
       - name: Commit and push changes
         run: |
