@@ -1,31 +1,24 @@
-import json
-import os
-from backend.data_collector import run_ingestion
-from backend.Starworld_optimizer import run_optimizer
-from backend.core_analytics import check_alert_threshold
+from src.api_client import fetch_sports_data
+# Import other phases as you build them
+# from src.prediction_engine import run_models
+# from src.optimizer import run_optimizer
 
 def main():
-    # 1. Collect Data
-    raw_data = run_ingestion()
+    print("--- Starting SharpPLAY Daily Workflow ---")
     
-    # 2. Optimize Data
-    optimized_data = run_optimizer(raw_data)
+    # 1. Collect Data (Phase 2 & 5)
+    print("Fetching data from API...")
+    data = fetch_sports_data()
     
-    # 3. Analyze Data
-    alerts = check_alert_threshold(optimized_data)
-    
-    # 4. Save Data to the Root 'data' folder
-    output_dir = 'data'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if data:
+        print("Data successfully retrieved.")
+        # 2. Run Prediction & Optimizer (Phase 3 & 4)
+        # result = run_models(data)
+        # run_optimizer(result)
         
-    output_path = os.path.join(output_dir, 'today_matchups.json')
-    
-    output = {"payload": {"alerts": alerts, "data_points": optimized_data}}
-    
-    with open(output_path, 'w') as f:
-        json.dump(output, f)
-        print(f"DEBUG: Successfully wrote {len(optimized_data)} items to {output_path}")
+        print("Workflow completed successfully.")
+    else:
+        print("Failed to retrieve data. Check API connection.")
 
 if __name__ == "__main__":
     main()
