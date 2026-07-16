@@ -1,3 +1,5 @@
+import requests
+# Other imports like pandas go here
 # 1. First, fetch the data
 response = requests.get(API_URL)
 data = response.json()
