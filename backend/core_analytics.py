@@ -1,22 +1,25 @@
 def check_alert_threshold(data_to_process):
     """
-    Debug mode: Bypasses intensity threshold to visualize all incoming data.
+    Refactored: Bypasses all filtering to visualize incoming API data.
     """
+    # Verify we have a list to work with
     if not isinstance(data_to_process, list):
-        print("DEBUG: Data is not a list. Returning empty list.")
+        print("DEBUG: Pipeline Error - data_to_process is not a list.")
         return []
-        
-    print(f"DEBUG: Pipeline received {len(data_to_process)} items.")
     
-    # Bypass logic: Return everything so we can see the data structure 
-    # on your dashboard's green RAW DATA block.
+    # Log the number of items received to your GitHub Actions run logs
+    print(f"DEBUG: Pipeline successfully received {len(data_to_process)} items.")
+    
+    # RETURN ALL DATA: 
+    # By returning the full list without filtering, the data will 
+    # populate your dashboard's green RAW DATA block, allowing you 
+    # to see the exact keys (e.g., 'intensity', 'impact', 'score').
     return data_to_process
 
-def get_intensity_score(game_item):
+def get_game_metadata(game_item):
     """
-    Helper to extract intensity once we identify the correct key.
-    Currently used as a placeholder.
+    Helper function to be updated once the key structure is confirmed.
     """
-    # Once data appears, look for the correct key (e.g., 'intensity', 'score')
-    # and update this return statement accordingly.
-    return game_item.get("intensity", 0)
+    # Once you see the keys in the green box, update this.
+    # Example: return game_item.get("team_name", "Unknown")
+    return game_item
