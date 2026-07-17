@@ -61,3 +61,5 @@ class AnalyticsEngine:
         except Exception as e:
             logging.error(f"Error in starworld_optimizer: {e}")
             return pd.DataFrame()
+import sys
+print(sys.path)
