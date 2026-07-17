@@ -1,23 +1,31 @@
 import streamlit as st
-from analytics.matchup_engine import AnalyticsEngine
+# Assuming your engine is in a file named machine_engine.py
+from machine_engine import AnalyticsEngine 
 
-def color_grading(val):
-    """Green for >= 80, Red otherwise."""
-    color = 'green' if isinstance(val, (int, float)) and val >= 80 else 'red'
-    return f'color: {color}'
+def main():
+    st.title("SharpPLAY Value Board")
 
-# Inside your dashboard game loop:
-if st.button(f"Run Starworld Optimizer {game_id}"):
-    # Instantiate engine only when the button is clicked
-    engine = AnalyticsEngine() 
-    df = engine.run_starworld_optimizer(game_id)
-    
-    if not df.empty:
-        # Apply formatting to numeric columns
-        styled_df = df.style.applymap(
-            color_grading, 
-            subset=['metric_1', 'metric_2', 'metric_3']
-        )
-        st.dataframe(styled_df)
-    else:
-        st.warning("Optimizer returned no data.")
+    # 1. Define game_id BEFORE using it
+    # You can set a default or allow user input
+    game_id = st.text_input("Enter Game ID", value="823440")
+
+    # 2. Initialize the engine
+    # Initialize outside the button to avoid re-instantiation issues
+    engine = AnalyticsEngine()
+
+    # 3. Handle the button click
+    # game_id is now defined and ready to be used
+    if st.button(f"Run Starworld Optimizer {game_id}"):
+        try:
+            with st.spinner('Calculating value...'):
+                # Call your optimizer method
+                results = engine.run_starworld_optimizer(game_id=game_id)
+                
+                # Display the results
+                st.write("### Optimization Results")
+                st.dataframe(results)
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+if __name__ == "__main__":
+    main()
