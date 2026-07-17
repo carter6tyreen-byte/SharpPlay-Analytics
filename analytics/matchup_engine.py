@@ -1,21 +1,19 @@
 import pandas as pd
 
 class AnalyticsEngine:
-    # ... (Keep previous prepare_game_data and other methods) ...
+    def __init__(self, raw_data=None):
+        # Default to empty dict to prevent initialization errors
+        self.raw_data = raw_data if raw_data is not None else {}
 
     def run_starworld_optimizer(self, game_id):
-        """
-        Processes game data and returns a DataFrame with metrics.
-        Must return a non-empty DataFrame for the dashboard to render.
-        """
-        # Placeholder for your data ingestion logic
-        # Ensure this returns a populated DataFrame with columns: 
-        # 'Name', 'Position', 'metric_1', 'metric_2', 'metric_3'
+        """Processes logic and returns a DataFrame with the required metrics."""
+        # Simulated data - replace with your actual API logic
         data = {
-            'Name': ['Player A', 'Player B'],
-            'Position': ['P', 'C'],
-            'metric_1': [85, 70],
-            'metric_2': [90, 75],
-            'metric_3': [60, 95]
+            'Name': ['Pitcher A', 'Batter B'],
+            'Position': ['P', 'OF'],
+            'metric_1': [85, 75],
+            'metric_2': [90, 65],
+            'metric_3': [82, 88]
         }
         return pd.DataFrame(data)
+
