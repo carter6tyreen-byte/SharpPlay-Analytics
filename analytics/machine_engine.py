@@ -3,18 +3,9 @@ import numpy as np
 import logging
 import streamlit as st
 
-# --- ADD THESE FUNCTIONS TO YOUR FILE ---
-def load_matchup_data():
-    """Fetches matchup data from the MLB API."""
-    # Placeholder: Replace with your actual requests.get() logic
-    return {'dates': []} 
+# Import the actual data fetching logic from your files
+from data.data_collector import load_matchup_data  # Assuming this exists in data_collector.py
+from data.mlb_stats import fetch_roster_data       # Assuming this exists in mlb_stats.py
 
 class AnalyticsEngine:
-    # ... (Keep your existing staticmethod and get_position_name) ...
-
-    def fetch_roster_data(self, game_id):
-        """Fetches roster data from the MLB API."""
-        # Placeholder: Replace with your actual requests.get() logic
-        return {'teams': []}
-
-    # ... (Keep your existing get_all_games, run_starworld_optimizer, and get_optimal_bets_with_sizing) ...
+    # ... rest of your class stays the same ...
