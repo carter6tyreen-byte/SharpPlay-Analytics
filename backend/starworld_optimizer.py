@@ -25,3 +25,16 @@
         
         # 4. Return as a clean DataFrame
         return pd.DataFrame(all_players)
+def run_starworld_optimizer(self, player_name):
+    # Print the name being searched
+    print(f"Searching for data for: {player_name}")
+    
+    # 1. Check if the player exists in your current data fetch
+    # (e.g., print your player mapping or game list here)
+    
+    # 2. Check if the API call actually returns a result
+    # data = self.fetch_data(...)
+    # print(f"API returned: {data}")
+    
+    # If the logic returns an empty result, the optimizer will yield an empty DF
+    return results
