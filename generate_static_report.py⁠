@@ -1,0 +1,39 @@
+import pandas as pd
+from analytics.matchup_engine import AnalyticsEngine
+
+def generate_static_html():
+    # 1. Initialize your engine (use the same logic as your app.py)
+    engine = AnalyticsEngine()
+    
+    # 2. Run the optimizer (replace with your actual data fetching method)
+    df = engine.run_starworld_optimizer(game_id="823440")
+    
+    # 3. Create the HTML table
+    # We use .to_html() to get a clean table structure
+    table_html = df.to_html(classes='table table-striped', index=False)
+    
+    # 4. Construct the full HTML file
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>SharpPLAY Value Board</title>
+        <style>
+            body {{ font-family: sans-serif; padding: 20px; }}
+            .table {{ width: 100%; border-collapse: collapse; }}
+            th, td {{ padding: 10px; border: 1px solid #ddd; text-align: left; }}
+        </style>
+    </head>
+    <body>
+        <h1>Today's Value Board</h1>
+        {table_html}
+    </body>
+    </html>
+    """
+    
+    # 5. Save as index.html (GitHub Pages looks for this file)
+    with open("index.html", "w") as f:
+        f.write(html_content)
+
+if __name__ == "__main__":
+    generate_static_html()

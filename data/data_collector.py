@@ -1,39 +1,34 @@
-import os
 import requests
-import json
-import sys
+import os
 
-# Maintain the path fix to access the backend module
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from backend.Starworld_optimizer import run_optimizer
+def run_ingestion():
+    """
+    Connects to the API and retrieves raw match data with sanitized headers.
+    """
+    endpoint = os.getenv("API_ENDPOINT")
+    api_key = os.getenv("SPORTS_API_KEY")
+    api_host = os.getenv("API_HOST")
 
-def fetch_live_data():
-    # REPLACE THESE TWO LINES WITH YOUR ACTUAL RAPIDAPI DETAILS
-    url = "https://YOUR_API_ENDPOINT_URL_HERE" 
+    if not endpoint or not api_key or not api_host:
+        raise ValueError("Missing required API environment variables.")
+
+    # Prepare raw headers
+    raw_headers = {
+        "x-rapidapi-key": api_key,
+        "x-rapidapi-host": api_host
+    }
+
+    # Sanitize header values to prevent UnicodeEncodeError
+    # This removes any non-ASCII characters that might cause latin-1 encoding failures
     headers = {
-        "x-rapidapi-key": os.getenv("SPORTS_API_KEY"),
-        "x-rapidapi-host": "YOUR_API_HOST_HERE"
+        key: str(value).encode('ascii', 'ignore').decode('ascii') 
+        for key, value in raw_headers.items()
     }
     
-    response = requests.get(url, headers=headers)
-    response.raise_for_status() # This will help you debug if the connection fails
+    print("DEBUG: Fetching live data from API with sanitized headers...")
+    response = requests.get(endpoint, headers=headers)
+    
+    # Raise an error if the request fails (e.g., 404, 500)
+    response.raise_for_status()
+    
     return response.json()
-
-def main():
-    try:
-        print("Fetching live data...")
-        raw_data = fetch_live_data()
-        
-        # Pass the live data to your optimizer logic
-        optimized_data = run_optimizer(raw_data)
-        
-        # Save to the JSON file your frontend reads
-        with open("data/today_matchups.json", "w") as f:
-            json.dump(optimized_data, f, indent=4)
-        print("Success: Live data fetched, optimized, and saved.")
-        
-    except Exception as e:
-        print(f"CRITICAL ERROR: {e}")
-
-if __name__ == "__main__":
-    main()
