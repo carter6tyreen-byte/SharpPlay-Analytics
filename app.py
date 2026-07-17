@@ -8,31 +8,34 @@ def main():
     engine = AnalyticsEngine()
     df = engine.get_all_games()
     
-    # Check if df is empty
+    # 1. DEBUG: Uncomment the next line to see your true column names
+    # st.write("Available columns:", df.columns.tolist())
+    
     if df.empty:
         st.write("No games found.")
         return
 
-    # DEBUG: See what your data actually looks like
-    # st.write("Available columns:", df.columns.tolist())
+    # 2. FIX: Replace these strings with the actual names from the debug output
+    # For example: display_col = 'away_name' and id_col = 'gamePk'
+    display_col = 'actual_display_column_name' 
+    id_col = 'actual_id_column_name'           
 
-    # Ensure your column names match the strings below exactly
-    # For this example, I am using common MLB API keys
-    # Adjust these strings to match the output of st.write(df.columns)
-    display_col = 'game_label'  # e.g., 'NYY vs BOS'
-    id_col = 'gamePk'           # e.g., the unique ID for the game
-
+    # 3. SAFETY: Check if columns exist before looping
     if display_col not in df.columns or id_col not in df.columns:
-        st.error(f"Data error: Looking for '{display_col}' and '{id_col}', but columns are {df.columns.tolist()}")
+        st.error(f"Error: Columns '{display_col}' or '{id_col}' not found. Available: {df.columns.tolist()}")
         return
 
+    # 4. LOOP: Safely iterate and create unique buttons
     for index, row in df.iterrows():
-        # Using a unique key based on the GameID to prevent Streamlit button errors
-        if st.button(f"Analyze: {row[display_col]}", key=str(row[id_col])):
-            st.write(f"Loading data for game: {row[id_col]}")
-            # Your optimizer logic
-            results = engine.run_starworld_optimizer(row[id_col])
-            st.dataframe(results)
+        # Ensure the key is converted to a string to avoid hash collisions
+        button_label = f"Analyze: {row[display_col]}"
+        button_key = str(row[id_col])
+        
+        if st.button(button_label, key=button_key):
+            with st.spinner('Running Optimizer...'):
+                results = engine.run_starworld_optimizer(row[id_col])
+                st.dataframe(results)
 
 if __name__ == "__main__":
     main()
+
