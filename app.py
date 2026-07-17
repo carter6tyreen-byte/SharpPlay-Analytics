@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 
-# Fixed path based on your repository structure[span_1](start_span)[span_1](end_span)
+# Path to the matchup data
 DATA_URL = "https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/refs/heads/main/data/today_matchups.json"
 
 @st.cache_data(ttl=3600)
@@ -49,15 +49,19 @@ for index, row in df_games.iterrows():
                     
                     player_list.append(info)
                 
-                # Define columns to show for a clean display
+                # Define columns and filter for active players
                 cols_to_show = ["Name", "Position", "atBats", "hits", "homeRuns", "strikeOuts", "baseOnBalls"]
                 
-                # Create DataFrame, filter columns, and remove empty rows[span_2](start_span)[span_2](end_span)
                 df_stats = pd.DataFrame(player_list)
-                df_clean = df_stats.reindex(columns=cols_to_show).dropna(subset=["Name"])
+                # Ensure atBats column exists and filter
+                if 'atBats' in df_stats.columns:
+                    df_clean = df_stats.reindex(columns=cols_to_show).dropna(subset=["Name"])
+                    df_active = df_clean[df_clean['atBats'] > 0]
+                else:
+                    df_active = df_stats.reindex(columns=cols_to_show).dropna(subset=["Name"])
                 
                 st.write("### Away Roster & Stats")
-                st.dataframe(df_clean, use_container_width=True, hide_index=True)
+                st.dataframe(df_active, use_container_width=True, hide_index=True)
 
 if not games:
     st.warning("No games found.")
