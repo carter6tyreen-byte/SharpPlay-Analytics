@@ -1,3 +1,8 @@
+import pandas as pd
+import json
+import requests
+import streamlit as st
+
 class AnalyticsEngine:
     @staticmethod
     def get_position_name(code):
@@ -10,12 +15,17 @@ class AnalyticsEngine:
         return mapping.get(code, code)
 
     def get_all_games(self):
-    # ... your logic to fetch data ...
-    if data is None or not data:
-        return pd.DataFrame()  # Return an empty DataFrame instead of None
-    return pd.DataFrame(data)
-
+        # 1. Ensure you load your data here first
+        # (Assuming you have a function called load_matchup_data() defined elsewhere)
+        matchup_data = load_matchup_data() 
+        data = matchup_data.get('dates', [])
+        
+        # 2. Indent the if block properly under the function
+        if data is None or not data:
+            return pd.DataFrame() 
+        
+        return pd.DataFrame(data)
 
     def run_starworld_optimizer(self, game_id):
-        # ... use self.get_position_name(code)
+        # Implementation logic here
         pass
