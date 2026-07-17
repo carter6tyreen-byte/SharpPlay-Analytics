@@ -29,3 +29,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: .
+- name: Generate MLB Schedule
+  run: python scripts/generate_schedule.py
