@@ -3,31 +3,19 @@ import json
 
 class AnalyticsEngine:
     def __init__(self):
-        # Path relative to the root where the script/app is executed
-        try:
-            with open('data/today_matchups.json', 'r') as f:
-                self.matchup_data = json.load(f)
-        except FileNotFoundError:
-            self.matchup_data = {"dates": []}
+        # ... your existing __init__ ...
+        with open('data/today_matchups.json', 'r') as f:
+            self.matchup_data = json.load(f)
 
     def get_all_games(self):
-        """Returns a DataFrame of all games for the Value Board list."""
-        all_games = []
-        for date_entry in self.matchup_data.get('dates', []):
-            for game in date_entry.get('games', []):
-                away = game['teams']['away']['team']['name']
-                home = game['teams']['home']['team']['name']
-                all_games.append({
-                    'GameID': game['gamePk'],
-                    'Game': f"{away} vs {home}"
-                })
-        return pd.DataFrame(all_games)
+        # ... your existing get_all_games ...
+        # (keep this as is)
+        pass
 
+    # --- PASTE THE NEW FUNCTION HERE ---
     def run_starworld_optimizer(self, game_id):
-        """Returns optimized data for a specific GameID."""
+        # 1. Find the specific game object
         target_game = None
-        
-        # Search through the loaded JSON for the matching GameID
         for date_entry in self.matchup_data.get('dates', []):
             for game in date_entry.get('games', []):
                 if str(game.get('gamePk')) == str(game_id):
@@ -37,23 +25,18 @@ class AnalyticsEngine:
         if not target_game:
             return pd.DataFrame([{"Error": "Game ID not found"}])
 
-        # Placeholder for your optimization logic
-        # You can expand this to include actual API math/calculations
-        away_team = target_game['teams']['away']['team']['name']
-        home_team = target_game['teams']['home']['team']['name']
-        status = target_game.get('status', {}).get('detailedState', 'N/A')
+        # 2. Extract players
+        all_players = []
+        for team_key in ['away', 'home']:
+            team_data = target_game['teams'][team_key]
+            # NOTE: Verify if your JSON actually has a 'players' key here!
+            # If your JSON structure is different, you must update 'players'
+            players = team_data.get('players', {}) 
+            for p_id, p_info in players.items():
+                all_players.append({
+                    'Player': p_info.get('person', {}).get('fullName', 'Unknown'),
+                    'Position': p_info.get('position', {}).get('abbreviation', 'N/A'),
+                    'Status': 'Optimized'
+                })
         
-        data = {
-            'Metric': ['Matchup', 'Status', 'Optimization Score'],
-            'Value': [
-                f"{away_team} at {home_team}", 
-                status, 
-                "High Value"
-            ]
-        }
-        return pd.DataFrame(data)
-
-# This main block is only for testing the engine independently
-if __name__ == "__main__":
-    engine = AnalyticsEngine()
-    print("Engine initialized and data loaded.")
+        return pd.DataFrame(all_players)
