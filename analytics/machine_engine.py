@@ -2,20 +2,23 @@ import pandas as pd
 import json
 import streamlit as st
 
+# 1. Move this to a standalone function so it can be cached easily
+@st.cache_data(ttl=3600)
+def load_matchup_data():
+    try:
+        with open('data/today_matchups.json', 'r') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return {"dates": []}
+
 class AnalyticsEngine:
     def __init__(self):
+        # The class no longer needs to store matchup_data as an instance variable
         pass
 
-    @st.cache_data(ttl=3600)  # Refreshes data every hour (3600 seconds)
-    def load_matchup_data(self):
-        try:
-            with open('data/today_matchups.json', 'r') as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return {"dates": []}
-
     def get_all_games(self):
-        matchup_data = self.load_matchup_data()
+        # 2. Call the standalone function instead of using self
+        matchup_data = load_matchup_data()
         all_games = []
         for date_entry in matchup_data.get('dates', []):
             for game in date_entry.get('games', []):
