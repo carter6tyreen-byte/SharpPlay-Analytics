@@ -32,7 +32,7 @@
                         "away": {
                             "team": {
                                 "id": 121,
-                                "name": "New York Mets",
+                                "name": "Los Angeles Dodgers",
                                 "link": "/api/v1/teams/121"
                             },
                             "leagueRecord": {
