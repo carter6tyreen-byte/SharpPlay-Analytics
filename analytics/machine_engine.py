@@ -10,8 +10,11 @@ class AnalyticsEngine:
         return mapping.get(code, code)
 
     def get_all_games(self):
-        # Your logic here
-        pass
+    # ... your logic to fetch data ...
+    if data is None or not data:
+        return pd.DataFrame()  # Return an empty DataFrame instead of None
+    return pd.DataFrame(data)
+
 
     def run_starworld_optimizer(self, game_id):
         # ... use self.get_position_name(code)
