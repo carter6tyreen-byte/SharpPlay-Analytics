@@ -1,3 +1,6 @@
+from analytics.machine_engine import AnalyticsEngine
+engine = AnalyticsEngine() # Initialize the instance
+
 import streamlit as st
 import pandas as pd
 from analytics.machine_engine import AnalyticsEngine
