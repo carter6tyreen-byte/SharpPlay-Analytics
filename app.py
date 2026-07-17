@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from analytics.machine_engine import AnalyticsEngine
 
-# Set page to wide mode for better table viewing
 st.set_page_config(layout="wide")
 
 def main():
@@ -10,7 +9,6 @@ def main():
     
     engine = AnalyticsEngine()
     
-    # Session state for navigation
     if 'selected_game' not in st.session_state:
         st.session_state.selected_game = None
 
@@ -18,32 +16,34 @@ def main():
         st.write("### Today's Matchups")
         games_df = engine.get_all_games()
         
-        # Display as a grid of buttons
-        for _, row in games_df.iterrows():
-            if st.button(f"View {row['Game']}", key=row['GameID']):
-                st.session_state.selected_game = row['GameID']
-                st.rerun()
+        if games_df.empty:
+            st.warning("No games found for today.")
+        else:
+            for _, row in games_df.iterrows():
+                if st.button(f"View {row['Game']}", key=row['GameID']):
+                    st.session_state.selected_game = row['GameID']
+                    st.rerun()
     else:
-        # Navigation
         if st.button("← Back to Matchups"):
             st.session_state.selected_game = None
             st.rerun()
             
-        st.write(f"### Live Roster & Metrics for Game: {st.session_state.selected_game}")
-        
-        # Get data
+        st.write(f"### Live Roster for Game: {st.session_state.selected_game}")
         player_df = engine.run_starworld_optimizer(st.session_state.selected_game)
         
-        # Apply Heatmap Styling (Example: color-coding status)
-        # Note: You can expand this to style numeric columns as you add them
+        # Fixed styling using .map instead of .applymap
         def highlight_status(val):
             color = 'lightgreen' if val == 'Active' else 'lightgrey'
             return f'background-color: {color}'
 
-        st.dataframe(
-            player_df.style.applymap(highlight_status, subset=['Status']),
-            use_container_width=True
-        )
+        # Ensure we only apply to 'Status' if it exists
+        if 'Status' in player_df.columns:
+            st.dataframe(
+                player_df.style.map(highlight_status, subset=['Status']),
+                use_container_width=True
+            )
+        else:
+            st.dataframe(player_df, use_container_width=True)
 
 if __name__ == "__main__":
     main()
