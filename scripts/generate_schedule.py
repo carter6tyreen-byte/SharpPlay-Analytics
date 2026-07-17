@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 def get_games_for_week():
     all_rows = []
+    # Loop through the next 7 days
     for i in range(7):
         target_date = (datetime.now() + timedelta(days=i)).strftime("%Y-%m-%d")
         url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={target_date}"
@@ -11,19 +12,21 @@ def get_games_for_week():
             response = requests.get(url, timeout=10)
             if response.status_code == 200:
                 data = response.json()
-                if data.get("dates"):
-                    for date_entry in data["dates"]:
-                        for game in date_entry.get("games", []):
-                            away = game["teams"]["away"]["team"]["name"]
-                            home = game["teams"]["home"]["team"]["name"]
-                            status = game["status"]["detailedState"]
-                            all_rows.append(f"<tr><td>{target_date}</td><td>{away} @ {home} ({status})</td></tr>")
-        except Exception:
+                # Safely iterate through dates instead of forcing index [0]
+                for date_entry in data.get("dates", []):
+                    for game in date_entry.get("games", []):
+                        away = game["teams"]["away"]["team"]["name"]
+                        home = game["teams"]["home"]["team"]["name"]
+                        status = game["status"]["detailedState"]
+                        all_rows.append(f"<tr><td>{target_date}</td><td>{away} @ {home} ({status})</td></tr>")
+        except Exception as e:
+            print(f"Error on {target_date}: {e}")
             continue
     return all_rows
 
 def update_html():
     rows = get_games_for_week()
+    
     table_content = "".join(rows) if rows else "<tr><td colspan='2'>No upcoming games found.</td></tr>"
 
     html_content = f"""<html>
@@ -38,7 +41,6 @@ def update_html():
 </body>
 </html>"""
 
-    # This saves the file in your repository root
     with open("index.html", "w") as f:
         f.write(html_content)
     print("Successfully updated index.html.")
