@@ -1,40 +1,33 @@
-    def run_starworld_optimizer(self, game_id):
-        # 1. Fetch the data (replace with your actual API request logic)
-        raw_data = self.fetch_roster_data(game_id) 
-        all_players = []
-        
-        # 2. Iterate through the teams and their respective rosters
-        for team in raw_data.get('teams', []):
-            team_name = team.get('name', 'Unknown')
-            team_side = team.get('side', 'N/A')
-            
-            # 3. Inner loop through each player on the roster
-            for player in team.get('roster', []):
-                # Map position using your helper method
-                position_code = player.get('position', {}).get('abbreviation', 'N/A')
-                full_position = self.get_position_name(position_code)
-                
-                # Append player details to our list
-                all_players.append({
-                    'Team': team_name,
-                    'Side': team_side,
-                    'Player': player.get('person', {}).get('fullName', 'Unknown'),
-                    'Position': full_position,
-                    'Status': player.get('status', {}).get('description', 'Active')
-                })
-        
-        # 4. Return as a clean DataFrame
-        return pd.DataFrame(all_players)
 def run_starworld_optimizer(self, player_name):
-    # Print the name being searched
-    print(f"Searching for data for: {player_name}")
+    # 1. Fetch all games/rosters first to find the player
+    # (Assuming you have a method like get_all_games)
+    all_games_data = self.get_all_games() 
     
-    # 1. Check if the player exists in your current data fetch
-    # (e.g., print your player mapping or game list here)
+    # 2. Iterate to find the game_id where the player is playing
+    target_game_id = None
+    for game in all_games_data.get('games', []):
+        # This logic depends on how your API structure looks
+        # You need to check if 'player_name' exists in the roster of this game
+        roster_data = self.fetch_roster_data(game['gamePk'])
+        
+        # Search for the player in this game's roster
+        for team in roster_data.get('teams', []):
+            for player in team.get('roster', []):
+                if player.get('person', {}).get('fullName') == player_name:
+                    target_game_id = game['gamePk']
+                    break
+        if target_game_id:
+            break
     
-    # 2. Check if the API call actually returns a result
-    # data = self.fetch_data(...)
-    # print(f"API returned: {data}")
-    
-    # If the logic returns an empty result, the optimizer will yield an empty DF
-    return results
+    # 3. If found, run your established logic
+    if target_game_id:
+        return self.run_starworld_optimizer_by_id(target_game_id)
+    else:
+        print(f"Player {player_name} not found in active games.")
+        return pd.DataFrame() # Return empty if not found
+
+# Rename your functional code to this
+def run_starworld_optimizer_by_id(self, game_id):
+    # This is your existing code that works with a game_id
+    raw_data = self.fetch_roster_data(game_id)
+    # ... rest of your original logic ...
