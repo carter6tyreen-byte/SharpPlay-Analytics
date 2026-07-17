@@ -3,8 +3,8 @@ import pandas as pd
 import requests
 from datetime import datetime
 
-# Corrected: File is in the root, so no /data/ prefix is needed
-DATA_URL = "https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/main/today_matchups.json"
+# Updated with the exact path identified in your system metadata
+DATA_URL = "https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/refs/heads/main/data/today_matchups.json"
 
 st.set_page_config(page_title="SharpPLAY Analytics", layout="wide")
 
@@ -15,8 +15,7 @@ def load_data():
         response.raise_for_status()
         data = response.json()
         
-        # Navigate the nested MLB JSON structure
-        # Structure: dates -> [0] -> games -> [list of games]
+        # Navigate the nested MLB JSON structure: dates -> [0] -> games
         games_list = data.get("dates", [{}])[0].get("games", [])
         
         if not games_list:
@@ -40,7 +39,7 @@ df = load_data()
 if df is not None and not df.empty:
     st.write(f"Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
-    # Define cleaner column names for the UI
+    # Selecting columns that exist in the nested structure
     display_cols = [
         'teams.away.team.name', 
         'teams.home.team.name', 
@@ -49,7 +48,6 @@ if df is not None and not df.empty:
         'description'
     ]
     
-    # Only select columns that actually exist in the data
     available_cols = [c for c in display_cols if c in df.columns]
     
     st.dataframe(
