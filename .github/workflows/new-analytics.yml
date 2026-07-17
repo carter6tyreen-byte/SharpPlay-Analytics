@@ -25,8 +25,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas streamlit
       
+      # FIX: Point explicitly to the file inside the analytics/ folder
       - name: Run Analytics Engine
-        run: python machine_engine.py
+        run: python analytics/machine_engine.py
       
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
