@@ -1,11 +1,17 @@
-from analytics.machine_engine import AnalyticsEngine
-engine = AnalyticsEngine() # Initialize the instance
-
 import streamlit as st
 import pandas as pd
 from analytics.machine_engine import AnalyticsEngine
 
 st.set_page_config(layout="wide")
+
+def main():
+    # Initialize the engine once inside main
+    engine = AnalyticsEngine()
+    
+    st.title("SharpPLAY Value Board")
+    
+    # ... rest of your code ...
+
 
 def main():
     st.title("SharpPLAY Value Board")
