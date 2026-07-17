@@ -1,10 +1,12 @@
-streamlit run app.py⁠
 import streamlit as st
 import pandas as pd
+from analytics.machine_engine import AnalyticsEngine # Make sure to import your engine correctly
 
 # Initialize session state for drill-down navigation
 if 'selected_game' not in st.session_state:
     st.session_state.selected_game = None
+# ... the rest of your code ...
+
 
 def main():
     st.title("SharpPLAY Value Board")
