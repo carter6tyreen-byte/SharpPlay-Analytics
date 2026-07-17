@@ -2,45 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SharpPLAY Analytics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharpPLAY Value Board</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .high-value { font-weight: bold; color: #2e7d32; }
+    </style>
 </head>
 <body>
-    <h1>Today's Matchups</h1>
-    <div id="matchup-container">Loading data...</div>
-
-    <script>
-        async function loadMatchups() {
-            const container = document.getElementById('matchup-container');
-            try {
-                // Adjust this path: use './data/today_matchups.json' if it's in a folder
-                const response = await fetch('./data/today_matchups.json');
-                
-                if (!response.ok) {
-                    throw new Error(`Could not load data: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Parsing the structure you provided
-                const game = data.dates[0].games[0];
-                const awayTeam = game.teams.away.team.name;
-                const homeTeam = game.teams.home.team.name;
-                
-                container.innerHTML = `
-                    <p><strong>${awayTeam}</strong> at <strong>${homeTeam}</strong></p>
-                    <p>Game ID: ${game.gamePk}</p>
-                    <p>Status: ${game.status.detailedState}</p>
-                `;
-            } catch (error) {
-                container.innerHTML = `<p style="color:red;">Error loading data: ${error.message}</p>`;
-                console.error("Fetch error:", error);
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', loadMatchups);
-    </script>
+    <h1>SharpPLAY Value Board</h1>
+    <p>Welcome to the dashboard. Please visit our <a href="https://your-streamlit-app-url.com">interactive analytics dashboard</a> for real-time optimizations.</p>
+    
+    <!-- This table will be updated by your machine_engine.py script -->
+    <div id="matchups-table">
+        <!-- Data content injected here -->
+    </div>
 </body>
 </html>
-// Inside your display logic
-const rowClass = opportunity.edge > 5.0 ? 'high-value' : 'value';
-// Use this to style your 'Value Board' with bold colors
