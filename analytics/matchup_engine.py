@@ -1,19 +1,36 @@
 import pandas as pd
+import os
 
 class AnalyticsEngine:
-    def __init__(self, raw_data=None):
-        # Default to empty dict to prevent initialization errors
-        self.raw_data = raw_data if raw_data is not None else {}
+    def __init__(self):
+        # Initialize your engine setup here
+        pass
 
     def run_starworld_optimizer(self, game_id):
-        """Processes logic and returns a DataFrame with the required metrics."""
-        # Simulated data - replace with your actual API logic
+        # REPLACE THIS with your actual logic to fetch/calculate data
+        # Returning a dummy DataFrame for structural verification
         data = {
-            'Name': ['Pitcher A', 'Batter B'],
-            'Position': ['P', 'OF'],
-            'metric_1': [85, 75],
-            'metric_2': [90, 65],
-            'metric_3': [82, 88]
+            'GameID': [game_id],
+            'Analysis': ['Value Found'],
+            'Confidence': [0.95]
         }
         return pd.DataFrame(data)
 
+def main():
+    # 1. Initialize the engine
+    engine = AnalyticsEngine()
+    
+    # 2. Define the target Game ID
+    target_game_id = "823440"
+    
+    # 3. Perform the analysis
+    print(f"Running optimizer for game: {target_game_id}")
+    results_df = engine.run_starworld_optimizer(game_id=target_game_id)
+    
+    # 4. Save results so generate_static_report.py can use them
+    # Saving to CSV is the most reliable way to share data between scripts
+    results_df.to_csv("optimizer_results.csv", index=False)
+    print("Optimization complete. Results saved to optimizer_results.csv")
+
+if __name__ == "__main__":
+    main()
