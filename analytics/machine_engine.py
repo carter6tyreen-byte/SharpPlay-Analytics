@@ -2,12 +2,18 @@ import pandas as pd
 
 class AnalyticsEngine:
     def __init__(self):
-        pass
+        # Mapping IDs to names for readability
+        self.game_metadata = {
+            "823440": {"Game": "Yankees vs Red Sox", "Player": "Aaron Judge"}
+        }
 
     def run_starworld_optimizer(self, game_id):
-        # Your core logic here
+        # Retrieve metadata or default to "Unknown"
+        metadata = self.game_metadata.get(game_id, {"Game": "Unknown", "Player": "Unknown"})
+        
         data = {
-            'GameID': [game_id],
+            'Game': [metadata['Game']],
+            'Player': [metadata['Player']],
             'Analysis': ['Value Found'],
             'Confidence': [0.95]
         }
@@ -17,10 +23,10 @@ def main():
     engine = AnalyticsEngine()
     target_game_id = "823440"
     
-    # 1. Run Analysis
+    # 1. Run Analysis with mapping
     df = engine.run_starworld_optimizer(game_id=target_game_id)
     
-    # 2. Convert to HTML directly
+    # 2. Convert to HTML
     table_html = df.to_html(classes='table', index=False)
     html_content = f"""
     <!DOCTYPE html>
@@ -36,7 +42,7 @@ def main():
     # 3. Save as index.html
     with open("index.html", "w") as f:
         f.write(html_content)
-    print("Optimization complete and index.html updated.")
+    print("Optimization complete and index.html updated with named data.")
 
 if __name__ == "__main__":
     main()
