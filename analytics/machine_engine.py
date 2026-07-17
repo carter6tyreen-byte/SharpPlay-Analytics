@@ -1,16 +1,7 @@
 import pandas as pd
-import json
-import requests
+import numpy as np
+import logging
 import streamlit as st
-
-# Function required for get_all_games to work
-@st.cache_data(ttl=3600)
-def load_matchup_data():
-    try:
-        with open('data/today_matchups.json', 'r') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {"dates": []}
 
 class AnalyticsEngine:
     @staticmethod
@@ -24,49 +15,50 @@ class AnalyticsEngine:
         return mapping.get(code, code)
 
     def get_all_games(self):
-        matchup_data = load_matchup_data()
-        all_games = []
-        for date_entry in matchup_data.get('dates', []):
-            for game in date_entry.get('games', []):
-                away = game.get('teams', {}).get('away', {}).get('team', {}).get('name', 'Unknown')
-                home = game.get('teams', {}).get('home', {}).get('team', {}).get('name', 'Unknown')
-                all_games.append({
-                    'GameID': game.get('gamePk'),
-                    'Game': f"{away} at {home}"
-                })
-        return pd.DataFrame(all_games)
+        # Ensure load_matchup_data is available in your scope
+        matchup_data = load_matchup_data() 
+        data = matchup_data.get('dates', [])
+        
+        if data is None or not data:
+            return pd.DataFrame() 
+        
+        return pd.DataFrame(data)
 
     def run_starworld_optimizer(self, game_id):
-        matchup_data = load_matchup_data()
-        target_game = None
-        for date_entry in matchup_data.get('dates', []):
-            for game in date_entry.get('games', []):
-                if str(game.get('gamePk')) == str(game_id):
-                    target_game = game
-                    break
-        
-        if not target_game:
-            return pd.DataFrame([{"Error": "Game ID not found"}])
-
+        # Placeholder for your actual data fetching logic
+        raw_data = self.fetch_roster_data(game_id) 
         all_players = []
-        teams_to_fetch = [
-            {'id': target_game['teams']['away']['team']['id'], 'name': target_game['teams']['away']['team']['name'], 'side': 'Away'},
-            {'id': target_game['teams']['home']['team']['id'], 'name': target_game['teams']['home']['team']['name'], 'side': 'Home'}
-        ]
         
-        for t in teams_to_fetch:
-            try:
-                url = f"https://statsapi.mlb.com/api/v1/teams/{t['id']}/roster"
-                response = requests.get(url, timeout=10).json()
-                for p in response.get('roster', []):
-                    all_players.append({
-                        'Team': t['name'],
-                        'Side': t['side'],
-                        'Player': p.get('person', {}).get('fullName', 'Unknown'),
-                        'Position': self.get_position_name(p.get('position', {}).get('abbreviation', 'N/A')),
-                        'Status': p.get('status', {}).get('description', 'Active')
-                    })
-            except Exception:
-                continue
+        for team in raw_data.get('teams', []):
+            team_name = team.get('name', 'Unknown')
+            team_side = team.get('side', 'N/A')
             
+            for player in team.get('roster', []):
+                position_code = player.get('position', {}).get('abbreviation', 'N/A')
+                all_players.append({
+                    'Team': team_name,
+                    'Side': team_side,
+                    'Player': player.get('person', {}).get('fullName', 'Unknown'),
+                    'Position': self.get_position_name(position_code),
+                    'Status': player.get('status', {}).get('description', 'Active')
+                })
         return pd.DataFrame(all_players)
+
+    def get_optimal_bets_with_sizing(self, predictions, market_odds):
+        """Applies utility-based optimization, penalty logic, and Kelly Criterion sizing."""
+        try:
+            logging.info("Starting Starworld optimization...")
+            df = pd.merge(predictions, market_odds, on='player_id', how='inner')
+            
+            df['implied_prob'] = 1 / df['decimal_odds']
+            df['edge'] = df['prob'] - df['implied_prob']
+            df['utility_score'] = df['edge'] * (1 - df['volatility'])
+            
+            df['b'] = df['decimal_odds'] - 1
+            df['kelly_fraction'] = np.where(df['b'] > 0, (df['b'] * df['prob'] - (1 - df['prob'])) / df['b'], 0)
+            df['bet_size'] = df['kelly_fraction'].clip(0, 0.05)
+            
+            return df[df['utility_score'] > 0].copy()
+        except Exception as e:
+            logging.error(f"Error in starworld_optimizer: {e}")
+            return pd.DataFrame()
