@@ -3,62 +3,18 @@ import numpy as np
 import logging
 import streamlit as st
 
+# --- ADD THESE FUNCTIONS TO YOUR FILE ---
+def load_matchup_data():
+    """Fetches matchup data from the MLB API."""
+    # Placeholder: Replace with your actual requests.get() logic
+    return {'dates': []} 
+
 class AnalyticsEngine:
-    @staticmethod
-    def get_position_name(code):
-        mapping = {
-            'P': 'Pitcher', 'C': 'Catcher', '1B': 'First Base', 
-            '2B': 'Second Base', '3B': 'Third Base', 'SS': 'Shortstop', 
-            'LF': 'Left Field', 'CF': 'Center Field', 'RF': 'Right Field',
-            'DH': 'Designated Hitter'
-        }
-        return mapping.get(code, code)
+    # ... (Keep your existing staticmethod and get_position_name) ...
 
-    def get_all_games(self):
-        # Ensure load_matchup_data is available in your scope
-        matchup_data = load_matchup_data() 
-        data = matchup_data.get('dates', [])
-        
-        if data is None or not data:
-            return pd.DataFrame() 
-        
-        return pd.DataFrame(data)
+    def fetch_roster_data(self, game_id):
+        """Fetches roster data from the MLB API."""
+        # Placeholder: Replace with your actual requests.get() logic
+        return {'teams': []}
 
-    def run_starworld_optimizer(self, game_id):
-        # Placeholder for your actual data fetching logic
-        raw_data = self.fetch_roster_data(game_id) 
-        all_players = []
-        
-        for team in raw_data.get('teams', []):
-            team_name = team.get('name', 'Unknown')
-            team_side = team.get('side', 'N/A')
-            
-            for player in team.get('roster', []):
-                position_code = player.get('position', {}).get('abbreviation', 'N/A')
-                all_players.append({
-                    'Team': team_name,
-                    'Side': team_side,
-                    'Player': player.get('person', {}).get('fullName', 'Unknown'),
-                    'Position': self.get_position_name(position_code),
-                    'Status': player.get('status', {}).get('description', 'Active')
-                })
-        return pd.DataFrame(all_players)
-
-    def get_optimal_bets_with_sizing(self, predictions, market_odds):
-        """Applies utility-based optimization, penalty logic, and Kelly Criterion sizing."""
-        try:
-            logging.info("Starting Starworld optimization...")
-            df = pd.merge(predictions, market_odds, on='player_id', how='inner')
-            
-            df['implied_prob'] = 1 / df['decimal_odds']
-            df['edge'] = df['prob'] - df['implied_prob']
-            df['utility_score'] = df['edge'] * (1 - df['volatility'])
-            
-            df['b'] = df['decimal_odds'] - 1
-            df['kelly_fraction'] = np.where(df['b'] > 0, (df['b'] * df['prob'] - (1 - df['prob'])) / df['b'], 0)
-            df['bet_size'] = df['kelly_fraction'].clip(0, 0.05)
-            
-            return df[df['utility_score'] > 0].copy()
-        except Exception as e:
-            logging.error(f"Error in starworld_optimizer: {e}")
-            return pd.DataFrame()
+    # ... (Keep your existing get_all_games, run_starworld_optimizer, and get_optimal_bets_with_sizing) ...
