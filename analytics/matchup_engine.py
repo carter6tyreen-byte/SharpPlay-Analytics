@@ -1,21 +1,21 @@
-class AnalyticsEngine:
-    # ... existing methods ...
+import pandas as pd
 
-    def apply_environment_score(self, data):
+class AnalyticsEngine:
+    # ... (Keep previous prepare_game_data and other methods) ...
+
+    def run_starworld_optimizer(self, game_id):
         """
-        Calculates ES and applies a tunable probability adjustment.
+        Processes game data and returns a DataFrame with metrics.
+        Must return a non-empty DataFrame for the dashboard to render.
         """
-        es = self.calculate_total_es(data)
-        
-        # Adjustment mapping (tunable via config/backtesting)
-        if es >= 90: adjustment = 0.08
-        elif es >= 80: adjustment = 0.05
-        elif es >= 70: adjustment = 0.03
-        elif es >= 45: adjustment = 0.00
-        elif es >= 30: adjustment = -0.03
-        elif es >= 15: adjustment = -0.06
-        else: adjustment = -0.08
-        
-        # Apply adjustment to base probability
-        data['p_adjusted'] = data['p_base'] * (1 + adjustment)
-        return data
+        # Placeholder for your data ingestion logic
+        # Ensure this returns a populated DataFrame with columns: 
+        # 'Name', 'Position', 'metric_1', 'metric_2', 'metric_3'
+        data = {
+            'Name': ['Player A', 'Player B'],
+            'Position': ['P', 'C'],
+            'metric_1': [85, 70],
+            'metric_2': [90, 75],
+            'metric_3': [60, 95]
+        }
+        return pd.DataFrame(data)
