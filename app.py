@@ -1,34 +1,31 @@
+streamlit run app.py⁠
 import streamlit as st
-import sys
-import os
+import pandas as pd
 
-# FIX: Add the current directory to sys.path to ensure 'analytics' is found
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-# Now import the engine
-from analytics.machine_engine import AnalyticsEngine
+# Initialize session state for drill-down navigation
+if 'selected_game' not in st.session_state:
+    st.session_state.selected_game = None
 
 def main():
     st.title("SharpPLAY Value Board")
-
-    # Define game_id
-    game_id = st.text_input("Enter Game ID", value="823440")
-
-    # Initialize the engine
-    try:
-        engine = AnalyticsEngine()
-    except Exception as e:
-        st.error(f"Error initializing engine: {e}")
-        return
-
-    if st.button(f"Run Starworld Optimizer {game_id}"):
-        try:
-            with st.spinner('Calculating value...'):
-                results = engine.run_starworld_optimizer(game_id=game_id)
-                st.write("### Optimization Results")
-                st.dataframe(results)
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-
-if __name__ == "__main__":
-    main()
+    
+    # Load your data
+    engine = AnalyticsEngine() 
+    
+    if st.session_state.selected_game is None:
+        # Show all games
+        games_df = engine.get_all_games() # Your method to list all matchups
+        st.write("### Today's Matchups")
+        for index, row in games_df.iterrows():
+            if st.button(f"View {row['Game']}", key=row['GameID']):
+                st.session_state.selected_game = row['GameID']
+                st.rerun()
+    else:
+        # Show player optimization for the selected game
+        if st.button("← Back to Matchups"):
+            st.session_state.selected_game = None
+            st.rerun()
+            
+        st.write(f"### Optimization for Game: {st.session_state.selected_game}")
+        player_df = engine.run_starworld_optimizer(st.session_state.selected_game)
+        st.dataframe(player_df) # Interactive table for player data

@@ -1,94 +1,24 @@
-
-    <html>
-    <head><title>SharpPLAY Value Board</title></head>
-    <body>
-        <h1>Today's Value Board</h1>
-        <table border="1" class="dataframe table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>Game</th>
-      <th>Status</th>
-      <th>Analysis</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>Tampa Bay Rays vs Boston Red Sox</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Tampa Bay Rays vs Boston Red Sox</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Los Angeles Dodgers vs New York Yankees</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Pittsburgh Pirates vs Cleveland Guardians</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Texas Rangers vs Atlanta Braves</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Chicago White Sox vs Toronto Blue Jays</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Miami Marlins vs Milwaukee Brewers</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Minnesota Twins vs Chicago Cubs</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Baltimore Orioles vs Houston Astros</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>San Diego Padres vs Kansas City Royals</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Cincinnati Reds vs Colorado Rockies</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Detroit Tigers vs Los Angeles Angels</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>Washington Nationals vs Athletics</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>St. Louis Cardinals vs Arizona Diamondbacks</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-    <tr>
-      <td>San Francisco Giants vs Seattle Mariners</td>
-      <td>Scheduled</td>
-      <td>Value Found</td>
-    </tr>
-  </tbody>
-</table>
-    </body>
-    </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharpPLAY Value Board</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        .high-value { font-weight: bold; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>SharpPLAY Value Board</h1>
+    <p>Welcome to the dashboard. Please visit our <a href="https://your-streamlit-app-url.com">interactive analytics dashboard</a> for real-time optimizations.</p>
     
+    <!-- This table will be updated by your machine_engine.py script -->
+    <div id="matchups-table">
+        <!-- Data content injected here -->
+    </div>
+</body>
+</html>
