@@ -1,25 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SharpPLAY Analytics</title>
+</head>
+<body>
+    <h1>Today's Matchups</h1>
+    <div id="matchup-container">Loading data...</div>
 
-    <!DOCTYPE html>
-    <html>
-    <head><title>SharpPLAY Value Board</title></head>
-    <body>
-        <h1>Today's Value Board</h1>
-        <table border="1" class="dataframe table">
-  <thead>
-    <tr style="text-align: right;">
-      <th>Game</th>
-      <th>Analysis</th>
-      <th>Confidence</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>New York Mets vs Philadelphia Phillies</td>
-      <td>Value Found</td>
-      <td>0.95</td>
-    </tr>
-  </tbody>
-</table>
-    </body>
-    </html>
-    
+    <script>
+        async function loadMatchups() {
+            const container = document.getElementById('matchup-container');
+            try {
+                // Adjust this path: use './data/today_matchups.json' if it's in a folder
+                const response = await fetch('./data/today_matchups.json');
+                
+                if (!response.ok) {
+                    throw new Error(`Could not load data: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Parsing the structure you provided
+                const game = data.dates[0].games[0];
+                const awayTeam = game.teams.away.team.name;
+                const homeTeam = game.teams.home.team.name;
+                
+                container.innerHTML = `
+                    <p><strong>${awayTeam}</strong> at <strong>${homeTeam}</strong></p>
+                    <p>Game ID: ${game.gamePk}</p>
+                    <p>Status: ${game.status.detailedState}</p>
+                `;
+            } catch (error) {
+                container.innerHTML = `<p style="color:red;">Error loading data: ${error.message}</p>`;
+                console.error("Fetch error:", error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadMatchups);
+    </script>
+</body>
+</html>
+// Inside your display logic
+const rowClass = opportunity.edge > 5.0 ? 'high-value' : 'value';
+// Use this to style your 'Value Board' with bold colors
