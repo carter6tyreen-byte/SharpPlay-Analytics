@@ -1,0 +1,13 @@
+## Phase 5 - STARWORLD Optimizer
+- [ ] **Data Pipeline Integration**: 
+    - Ensure `predictions` and `market_odds` dataframes are correctly ingested.
+    - Validate `player_id` mapping against MLB API data for successful `pd.merge`.
+- [ ] **Core Logic**:
+    - Apply utility-based optimization (Volatility Factor: $1 - \text{volatility}$).
+    - Implement Kelly Criterion sizing ($f^* = \frac{bp - q}{b}$).
+    - Apply bankroll constraint (e.g., $0.05$ max bet).
+- [ ] **Dashboard Integration**:
+    - Connect `st.button` trigger in `app.py` to the optimizer function.
+    - Display filtered results ($utility\_score > 0$) in the UI.
+- [ ] **Validation**: 
+    - Verify betting output against historical test data before live deployment.
