@@ -1,22 +1,17 @@
 class AnalyticsEngine:
-    def __init__(self, raw_data):
-        """Initializes the engine with the raw matchup data."""
-        self.raw_data = raw_data
+    # ... __init__ ...
 
-    def analyze_matchups(self, simulation_results):
+    def run_starworld_engine(self, simulation_results):
+        # 1. AI Prediction Layer (via analyze_matchups)
+        # 2. Optimization Layer (Selecting the portfolio)
+        # 3. Kelly Risk Layer (Applying dynamic sizing)
+        ...
+
+    def calculate_stake_sizing(self, data):
         """
-        Processes simulation output to identify betting edges.
+        Implements the dynamic Kelly Risk Layer.
+        Formula: Stake = (Kelly * Confidence * DataQuality * PortfolioFactor)
         """
-        results = []
-        for game in simulation_results:
-            # Your existing logic here...
-            win_prob = game.get('simulated_win_prob')
-            odds = game.get('market_odds')
-            
-            # ... calculation logic ...
-            
-            results.append({
-                "game": game.get('name'),
-                # ...
-            })
-        return results
+        # Apply fractional Kelly (e.g., 1/4 or 1/2) here
+        # Incorporate confidence and data quality adjustments
+        return final_stakes
