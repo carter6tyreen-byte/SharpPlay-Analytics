@@ -8,34 +8,40 @@ def main():
     engine = AnalyticsEngine()
     df = engine.get_all_games()
     
-    # 1. DEBUG: Uncomment the next line to see your true column names
-    # st.write("Available columns:", df.columns.tolist())
+    # 1. Validation: Ensure the data contains the expected 'games' list
+    if df.empty or 'games' not in df.columns:
+        st.write("No schedule data found.")
+        return
+
+    # 2. Unpacking: The API nests games inside a list for each date
+    # We take the first available date entry
+    games_list = df.iloc[0].get('games', [])
     
-    if df.empty:
-        st.write("No games found.")
+    if not games_list:
+        st.write("No games scheduled for this date.")
         return
 
-    # 2. FIX: Replace these strings with the actual names from the debug output
-    # For example: display_col = 'away_name' and id_col = 'gamePk'
-    display_col = 'actual_display_column_name' 
-    id_col = 'actual_id_column_name'           
+    # 3. Processing: Convert the nested list into a usable DataFrame
+    games_df = pd.DataFrame(games_list)
 
-    # 3. SAFETY: Check if columns exist before looping
-    if display_col not in df.columns or id_col not in df.columns:
-        st.error(f"Error: Columns '{display_col}' or '{id_col}' not found. Available: {df.columns.tolist()}")
-        return
-
-    # 4. LOOP: Safely iterate and create unique buttons
-    for index, row in df.iterrows():
-        # Ensure the key is converted to a string to avoid hash collisions
-        button_label = f"Analyze: {row[display_col]}"
-        button_key = str(row[id_col])
-        
-        if st.button(button_label, key=button_key):
-            with st.spinner('Running Optimizer...'):
-                results = engine.run_starworld_optimizer(row[id_col])
-                st.dataframe(results)
+    # 4. Rendering: Iterate through the unpacked games
+    for index, row in games_df.iterrows():
+        try:
+            # Path: teams -> away/home -> team -> name
+            away = row['teams']['away']['team']['name']
+            home = row['teams']['home']['team']['name']
+            game_id = str(row['gamePk'])
+            
+            label = f"{away} @ {home}"
+            
+            # Using gamePk as a unique key for the button
+            if st.button(f"Analyze: {label}", key=game_id):
+                with st.spinner('Running Optimizer...'):
+                    results = engine.run_starworld_optimizer(game_id)
+                    st.dataframe(results)
+        except KeyError as e:
+            st.error(f"Data mapping error: Missing field {e}")
+            continue
 
 if __name__ == "__main__":
     main()
-
