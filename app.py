@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import requests
 
+# Fixed path based on your repository structure[span_1](start_span)[span_1](end_span)
 DATA_URL = "https://raw.githubusercontent.com/carter6tyreen-byte/SharpPlay-Analytics/refs/heads/main/data/today_matchups.json"
 
 @st.cache_data(ttl=3600)
@@ -19,6 +20,8 @@ st.title("⚾ SharpPLAY Analytics Dashboard")
 
 games = load_schedule()
 df_games = pd.json_normalize(games)
+
+st.subheader("Today's Matchups")
 
 for index, row in df_games.iterrows():
     game_pk = row['gamePk']
@@ -39,19 +42,22 @@ for index, row in df_games.iterrows():
                         "Position": p_data.get('position', {}).get('abbreviation', 'N/A')
                     }
                     
-                    # Extract stats if they exist
+                    # Extract stats
                     stats = p_data.get('stats', {})
-                    # Add batting stats (e.g., avg, homeRuns)
                     info.update(stats.get('batting', {}))
-                    # Add pitching stats (e.g., era, strikeOuts)
                     info.update(stats.get('pitching', {}))
                     
                     player_list.append(info)
                 
-                st.write("### Away Roster & Stats")
-                # Create DataFrame and clean up empty columns
+                # Define columns to show for a clean display
+                cols_to_show = ["Name", "Position", "atBats", "hits", "homeRuns", "strikeOuts", "baseOnBalls"]
+                
+                # Create DataFrame, filter columns, and remove empty rows[span_2](start_span)[span_2](end_span)
                 df_stats = pd.DataFrame(player_list)
-                st.dataframe(df_stats, use_container_width=True, hide_index=True)
+                df_clean = df_stats.reindex(columns=cols_to_show).dropna(subset=["Name"])
+                
+                st.write("### Away Roster & Stats")
+                st.dataframe(df_clean, use_container_width=True, hide_index=True)
 
 if not games:
     st.warning("No games found.")
