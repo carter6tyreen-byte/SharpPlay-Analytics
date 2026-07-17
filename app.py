@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 from analytics.machine_engine import AnalyticsEngine
 
-# 1. Page Configuration
+# Page config must be at the top level with no indentation
 st.set_page_config(page_title="MLB Analytics Board", layout="wide")
+
 
 # 2. Initialize Session State
 if 'engine' not in st.session_state:
