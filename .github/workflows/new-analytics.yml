@@ -1,27 +1,14 @@
+name: SharpPLAY Analytics Pipeline
+
+# THIS IS THE PART THAT WAS MISSING OR FORMATTED INCORRECTLY
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # Added this so you can run it manually in the UI
+
 jobs:
   update-dashboards:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with: {python-version: '3.9'}
-      
-      - name: Install dependencies
-        run: pip install pandas streamlit
-      
-      # Step A: Run your renamed engine script
-      - name: Generate Data
-        run: python machine_engine.py
-      
-      # Step B: Build the static page
-      - name: Build Static Value Board
-        run: python generate_static_report.py
-      
-      # Step C: Deploy
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+    # ... rest of your jobs ...
