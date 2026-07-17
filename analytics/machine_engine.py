@@ -1,39 +1,23 @@
 import pandas as pd
-import json
 
 class AnalyticsEngine:
     def __init__(self):
-        # Load the live data directly from the JSON file in your data folder
+        # Load the live data
         self.matchup_data = pd.read_json('data/today_matchups.json')
 
-    def run_starworld_optimizer(self):
-        # Use the loaded DataFrame instead of a hardcoded dictionary
-        # You can now perform your logic on self.matchup_data here
-        return self.matchup_data
+    # Update this line to accept game_id again
+    def run_starworld_optimizer(self, game_id):
+        # Filter your loaded data for the specific game_id
+        # Assuming your JSON has a column named 'GameID'
+        result = self.matchup_data[self.matchup_data['GameID'] == int(game_id)]
+        return result
 
 def main():
     engine = AnalyticsEngine()
+    target_game_id = "823440"
     
-    # 1. Get the dynamic data
-    df = engine.run_starworld_optimizer()
+    # Now this call will work because the function expects 'game_id'
+    df = engine.run_starworld_optimizer(game_id=target_game_id)
     
-    # 2. Convert to HTML
-    table_html = df.to_html(classes='table', index=False)
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head><title>SharpPLAY Value Board</title></head>
-    <body>
-        <h1>Today's Value Board</h1>
-        {table_html}
-    </body>
-    </html>
-    """
-    
-    # 3. Save to root directory
-    with open("index.html", "w") as f:
-        f.write(html_content)
-    print("Optimization complete using live data.")
+    # ... rest of your code
 
-if __name__ == "__main__":
-    main()
