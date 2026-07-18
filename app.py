@@ -1,4 +1,7 @@
 import streamlit as st
+print("App is starting up...") # Check logs for this
+from analytics.machine_engine import AnalyticsEngine
+import streamlit as st
 from analytics.machine_engine import AnalyticsEngine
 
 st.set_page_config(page_title="MLB Analytics Board", layout="wide")
