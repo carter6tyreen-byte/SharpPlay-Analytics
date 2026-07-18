@@ -4,32 +4,39 @@ import requests
 class AnalyticsEngine:
     def __init__(self):
         self.base_url = "https://statsapi.mlb.com/api/v1"
+        self.headers = {}
+
+    def _fetch_from_api(self, endpoint_type, params=None):
+        try:
+            url = f"{self.base_url}/{endpoint_type}"
+            response = requests.get(url, params=params, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"Error fetching {endpoint_type}: {e}")
+            return None
+
+    def get_pitcher_data(self):
+        params = {"sportId": 1, "statGroup": "pitching", "statType": "season", "leaderCategories": "era", "season": 2026}
+        data = self._fetch_from_api("stats/leaders", params=params)
+        return self._process_data(data)
+
+    def get_batter_data(self):
+        params = {"sportId": 1, "statGroup": "hitting", "statType": "season", "leaderCategories": "homeRuns", "season": 2026}
+        data = self._fetch_from_api("stats/leaders", params=params)
+        return self._process_data(data)
 
     def _process_data(self, data):
-        """Converts MLB JSON response into a clean DataFrame."""
-        if not data or 'leagueLeaders' not in data:
+        if not data or 'leagueLeaders' not in data or not data['leagueLeaders']:
             return pd.DataFrame()
-        # ... (your processing logic)
-
-    # Added 'self' here
-    def get_position_name(self, code):
-        mapping = {
-            'P': 'Pitcher', 'C': 'Catcher', '1B': 'First Base', 
-            '2B': 'Second Base', '3B': 'Third Base', 'SS': 'Shortstop', 
-            'LF': 'Left Field', 'CF': 'Center Field', 'RF': 'Right Field',
-            'DH': 'Designated Hitter'
-        }
-        return mapping.get(code, code)
-
-    def get_all_games(self):
-        # If load_matchup_data is in this class, use self.load_matchup_data()
-        matchup_data = self.load_matchup_data() 
-        data = matchup_data.get('dates', [])
         
-        if not data:
-            return pd.DataFrame() 
+        df = pd.json_normalize(data['leagueLeaders'])
+        rename_map = {'person.fullName': 'Player', 'stat': 'Value', 'rank': 'Rank'}
+        df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
         
-        return pd.DataFrame(data)
-
-    def run_starworld_optimizer(self, game_id):
-        pass
+        required_cols = ['Rank', 'Player', 'Value']
+        if 'team.name' in df.columns:
+            required_cols.append('team.name')
+            
+        existing_cols = [c for c in required_cols if c in df.columns]
+        return df[existing_cols] if existing_cols else pd.DataFrame()
