@@ -1,1 +1,2 @@
+print("Analytics package loaded")
 
