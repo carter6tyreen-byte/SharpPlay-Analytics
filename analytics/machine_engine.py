@@ -5,18 +5,21 @@ class AnalyticsEngine:
     def __init__(self):
         self.base_url = "https://statsapi.mlb.com/api/v1"
 
-    def _fetch_from_api(self, endpoint_type, params=None):
+        def _fetch_from_api(self, endpoint_type, params=None):
         try:
             url = f"{self.base_url}/{endpoint_type}"
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
-            # This will appear in your Streamlit 'Manage app > See logs'
-            print(f"DEBUG: API returned data for {params.get('season')}: {'leagueLeaders' in data}")
+            
+            # FORCE LOGGING: We print to st.write and standard print
+            msg = f"DEBUG: API returned data for {params.get('season')}: 'leagueLeaders' in data is {'leagueLeaders' in data}"
+            print(msg, flush=True) # flush=True forces the output
             return data
         except Exception as e:
-            print(f"DEBUG: API Error: {e}")
+            print(f"DEBUG: API Error: {e}", flush=True)
             return None
+
 
     def get_pitcher_data(self):
         # Try 2026 first, then fallback to 2025
