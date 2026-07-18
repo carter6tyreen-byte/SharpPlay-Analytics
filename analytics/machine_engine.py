@@ -1,53 +1,30 @@
-import pandas as pd
-import requests
-
-class AnalyticsEngine:
-    def __init__(self):
-        # Official MLB Stats API base URL
-        self.base_url = "https://statsapi.mlb.com/api/v1"
-        self.headers = {} 
-
-    def _fetch_from_api(self, endpoint_type, params=None):
-        """Fetches data from the MLB public API."""
-        try:
-            url = f"{self.base_url}/{endpoint_type}"
-            response = requests.get(url, params=params, headers=self.headers, timeout=10)
-            response.raise_for_status()
-            return response.json()
-        except Exception as e:
-            print(f"Error fetching {endpoint_type}: {e}")
-            return None
-
-    def get_pitcher_data(self):
-        """Fetches pitching leaders."""
-        params = {"sportId": 1, "statGroup": "pitching", "statType": "season", "leaderCategories": "era", "season": 2026}
-        data = self._fetch_from_api("stats/leaders", params=params)
-        return self._process_data(data)
-
-    def get_batter_data(self):
-        """Fetches batting leaders."""
-        params = {"sportId": 1, "statGroup": "hitting", "statType": "season", "leaderCategories": "homeRuns", "season": 2026}
-        data = self._fetch_from_api("stats/leaders", params=params)
-        return self._process_data(data)
-
     def _process_data(self, data):
-        """Converts MLB JSON response into a clean DataFrame by normalizing nested objects."""
-        if not data or 'leagueLeaders' not in data:
+        """Converts MLB JSON response into a clean DataFrame with safety checks."""
+        # Check if data exists and contains 'leagueLeaders'
+        if not data or 'leagueLeaders' not in data or not data['leagueLeaders']:
             return pd.DataFrame()
         
         # 1. Normalize the 'leagueLeaders' list
         df = pd.json_normalize(data['leagueLeaders'])
         
-        # 2. Clean up column names for readability
-        df = df.rename(columns={
+        # 2. Rename columns only if they exist in the DataFrame
+        rename_map = {
             'person.fullName': 'Player',
             'stat': 'Value',
             'rank': 'Rank'
-        })
+        }
+        df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
         
-        # 3. Keep only necessary columns
-        cols_to_keep = ['Rank', 'Player', 'Value']
+        # 3. Safely select only columns that exist
+        required_cols = ['Rank', 'Player', 'Value']
         if 'team.name' in df.columns:
-            cols_to_keep.append('team.name')
+            required_cols.append('team.name')
             
-        return df[cols_to_keep]
+        # Filter: only keep columns that are actually present
+        existing_cols = [c for c in required_cols if c in df.columns]
+        
+        # If no columns match, return empty to prevent crash
+        if not existing_cols:
+            return pd.DataFrame()
+            
+        return df[existing_cols]
