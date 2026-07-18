@@ -5,54 +5,29 @@ class AnalyticsEngine:
     def __init__(self):
         self.base_url = "https://statsapi.mlb.com/api/v1"
 
-    # This method is now correctly indented outside of __init__
     def _fetch_from_api(self, endpoint_type, params=None):
+        url = f"{self.base_url}/{endpoint_type}"
         try:
-            url = f"{self.base_url}/{endpoint_type}"
+            # Add print here to confirm the exact URL being called
+            print(f"DEBUG: Calling URL: {url} with params {params}", flush=True)
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
             
-            # FORCE LOGGING: We print to standard output
-            msg = f"DEBUG: API returned data for {params.get('season')}: 'leagueLeaders' in data is {'leagueLeaders' in data}"
-            print(msg, flush=True) 
+            # Print the first 100 chars of the data to verify what the API actually returned
+            print(f"DEBUG: Data snippet: {str(data)[:100]}", flush=True)
             return data
         except Exception as e:
-            print(f"DEBUG: API Error: {e}", flush=True)
+            print(f"DEBUG: CRITICAL API ERROR: {e}", flush=True)
             return None
 
     def get_pitcher_data(self):
-        # Try 2026 first, then fallback to 2025
-        for year in [2026, 2025]:
-            params = {"sportId": 1, "statGroup": "pitching", "statType": "season", "leaderCategories": "era", "season": year}
-            data = self._fetch_from_api("stats/leaders", params=params)
-            
-            if data and data.get('leagueLeaders'):
-                return self._process_data(data)
+        # We only check 2025 for now to verify data connectivity
+        params = {"sportId": 1, "statGroup": "pitching", "statType": "season", "leaderCategories": "era", "season": 2025}
+        data = self._fetch_from_api("stats/leaders", params=params)
         
-        return pd.DataFrame() 
-
-    def get_batter_data(self):
-        # Try 2026 first, then fallback to 2025
-        for year in [2026, 2025]:
-            params = {"sportId": 1, "statGroup": "hitting", "statType": "season", "leaderCategories": "homeRuns", "season": year}
-            data = self._fetch_from_api("stats/leaders", params=params)
-            
-            if data and data.get('leagueLeaders'):
-                return self._process_data(data)
-        
-        return pd.DataFrame()
-
-    def _process_data(self, data):
-        if not data or 'leagueLeaders' not in data:
-            return pd.DataFrame()
-        
-        # Flatten the nested structure
-        df = pd.json_normalize(data['leagueLeaders'])
-        
-        # Select and rename columns if they exist
-        cols = {'person.fullName': 'Player', 'value': 'Value', 'rank': 'Rank'}
-        df = df.rename(columns=cols)
-        
-        # Return only desired columns if present
-        return df[[c for c in ['Rank', 'Player', 'Value'] if c in df.columns]]
+        if data and 'leagueLeaders' in data and len(data['leagueLeaders']) > 0:
+            return self._process_data(data)
+        else:
+            print("DEBUG: No leagueLeaders found in response for 2025", flush=True)
+            return None
