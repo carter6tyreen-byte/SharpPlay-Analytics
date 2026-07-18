@@ -4,20 +4,22 @@ import requests
 class AnalyticsEngine:
     def __init__(self):
         # REPLACE THESE with the actual URL and Key from your data provider
-        self.base_url = "https://your-api-domain.com/v1" 
-        self.headers = {"Authorization": "Bearer YOUR_REAL_API_KEY_HERE"}
+        self.base_url = eb8a7ef9ccmsh67f8b9de12e7315p1d9560jsn11fc258de105
+        self.headers = {"Authorization": "Bearer eb8a7ef9ccmsh67f8b9de12e7315p1d9560jsn11fc258de105"}
 
     def _fetch_from_api(self, endpoint_type):
         """Fetches data and handles common JSON response structures."""
         try:
-            # Using the headers and base_url defined in __init__
+            # The URL path is constructed using the base_url and the endpoint type
             response = requests.get(f"{self.base_url}/{endpoint_type}", headers=self.headers, timeout=10)
+            
+            # Log status to help verify if credentials are working
             print(f"DEBUG: Response status {response.status_code} for {endpoint_type}")
             
             response.raise_for_status()
             data = response.json()
             
-            # Print structure to help debug if tables remain empty
+            # Log type to help debug if tables remain empty
             print(f"DEBUG: Data structure received: {type(data)}")
             
             return data
@@ -43,7 +45,6 @@ class AnalyticsEngine:
         # If data is a dictionary, look for the main list key
         if isinstance(data, dict):
             # Try to find a key that holds the list. 
-            # If your API logs show a different key name, add it to this list!
             for key in ['data', 'players', 'stats', 'results', 'response']:
                 if key in data and isinstance(data[key], list):
                     return pd.DataFrame(data[key])
