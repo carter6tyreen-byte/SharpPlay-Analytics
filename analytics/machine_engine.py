@@ -1,37 +1,34 @@
-    def _process_data(self, data):
-        """Converts MLB JSON response into a clean DataFrame by normalizing nested objects."""
-        if not data or 'leagueLeaders' not in data:
-            return pd.DataFrame()
-        
-        # 1. Normalize the 'leagueLeaders' list
-        # This automatically flattens dictionaries like 'person' and 'stat'
-        df = pd.json_normalize(data['leagueLeaders'])
-        
-        # 2. Clean up column names for readability
-        # json_normalize creates names like 'person.fullName' and 'stat'
-        df = df.rename(columns={
-            'person.fullName': 'Player',
-            'stat': 'Value',
-            'rank': 'Rank'
-        })
-        
-        # 3. Drop unnecessary columns if you only want the basics
-        # Keep only what you actually need to see in the table
-        cols_to_keep = ['Rank', 'Player', 'Value']
-        # Add 'team.name' if you want to see the team
-        if 'team.name' in df.columns:
-            cols_to_keep.append('team.name')
-            
-        return df[cols_to_keep]
 import pandas as pd
 import requests
 
 class AnalyticsEngine:
     def __init__(self):
+        # Official MLB Stats API base URL
         self.base_url = "https://statsapi.mlb.com/api/v1"
         self.headers = {} 
 
-    # ... (Keep your _fetch_from_api, get_pitcher_data, and get_batter_data methods) ...
+    def _fetch_from_api(self, endpoint_type, params=None):
+        """Fetches data from the MLB public API."""
+        try:
+            url = f"{self.base_url}/{endpoint_type}"
+            response = requests.get(url, params=params, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            print(f"Error fetching {endpoint_type}: {e}")
+            return None
+
+    def get_pitcher_data(self):
+        """Fetches pitching leaders."""
+        params = {"sportId": 1, "statGroup": "pitching", "statType": "season", "leaderCategories": "era", "season": 2026}
+        data = self._fetch_from_api("stats/leaders", params=params)
+        return self._process_data(data)
+
+    def get_batter_data(self):
+        """Fetches batting leaders."""
+        params = {"sportId": 1, "statGroup": "hitting", "statType": "season", "leaderCategories": "homeRuns", "season": 2026}
+        data = self._fetch_from_api("stats/leaders", params=params)
+        return self._process_data(data)
 
     def _process_data(self, data):
         """Converts MLB JSON response into a clean DataFrame by normalizing nested objects."""
