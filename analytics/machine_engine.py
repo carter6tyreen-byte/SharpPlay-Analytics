@@ -1,10 +1,13 @@
 import pandas as pd
-import json
 import requests
-import streamlit as st
 
 class AnalyticsEngine:
-    @staticmethod
+    def __init__(self):
+        # ... (init code)
+
+    def _process_data(self, data):
+        """Converts MLB JSON response into a clean DataFrame with safety checks."""
+    
     def get_position_name(code):
         mapping = {
             'P': 'Pitcher', 'C': 'Catcher', '1B': 'First Base', 
