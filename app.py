@@ -3,91 +3,61 @@ import pandas as pd
 import json
 import os
 
-# Configuration
 LOG_FILE = 'predictions_log.csv'
 MATCHUP_FILE = 'data/today_matchups.json'
 
 def load_matchup_data():
-    """Parses JSON to extract game metadata, status, and player lists."""
-    if not os.path.exists(MATCHUP_FILE):
-        return []
-    
+    if not os.path.exists(MATCHUP_FILE): return []
     with open(MATCHUP_FILE, 'r') as f:
         try:
             data = json.load(f)
-            all_games = []
+            games_list = []
             for entry in data.get('dates', []):
                 for game in entry.get('games', []):
-                    # Extract game details and status
-                    status_info = game.get('status', {})
+                    # Safely drill into nested JSON
+                    home = game.get('teams', {}).get('home', {})
+                    away = game.get('teams', {}).get('away', {})
                     
-                    # Placeholder lists: In the next step, update these to parse your JSON paths
-                    # e.g., game.get('lineups', {}).get('homePlayers', [])
-                    flat_game = {
+                    # Extract players if 'lineups' or 'pitchers' were hydrated
+                    # Using .get('lineup', []) and .get('pitchers', [])
+                    h_hitters = [p.get('fullName') for p in home.get('lineup', [])]
+                    a_hitters = [p.get('fullName') for p in away.get('lineup', [])]
+                    
+                    games_list.append({
                         'gamePk': game.get('gamePk'),
-                        'away_team': game.get('teams', {}).get('away', {}).get('team', {}).get('name'),
-                        'home_team': game.get('teams', {}).get('home', {}).get('team', {}).get('name'),
-                        'status': status_info.get('detailedState', 'Unknown'),
-                        'pitchers': ['Pitcher A', 'Pitcher B'], 
-                        'hitters': ['Hitter A', 'Hitter B']
-                    }
-                    all_games.append(flat_game)
-            return all_games
-        except json.JSONDecodeError:
-            return []
+                        'date': entry.get('date'),
+                        'matchup': f"{away.get('team',{}).get('name')} @ {home.get('team',{}).get('name')}",
+                        'status': game.get('status', {}).get('detailedState'),
+                        'hitters': (h_hitters + a_hitters) or ['No lineup yet'],
+                        'pitchers': ['TBD'] # Pitchers often require a separate lookup
+                    })
+            return games_list
+        except: return []
 
-def initialize_log():
-    if not os.path.exists(LOG_FILE):
-        df = pd.DataFrame(columns=['timestamp', 'game_id', 'matchup', 'pitcher', 'hitter', 'pred_hr', 'actual_hr', 'status'])
-        df.to_csv(LOG_FILE, index=False)
+st.set_page_config(layout="wide")
+st.title("⚾ ProAnalytics Tracker")
 
-st.set_page_config(page_title="ProAnalytics Dashboard", layout="wide")
-st.title("⚾ ProAnalytics Performance Tracker")
-initialize_log()
-
-# 1. Display Matchups (Filtering out Postponed)
+# 1. Show Schedules
 matchups = load_matchup_data()
-if matchups:
-    df_matchups = pd.DataFrame(matchups)
-    # Only show active/scheduled games
-    active_games = df_matchups[df_matchups['status'] != 'Postponed']
-    
-    st.subheader("Today's Active Matchups")
-    st.dataframe(active_games.drop(columns=['pitchers', 'hitters'], errors='ignore'), width='stretch')
+df = pd.DataFrame(matchups)
+
+if not df.empty:
+    st.subheader("Upcoming Slate")
+    st.dataframe(df.drop(columns=['hitters', 'pitchers']), use_container_width=True)
+
+    # 2. Prediction Form
+    with st.form("pred_form"):
+        # Filter out 'Postponed'
+        active = [m for m in matchups if m['status'] != 'Postponed']
+        selection = st.selectbox("Select Game", [m['matchup'] + f" ({m['date']})" for m in active])
+        
+        # Find selected game data
+        game_data = next(m for m in active if m['matchup'] in selection)
+        
+        hitter = st.selectbox("Select Hitter", game_data['hitters'])
+        hr = st.number_input("Predicted HRs", 0)
+        
+        if st.form_submit_button("Log"):
+            st.write(f"Logged {hitter} for {game_data['matchup']}")
 else:
-    st.info("No matchup data found or all games postponed.")
-
-# 2. Dynamic Input Form
-if matchups:
-    st.subheader("Add New Prediction")
-    with st.form("prediction_form"):
-        # Filter active games for the dropdown
-        active_matchups = [g for g in matchups if g['status'] != 'Postponed']
-        game_options = {f"{g['away_team']} vs {g['home_team']}": g for g in active_matchups}
-        
-        selected_name = st.selectbox("Select Matchup", list(game_options.keys()))
-        selected_data = game_options[selected_name]
-        
-        pitcher = st.selectbox("Starting Pitcher", selected_data.get('pitchers', []))
-        hitter = st.selectbox("Hitter", selected_data.get('hitters', []))
-        pred_hr = st.number_input("Predicted HRs", min_value=0, step=1)
-        
-        if st.form_submit_button("Log Prediction"):
-            new_entry = pd.DataFrame([{
-                'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M'),
-                'game_id': selected_data['gamePk'],
-                'matchup': selected_name,
-                'pitcher': pitcher,
-                'hitter': hitter,
-                'pred_hr': pred_hr,
-                'actual_hr': 0,
-                'status': 'Pending'
-            }])
-            new_entry.to_csv(LOG_FILE, mode='a', header=False, index=False)
-            st.success(f"Logged {hitter} vs {pitcher}!")
-            st.rerun()
-
-# 3. Results
-st.subheader("Prediction vs. Actual Results")
-if os.path.exists(LOG_FILE):
-    st.dataframe(pd.read_csv(LOG_FILE), width='stretch')
+    st.warning("No data. Run the collector first.")
