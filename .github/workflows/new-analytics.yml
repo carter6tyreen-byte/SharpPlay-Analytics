@@ -20,16 +20,17 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests pandas
 
-      # Step 1: Run your distribution logic
+      # 1. Generate player distributions (this creates data/player_distributions.json)
       - name: Run Analytics Generation
         run: python backend/core_analytics.py
 
-      # Step 2: Run the new results collector
+      # 2. Collect match results (this creates data/audit_results.json)
       - name: Run Results Collector
         run: python results_collector.py
 
+      # 3. Commit and push both JSON files back to the repository
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
