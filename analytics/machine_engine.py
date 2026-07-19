@@ -8,47 +8,39 @@ class AnalyticsEngine:
     def _fetch_from_api(self, endpoint, params):
         url = f"{self.base_url}/{endpoint}"
         try:
-            response = requests.get(url, params=params, timeout=10)
+            # Using headers to ensure the request is identified correctly
+            headers = {'User-Agent': 'Mozilla/5.0'}
+            response = requests.get(url, params=params, headers=headers, timeout=10)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             print(f"API Error: {e}", flush=True)
             return None
 
-    def _get_stats(self, group, sort_stat):
-        # Using the standard stats endpoint with required parameters
+    def _get_stats(self, stat_group, sort_stat):
+        # Updated parameters to avoid the 400 Bad Request error
         params = {
             "sportId": 1,
-            "group": group,
-            "type": "season",
-            "sortStat": sort_stat,
+            "group": stat_group,
+            "stats": "season",
             "season": 2025,
+            "order": "desc",
+            "sortStat": sort_stat,
             "limit": 10
         }
         data = self._fetch_from_api("stats", params=params)
         
-        if not data or 'stats' not in data or len(data['stats']) == 0:
+        if not data or 'stats' not in data or not data['stats']:
             return pd.DataFrame()
             
-        # Extract data from the 'splits' list
         splits = data['stats'][0].get('splits', [])
-        if not splits:
-            return pd.DataFrame()
-            
         df = pd.json_normalize(splits)
         
-        # Mapping API fields to readable table headers
-        # 'player.fullName' is standard for both pitching and hitting
-        rename_map = {
-            'player.fullName': 'Player', 
-            'stat.' + sort_stat: 'Value'
-        }
-        
-        # Filter and rename
+        # Mapping column names based on API response structure
+        rename_map = {'player.fullName': 'Player', f'stat.{sort_stat}': 'Value'}
         df = df.rename(columns=rename_map)
-        if 'Player' in df.columns and 'Value' in df.columns:
-            return df[['Player', 'Value']]
-        return pd.DataFrame()
+        
+        return df[['Player', 'Value']] if 'Player' in df.columns else pd.DataFrame()
 
     def get_pitcher_data(self):
         return self._get_stats("pitching", "era")
