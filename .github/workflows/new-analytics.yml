@@ -24,7 +24,10 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        # Updated to run from the root, as path issues caused previous failures
+        # Set PYTHONPATH to the root so the script can resolve imports
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        # Explicitly run from the root where the file is located
         run: python generate_static_report.py
 
       - name: Commit and push updates
