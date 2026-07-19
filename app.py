@@ -30,25 +30,19 @@ if player_data:
     st.success(f"Player distributions successfully loaded from `{loaded_path}`!")
     st.subheader("Player Performance Distributions")
     
-    # 1. Convert JSON to Dataframe
     df_dist = pd.DataFrame.from_dict(player_data, orient='index')
     
-    # 2. WHERE IT GOES: Filter Logic 
-    # Option A: If your JSON file starts including a "status" key (e.g., "status": "Injured")
     if "status" in df_dist.columns:
         active_only = st.checkbox("Hide Injured Players", value=True)
         if active_only:
             df_dist = df_dist[df_dist["status"].str.lower() != "injured"]
-            
-    # Option B: Hardcoded fallback UI filter based on Player Names (index) until your data source is updated
     else:
         hide_injured = st.checkbox("Hide Known Injured Players (Manual Filter)", value=False)
         if hide_injured:
-            # Add names here to temporarily drop them from the view manually
-            injured_list = ["Mookie Betts", "Ronald Acuña Jr."] 
+            # Customize or add player names here as needed
+            injured_list = ["Mookie Betts", "Ronald Acuña Jr."]
             df_dist = df_dist.drop(index=[name for name in injured_list if name in df_dist.index])
 
-    # 3. Display final filtered dataframe
     st.dataframe(df_dist, use_container_width=True)
 else:
     st.error("player_distributions.json not found or could not be parsed in the data directory.")
