@@ -24,13 +24,15 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        # Run directly from the root workspace
+        # We explicitly navigate into the nested folder
         run: |
+          cd SharpPlay-Analytics
           python generate_static_report.py
-          
+
       - name: Commit and push updates
-        # Run directly from the root workspace
+        # We must also navigate to the nested folder here to find the 'data' directory
         run: |
+          cd SharpPlay-Analytics
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           if [ -d "data" ]; then
