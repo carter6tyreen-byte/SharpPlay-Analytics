@@ -1,41 +1,18 @@
-name: update-stats
-
-on:
-  push:
-    branches: [ "main" ]
-  schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
-
-jobs:
-  run-analytics:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install dependencies
-        run: |
-          pip install requests pandas numpy
-
       - name: Run Analytics Generation Script
-        # We explicitly navigate into the nested folder
         run: |
-          cd SharpPlay-Analytics
-          python generate_static_report.py
-
-      - name: Commit and push updates
-        # We must also navigate to the nested folder here to find the 'data' directory
-        run: |
-          cd SharpPlay-Analytics
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          if [ -d "data" ]; then
-            git add data/
-            git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
+          # 1. Print all folders so we can see what is actually there
+          echo "Listing current directory contents:"
+          ls -F
+          
+          # 2. Find the script no matter where it is
+          SCRIPT_PATH=$(find . -name "generate_static_report.py" -print -quit)
+          
+          if [ -z "$SCRIPT_PATH" ]; then
+            echo "Error: Could not find generate_static_report.py"
+            exit 1
           fi
+          
+          echo "Found script at: $SCRIPT_PATH"
+          
+          # 3. Run it using the path found
+          python "$SCRIPT_PATH"
