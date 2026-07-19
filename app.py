@@ -8,14 +8,20 @@ LOG_FILE = 'predictions_log.csv'
 MATCHUP_FILE = 'data/today_matchups.json'
 
 def load_matchup_data():
-    """Loads and flattens the nested JSON data."""
+    """Loads JSON data and flattens nested structures for cleaner display."""
     if os.path.exists(MATCHUP_FILE):
         with open(MATCHUP_FILE, 'r') as f:
             data = json.load(f)
-            # Flatten structure: dates -> games
             all_games = []
             for entry in data.get('dates', []):
-                all_games.extend(entry.get('games', []))
+                for game in entry.get('games', []):
+                    # Flattening: Extracting specific fields from the nested 'teams' dictionary
+                    flat_game = {
+                        'gamePk': game.get('gamePk'),
+                        'away_team': game.get('teams', {}).get('away', {}).get('team', {}).get('name'),
+                        'home_team': game.get('teams', {}).get('home', {}).get('team', {}).get('name')
+                    }
+                    all_games.append(flat_game)
             return all_games
     return []
 
@@ -36,7 +42,7 @@ st.subheader("Today's Matchup Insights")
 matchups = load_matchup_data()
 if matchups:
     df_matchups = pd.DataFrame(matchups)
-    # Using 'width' instead of 'use_container_width' to fix deprecation warning
+    # Using 'width' parameter to resolve deprecation warnings
     st.dataframe(df_matchups, width='stretch')
 else:
     st.info("No matchup data found. Please ensure data_collector.py has run.")
@@ -49,7 +55,6 @@ def color_status(val):
     color = 'green' if val == 'Finished' else 'orange'
     return f'background-color: {color}'
 
-# Updated to 'width' parameter
 if not logs.empty:
     st.dataframe(
         logs.style.map(color_status, subset=['status']),
