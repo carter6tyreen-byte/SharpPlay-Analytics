@@ -24,16 +24,18 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        # Set working directory to the workspace root and run explicitly
-        working-directory: ${{ github.workspace }}
+        # This navigates into the nested directory where the file actually resides
+        working-directory: SharpPlay-Analytics
         run: |
+          echo "Current directory is $(pwd)"
           python generate_static_report.py
 
       - name: Commit and push updates
+        # Ensure we stay in the correct directory for git commands
+        working-directory: SharpPlay-Analytics
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Target the root data directory
           if [ -d "data" ]; then
             git add data/
             git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
