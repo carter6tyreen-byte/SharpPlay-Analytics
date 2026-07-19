@@ -39,7 +39,7 @@ if player_data:
     else:
         hide_injured = st.checkbox("Hide Known Injured Players (Manual Filter)", value=False)
         if hide_injured:
-            injured_list = ["Mookie Betts", "Ronald Acuña Jr."]
+            injured_list = ["Mookie Betts", "Ronald Acuña Jr.", "Aaron Judge", "Shohei Ohtani"]
             df_dist = df_dist.drop(index=[name for name in injured_list if name in df_dist.index])
 
     st.dataframe(df_dist, width='stretch')
