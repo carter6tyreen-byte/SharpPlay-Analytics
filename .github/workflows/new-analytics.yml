@@ -20,7 +20,19 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install pandas numpy
+        run: pip install requests
 
-      - name: Run Analytics Generation Script
+      # Step 1: Run your distribution logic
+      - name: Run Analytics Generation
         run: python backend/core_analytics.py
+
+      # Step 2: Run the new results collector
+      - name: Run Results Collector
+        run: python results_collector.py
+
+      - name: Commit and push updates
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add data/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update stats and audit results [skip ci]" && git push)
