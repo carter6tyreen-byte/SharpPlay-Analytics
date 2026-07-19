@@ -8,7 +8,7 @@ LOG_FILE = 'predictions_log.csv'
 MATCHUP_FILE = 'data/today_matchups.json'
 
 def load_matchup_data():
-    """Parses the local JSON file for games and rosters."""
+    """Parses the local JSON file for games, rosters, and scores."""
     if not os.path.exists(MATCHUP_FILE): 
         return []
     
@@ -19,9 +19,12 @@ def load_matchup_data():
             
             for entry in data.get('dates', []):
                 for game in entry.get('games', []):
-                    # Extract team containers
                     home = game.get('teams', {}).get('home', {})
                     away = game.get('teams', {}).get('away', {})
+                    
+                    # Score extraction
+                    h_score = home.get('score', 0)
+                    a_score = away.get('score', 0)
                     
                     # Safely drill into the 'lineup' list -> 'person' dict -> 'fullName'
                     h_hitters = [p.get('person', {}).get('fullName') for p in home.get('lineup', [])]
@@ -33,6 +36,7 @@ def load_matchup_data():
                         'date': entry.get('date'),
                         'matchup': f"{away.get('team',{}).get('name')} vs {home.get('team',{}).get('name')}",
                         'status': game.get('status', {}).get('detailedState', 'Scheduled'),
+                        'score': f"{a_score} - {h_score}" if game.get('status', {}).get('abstractGameState') == 'Final' else "N/A",
                         'hitters': all_hitters if all_hitters else ['Lineup pending'],
                         'gamePk': game.get('gamePk')
                     })
@@ -48,9 +52,9 @@ matchups = load_matchup_data()
 
 if matchups:
     df = pd.DataFrame(matchups)
-    st.subheader("Upcoming Slate")
-    # Updated to resolve deprecation warning by using width=None for standard behavior
-    st.dataframe(df[['date', 'matchup', 'status']], hide_index=True, width='stretch')
+    st.subheader("Upcoming Slate & Scores")
+    # Displays date, matchup, status, and the new score column
+    st.dataframe(df[['date', 'matchup', 'status', 'score']], hide_index=True, width='stretch')
 
     # Prediction Form
     st.subheader("Add New Prediction")
@@ -76,7 +80,6 @@ if matchups:
                         'hitter': hitter, 
                         'hr': hr
                     }])
-                    # Save to CSV
                     new_entry.to_csv(
                         LOG_FILE, 
                         mode='a', 
