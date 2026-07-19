@@ -4,7 +4,7 @@ import statsapi
 import datetime
 
 today = datetime.date.today().strftime("%Y-%m-%d")
-print(f"Fetching full MLB slate for {today}...")
+print(f"Fetching full pre-game MLB slate for {today}...")
 
 try:
     schedule = statsapi.schedule(date=today)
@@ -15,7 +15,7 @@ except Exception as e:
 player_distributions = {}
 teams_to_process = set()
 
-# Gather all home and away teams playing on today's slate
+# Capture all teams playing on today's slate for pre-game breakdown
 for game in schedule:
     if game.get('home_name'):
         teams_to_process.add(game.get('home_name'))
@@ -24,7 +24,6 @@ for game in schedule:
 
 print(f"Found {len(teams_to_process)} teams on today's slate. Pulling rosters...")
 
-# Loop through each team playing today and pull their active roster players
 for team_name in teams_to_process:
     try:
         team_id = statsapi.lookup_team(team_name)[0]['id']
@@ -34,7 +33,7 @@ for team_name in teams_to_process:
                 parts = line.split('-')
                 if len(parts) > 1:
                     player_name = parts[1].strip()
-                    # Assign baseline metrics ready for your optimizer breakdown
+                    # Assign baseline performance distributions for pre-game modeling
                     player_distributions[player_name] = {
                         "HR": 0.08,
                         "SO": 0.20
@@ -42,9 +41,9 @@ for team_name in teams_to_process:
     except Exception as ex:
         print(f"Skipping roster for {team_name}: {ex}")
 
-# Final safety check fallback if no schedule is found
+# Fallback safety net if schedule lookup is empty
 if len(player_distributions) == 0:
-    print("No active players found, loading fallback data...")
+    print("Loading default slate fallback...")
     player_distributions = {
         "Aaron Judge": {"HR": 0.12, "SO": 0.25},
         "Shohei Ohtani": {"HR": 0.1, "SO": 0.2},
@@ -59,4 +58,4 @@ output_path = os.path.join(data_dir, "player_distributions.json")
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump(player_distributions, f, indent=4)
 
-print(f"Successfully saved {len(player_distributions)} players to {output_path}.")
+print(f"Successfully saved {len(player_distributions)} pre-game players to {output_path}.")
