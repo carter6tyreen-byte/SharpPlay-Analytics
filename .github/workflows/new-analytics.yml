@@ -24,12 +24,10 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        # REMOVED: working-directory
         run: |
           python generate_static_report.py
 
       - name: Commit and push updates
-        # REMOVED: working-directory
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -37,4 +35,3 @@ jobs:
             git add data/
             git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
           fi
-l
