@@ -25,14 +25,17 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          # Reverting back to the original script
-          python generate_static_report.py
+          # The file was confirmed to be inside the nested directory structure
+          # Navigate into the subfolder to execute the script and maintain imports
+          cd SharpPlay-Analytics
+          python run_analytics.py
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          # Adds changes to the data directory
+          # Ensure we are in the correct directory to find the data folder
+          cd SharpPlay-Analytics
           git add data/
           git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
