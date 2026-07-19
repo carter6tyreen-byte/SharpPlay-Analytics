@@ -39,11 +39,10 @@ if player_data:
     else:
         hide_injured = st.checkbox("Hide Known Injured Players (Manual Filter)", value=False)
         if hide_injured:
-            # Customize or add player names here as needed
             injured_list = ["Mookie Betts", "Ronald Acuña Jr."]
             df_dist = df_dist.drop(index=[name for name in injured_list if name in df_dist.index])
 
-    st.dataframe(df_dist, use_container_width=True)
+    st.dataframe(df_dist, width='stretch')
 else:
     st.error("player_distributions.json not found or could not be parsed in the data directory.")
     
