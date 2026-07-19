@@ -8,7 +8,8 @@ class AnalyticsEngine:
     def _fetch_from_api(self, endpoint, params):
         try:
             headers = {'User-Agent': 'Mozilla/5.0'}
-            response = requests.get(f"{self.base_url}/{endpoint}", params=params, headers=headers, timeout=10)
+            url = f"{self.base_url}/{endpoint}"
+            response = requests.get(url, params=params, headers=headers, timeout=10)
             response.raise_for_status()
             return response.json()
         except Exception as e:
@@ -17,27 +18,43 @@ class AnalyticsEngine:
 
     def _get_stats(self, stat_group, sort_stat):
         params = {
-            "sportId": 1, "group": stat_group, "stats": "season",
-            "season": 2025, "order": "desc", "sortStat": sort_stat, "limit": 10
+            "sportId": 1, 
+            "group": stat_group, 
+            "stats": "season",
+            "season": 2026,
+            "order": "desc",
+            "sortStat": sort_stat,
+            "limit": 100
         }
         data = self._fetch_from_api("stats", params=params)
         
         if not data or 'stats' not in data or not data['stats']:
             return pd.DataFrame()
             
-        df = pd.json_normalize(data['stats'][0].get('splits', []))
+        splits = data['stats'][0].get('splits', [])
+        df = pd.json_normalize(splits)
         
-        # Mapping API fields: 'team.name' provides context
+        # Filter: Only include players with roster status 'A' (Active)
+        # We check both common field naming conventions
+        status_field = 'status_code' if 'status_code' in df.columns else 'player.status.code'
+        if status_field in df.columns:
+            df = df[df[status_field] == 'A']
+        
+        # Mapping API fields
         rename_map = {
             'player.fullName': 'Player', 
-            'team.name': 'Team',
+            'team.name': 'Team', 
             f'stat.{sort_stat}': 'Value'
         }
-        df = df.rename(columns=rename_map)
         
-        # Return necessary columns for the board
-        cols = ['Player', 'Team', 'Value']
-        return df[cols] if all(c in df.columns for c in cols) else pd.DataFrame()
+        # Clean columns and return
+        df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
+        
+        # Return columns if they exist
+        required_cols = ['Player', 'Team', 'Value']
+        if all(col in df.columns for col in required_cols):
+            return df[required_cols].head(10)
+        return pd.DataFrame()
 
     def get_pitcher_data(self):
         return self._get_stats("pitching", "era")
