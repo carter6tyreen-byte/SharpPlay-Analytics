@@ -60,4 +60,4 @@ if matchups:
                 st.success(f"Logged {hitter}!")
 else:
     st.warning("Run the data collector first.")
-ok 
+
