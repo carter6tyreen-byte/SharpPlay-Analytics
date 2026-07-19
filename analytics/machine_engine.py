@@ -16,13 +16,13 @@ class AnalyticsEngine:
             print(f"API Error: {e}", flush=True)
             return None
 
-    def _get_stats(self, stat_group, sort_stat):
+    def _get_stats(self, stat_group, sort_stat, order="desc"):
         params = {
             "sportId": 1, 
             "group": stat_group, 
             "stats": "season",
             "season": 2026,
-            "order": "desc",
+            "order": order,
             "sortStat": sort_stat,
             "limit": 100
         }
@@ -35,29 +35,27 @@ class AnalyticsEngine:
         df = pd.json_normalize(splits)
         
         # Filter: Only include players with roster status 'A' (Active)
-        # We check both common field naming conventions
         status_field = 'status_code' if 'status_code' in df.columns else 'player.status.code'
         if status_field in df.columns:
             df = df[df[status_field] == 'A']
         
-        # Mapping API fields
         rename_map = {
             'player.fullName': 'Player', 
             'team.name': 'Team', 
             f'stat.{sort_stat}': 'Value'
         }
         
-        # Clean columns and return
         df = df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns})
         
-        # Return columns if they exist
         required_cols = ['Player', 'Team', 'Value']
         if all(col in df.columns for col in required_cols):
             return df[required_cols].head(10)
         return pd.DataFrame()
 
     def get_pitcher_data(self):
-        return self._get_stats("pitching", "era")
+        # Sort ERA ascending: Lowest (best) ERA at the top
+        return self._get_stats("pitching", "era", order="asc")
 
     def get_batter_data(self):
-        return self._get_stats("hitting", "homeRuns")
+        # Sort HR descending: Highest (best) HR at the top
+        return self._get_stats("hitting", "homeRuns", order="desc")
