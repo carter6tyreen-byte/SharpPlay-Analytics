@@ -15,7 +15,6 @@ except Exception as e:
 player_distributions = {}
 teams_to_process = set()
 
-# Capture all teams playing on today's slate for pre-game breakdown
 for game in schedule:
     if game.get('home_name'):
         teams_to_process.add(game.get('home_name'))
@@ -27,13 +26,12 @@ print(f"Found {len(teams_to_process)} teams on today's slate. Pulling rosters...
 for team_name in teams_to_process:
     try:
         team_id = statsapi.lookup_team(team_name)[0]['id']
-        roster = statsapi.roster(team_id)
-        for line in roster.splitlines():
+        roster_text = statsapi.roster(team_id)
+        for line in roster_text.splitlines():
             if line.strip():
                 parts = line.split('-')
-                if len(parts) > 1:
+                if len(parts) >= 2:
                     player_name = parts[1].strip()
-                    # Assign baseline performance distributions for pre-game modeling
                     player_distributions[player_name] = {
                         "HR": 0.08,
                         "SO": 0.20
@@ -41,7 +39,6 @@ for team_name in teams_to_process:
     except Exception as ex:
         print(f"Skipping roster for {team_name}: {ex}")
 
-# Fallback safety net if schedule lookup is empty
 if len(player_distributions) == 0:
     print("Loading default slate fallback...")
     player_distributions = {
