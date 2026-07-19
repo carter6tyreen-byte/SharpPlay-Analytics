@@ -1,6 +1,16 @@
 import subprocess
 import os
 
+# Automatically run data collector on app startup to generate fresh JSON
+try:
+    script_path = os.path.join(os.path.dirname(__file__), "data", "data_collector.py")
+    subprocess.run(["python", script_path], check=True)
+except Exception as e:
+    print(f"Auto-collection warning: {e}")
+
+import subprocess
+import os
+
 # Automatically run the data collector script on app startup to ensure the full slate is loaded
 collector_path = os.path.join(os.path.dirname(__file__), "data", "data_collector.py")
 if os.path.exists(collector_path):
