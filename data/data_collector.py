@@ -1,16 +1,26 @@
 import requests
 import json
+import os
 
-def load_matchup_data():
-    """Fetches all MLB games for today, including live and finished games."""
-    # sportId=1 is MLB. Including specific statuses to capture everything.
-    url = "https://statsapi.mlb.com/api/v1/schedule/games/?sportId=1"
+# Ensure the data directory exists
+os.makedirs('data', exist_ok=True)
+
+def fetch_and_save_matchups():
+    # Adding 'hydrate=lineups,pitchers' to get detailed player information
+    url = "https://statsapi.mlb.com/api/v1/schedule?hydrate=lineups,pitchers&date=2026-07-19&sportId=1"
+    
     try:
-        response = requests.get(url, timeout=15)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            return {"dates": []}
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        
+        # Save the full response with hydrated player data
+        with open('data/today_matchups.json', 'w') as f:
+            json.dump(data, f, indent=4)
+        print("Data collected successfully with player details.")
+        
     except Exception as e:
         print(f"Error fetching data: {e}")
-        return {"dates": []}
+
+if __name__ == "__main__":
+    fetch_and_save_matchups()
