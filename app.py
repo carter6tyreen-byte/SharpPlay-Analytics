@@ -7,29 +7,35 @@ LOG_FILE = 'predictions_log.csv'
 MATCHUP_FILE = 'data/today_matchups.json'
 
 def load_matchup_data():
-    if not os.path.exists(MATCHUP_FILE): return []
+    if not os.path.exists(MATCHUP_FILE): 
+        return []
+    
     with open(MATCHUP_FILE, 'r') as f:
         try:
             data = json.load(f)
             games_list = []
+            # Safely navigate the JSON structure
             for entry in data.get('dates', []):
                 for game in entry.get('games', []):
                     home = game.get('teams', {}).get('home', {})
                     away = game.get('teams', {}).get('away', {})
                     
-                    # Extract names from hydrated lineup/pitcher lists
-                    h_hitters = [p.get('fullName') for p in home.get('lineup', [])]
-                    a_hitters = [p.get('fullName') for p in away.get('lineup', [])]
+                    # Safely extract lineups if they exist
+                    h_hitters = [p.get('person', {}).get('fullName') for p in home.get('lineup', [])]
+                    a_hitters = [p.get('person', {}).get('fullName') for p in away.get('lineup', [])]
+                    
+                    hitters = h_hitters + a_hitters
                     
                     games_list.append({
                         'date': entry.get('date'),
                         'matchup': f"{away.get('team',{}).get('name')} vs {home.get('team',{}).get('name')}",
                         'status': game.get('status', {}).get('detailedState', 'Scheduled'),
-                        'hitters': (h_hitters + a_hitters) or ['Lineup pending'],
+                        'hitters': hitters if hitters else ['Lineup pending'],
                         'gamePk': game.get('gamePk')
                     })
             return games_list
-        except: return []
+        except Exception: 
+            return []
 
 st.set_page_config(page_title="ProAnalytics", layout="wide")
 st.title("⚾ ProAnalytics Performance Tracker")
@@ -38,8 +44,8 @@ matchups = load_matchup_data()
 
 if matchups:
     df = pd.DataFrame(matchups)
-    st.subheader("Upcoming Slate (Today & Tomorrow)")
-    st.dataframe(df[['date', 'matchup', 'status']], width='stretch')
+    st.subheader("Upcoming Slate")
+    st.dataframe(df[['date', 'matchup', 'status']], hide_index=True, use_container_width=True)
 
     st.subheader("Add New Prediction")
     with st.form("pred_form"):
@@ -52,12 +58,10 @@ if matchups:
         
         if st.form_submit_button("Log Prediction"):
             if hitter == 'Lineup pending':
-                st.error("Lineup not yet available.")
+                st.error("Lineup data is not yet available for this game.")
             else:
-                pd.DataFrame([{'date': game['date'], 'matchup': game['matchup'], 'hitter': hitter, 'hr': hr}]).to_csv(
-                    LOG_FILE, mode='a', header=not os.path.exists(LOG_FILE), index=False
-                )
-                st.success(f"Logged {hitter}!")
+                new_pred = pd.DataFrame([{'date': game['date'], 'matchup': game['matchup'], 'hitter': hitter, 'hr': hr}])
+                new_pred.to_csv(LOG_FILE, mode='a', header=not os.path.exists(LOG_FILE), index=False)
+                st.success(f"Logged prediction for {hitter}!")
 else:
-    st.warning("Run the data collector first.")
-
+    st.warning("No games found. Please ensure the data collector has run successfully.")
