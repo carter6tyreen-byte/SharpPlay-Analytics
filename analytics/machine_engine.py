@@ -15,32 +15,43 @@ class AnalyticsEngine:
             print(f"API Error: {e}", flush=True)
             return None
 
-    def _get_data(self, stat_group, category):
-        # We use the 'stats' endpoint with 'type=season' to get the full list
+    def _get_stats(self, group, sort_stat):
+        # Using the standard stats endpoint with required parameters
         params = {
             "sportId": 1,
-            "group": stat_group,
+            "group": group,
             "type": "season",
-            "sortStat": category,
+            "sortStat": sort_stat,
             "season": 2025,
             "limit": 10
         }
         data = self._fetch_from_api("stats", params=params)
         
-        if not data or 'stats' not in data or not data['stats']:
+        if not data or 'stats' not in data or len(data['stats']) == 0:
             return pd.DataFrame()
             
-        # The /stats endpoint returns data in the 'splits' list
+        # Extract data from the 'splits' list
         splits = data['stats'][0].get('splits', [])
+        if not splits:
+            return pd.DataFrame()
+            
         df = pd.json_normalize(splits)
         
-        # Mapping to clean up common output names
-        # Note: adjust these based on the actual columns found in your logs
-        return df
+        # Mapping API fields to readable table headers
+        # 'player.fullName' is standard for both pitching and hitting
+        rename_map = {
+            'player.fullName': 'Player', 
+            'stat.' + sort_stat: 'Value'
+        }
+        
+        # Filter and rename
+        df = df.rename(columns=rename_map)
+        if 'Player' in df.columns and 'Value' in df.columns:
+            return df[['Player', 'Value']]
+        return pd.DataFrame()
 
     def get_pitcher_data(self):
-        # Sorting by ERA usually requires the 'qualified' parameter or specific ranking
-        return self._get_data("pitching", "era")
+        return self._get_stats("pitching", "era")
 
     def get_batter_data(self):
-        return self._get_data("hitting", "homeRuns")
+        return self._get_stats("hitting", "homeRuns")
