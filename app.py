@@ -1,42 +1,61 @@
 import streamlit as st
-from analytics.machine_engine import AnalyticsEngine
+import pandas as pd
+import os
+from datetime import datetime
 
-# Set page layout
-st.set_page_config(page_title="MLB Analytics Board", layout="wide")
-st.title("MLB Analytics Board")
+# Configuration
+LOG_FILE = 'predictions_log.csv'
 
-@st.cache_resource
-def get_engine():
-    return AnalyticsEngine()
+def initialize_log():
+    if not os.path.exists(LOG_FILE):
+        df = pd.DataFrame(columns=['timestamp', 'game_id', 'matchup', 'hitter', 'pred_hr', 'actual_hr', 'status'])
+        df.to_csv(LOG_FILE, index=False)
 
-engine = get_engine()
+def log_prediction(game_id, matchup, hitter, pred_hr):
+    # This function logs your pre-game insight
+    new_data = {
+        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M"),
+        'game_id': game_id,
+        'matchup': matchup,
+        'hitter': hitter,
+        'pred_hr': pred_hr,
+        'actual_hr': 0, 
+        'status': 'Pending'
+    }
+    df = pd.DataFrame([new_data])
+    df.to_csv(LOG_FILE, mode='a', header=False, index=False)
 
-# Styling functions
-def style_pitcher_era(val):
-    color = 'green' if isinstance(val, (int, float)) and val < 3.5 else 'black'
-    return f'color: {color}'
+# UI Display
+st.set_page_config(page_title="ProAnalytics Dashboard", layout="wide")
+st.title("⚾ ProAnalytics Performance Tracker")
 
-def style_batter_hr(val):
-    color = 'green' if isinstance(val, (int, float)) and val > 30 else 'black'
-    return f'color: {color}'
+initialize_log()
 
-# --- Pitcher Section ---
-st.subheader("Pitcher ERA Leaders")
-# Note: Ensure get_pitcher_data in your engine is updated to use order='asc'
-pitcher_df = engine.get_pitcher_data()
-if pitcher_df is not None and not pitcher_df.empty:
-    styled_pitcher = pitcher_df.style.map(style_pitcher_era, subset=['Value'])
-    # FIX: Using 'stretch' to fill container correctly
-    st.dataframe(styled_pitcher, width='stretch') 
-else:
-    st.warning("No pitcher data available.")
+# Sidebar for manual testing of the tracker
+st.sidebar.header("Add Prediction")
+with st.sidebar.form("predict_form"):
+    gid = st.text_input("Game ID")
+    hit = st.text_input("Batter Name")
+    hr = st.number_input("Predicted HRs", min_value=0)
+    if st.form_submit_button("Log Entry"):
+        log_prediction(gid, "N/A", hit, hr)
+        st.success("Logged!")
 
-# --- Batter Section ---
-st.subheader("Batter Home Run Leaders")
-batter_df = engine.get_batter_data()
-if batter_df is not None and not batter_df.empty:
-    styled_batter = batter_df.style.map(style_batter_hr, subset=['Value'])
-    # FIX: Using 'stretch' to fill container correctly
-    st.dataframe(styled_batter, width='stretch')
-else:
-    st.warning("No batter data available.")
+# Performance Display
+st.subheader("Prediction vs. Actual Results")
+logs = pd.read_csv(LOG_FILE)
+
+def color_status(val):
+    color = 'green' if val == 'Finished' else 'orange'
+    return f'background-color: {color}'
+
+st.dataframe(
+    logs.style.applymap(color_status, subset=['status']),
+    use_container_width=True
+)
+
+if not logs.empty:
+    finished = logs[logs['status'] == 'Finished']
+    if not finished.empty:
+        acc = (finished['pred_hr'] == finished['actual_hr']).mean() * 100
+        st.metric("Model Hit Rate", f"{acc:.1f}%")
