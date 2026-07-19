@@ -6,6 +6,8 @@ import os
 # Configuration
 LOG_FILE = 'predictions_log.csv'
 MATCHUP_FILE = 'data/today_matchups.json'
+# Add your frequent hitters here
+FREQUENT_HITTERS = ["Shohei Ohtani", "Aaron Judge", "Juan Soto", "Bryce Harper", "Mookie Betts"]
 
 def load_matchup_data():
     """Loads JSON data and flattens nested structures."""
@@ -36,12 +38,13 @@ st.title("⚾ ProAnalytics Performance Tracker")
 
 initialize_log()
 
-# 1. Display Today's Data
+# 1. Display Today's Data (Hiding gamePk)
 st.subheader("Today's Matchup Insights")
 matchups = load_matchup_data()
 if matchups:
     df_matchups = pd.DataFrame(matchups)
-    st.dataframe(df_matchups, width='stretch')
+    # Display table without the gamePk column
+    st.dataframe(df_matchups.drop(columns=['gamePk']), width='stretch')
 else:
     st.info("No matchup data found. Please ensure data_collector.py has run.")
 
@@ -51,12 +54,13 @@ with st.form("prediction_form"):
     game_options = {f"{g['away_team']} vs {g['home_team']}": g['gamePk'] for g in matchups}
     selected_matchup = st.selectbox("Select Matchup", list(game_options.keys()))
     
-    hitter = st.text_input("Hitter Name")
+    # Scrollable list for hitters
+    hitter = st.selectbox("Select Hitter", options=FREQUENT_HITTERS)
     pred_hr = st.number_input("Predicted HRs", min_value=0, step=1)
     
     submitted = st.form_submit_button("Log Prediction")
     
-    if submitted and hitter:
+    if submitted:
         new_entry = pd.DataFrame([{
             'timestamp': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M'),
             'game_id': game_options[selected_matchup],
@@ -67,7 +71,7 @@ with st.form("prediction_form"):
             'status': 'Pending'
         }])
         new_entry.to_csv(LOG_FILE, mode='a', header=False, index=False)
-        st.success("Prediction logged!")
+        st.success(f"Prediction logged for {hitter}!")
         st.rerun()
 
 # 2. Performance Tracking
