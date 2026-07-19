@@ -25,29 +25,15 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          # 1. Print all folders so we can see what is actually there
-          echo "Listing current directory contents:"
-          ls -F
-          
-          # 2. Find the script no matter where it is
-          SCRIPT_PATH=$(find . -name "generate_static_report.py" -print -quit)
-          
-          if [ -z "$SCRIPT_PATH" ]; then
-            echo "Error: Could not find generate_static_report.py"
-            exit 1
-          fi
-          
-          echo "Found script at: $SCRIPT_PATH"
-          
-          # 3. Run it using the path found
-          python "$SCRIPT_PATH"
+          # The logs confirmed the file is in the root
+          python generate_static_report.py
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Check if data directory exists and commit its contents
-          if [ -d "data" ]; then
-            git add data/
+          # Only add if the file exists to avoid git errors
+          if [ -f "data/player_distributions.json" ]; then
+            git add data/player_distributions.json
             git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
           fi
