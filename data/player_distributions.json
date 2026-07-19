@@ -6,5 +6,9 @@
     "Shohei Ohtani": {
         "HR": 0.1,
         "SO": 0.2
+    },
+    "Mookie Betts": {
+        "HR": 0.08,
+        "SO": 0.15
     }
 }
