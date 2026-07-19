@@ -8,7 +8,7 @@ LOG_FILE = 'predictions_log.csv'
 MATCHUP_FILE = 'data/today_matchups.json'
 
 def load_matchup_data():
-    """Parses the local JSON file for games, rosters, and scores."""
+    """Parses the local JSON file for all games, rosters, and scores."""
     if not os.path.exists(MATCHUP_FILE): 
         return []
     
@@ -17,7 +17,9 @@ def load_matchup_data():
             data = json.load(f)
             games_list = []
             
+            # Iterate through all dates and all games within those dates
             for entry in data.get('dates', []):
+                date = entry.get('date')
                 for game in entry.get('games', []):
                     home = game.get('teams', {}).get('home', {})
                     away = game.get('teams', {}).get('away', {})
@@ -26,14 +28,13 @@ def load_matchup_data():
                     h_score = home.get('score', 0)
                     a_score = away.get('score', 0)
                     
-                    # Safely drill into the 'lineup' list -> 'person' dict -> 'fullName'
+                    # Extract full rosters
                     h_hitters = [p.get('person', {}).get('fullName') for p in home.get('lineup', [])]
                     a_hitters = [p.get('person', {}).get('fullName') for p in away.get('lineup', [])]
-                    
                     all_hitters = h_hitters + a_hitters
                     
                     games_list.append({
-                        'date': entry.get('date'),
+                        'date': date,
                         'matchup': f"{away.get('team',{}).get('name')} vs {home.get('team',{}).get('name')}",
                         'status': game.get('status', {}).get('detailedState', 'Scheduled'),
                         'score': f"{a_score} - {h_score}" if game.get('status', {}).get('abstractGameState') == 'Final' else "N/A",
@@ -53,7 +54,7 @@ matchups = load_matchup_data()
 if matchups:
     df = pd.DataFrame(matchups)
     st.subheader("Upcoming Slate & Scores")
-    # Displays date, matchup, status, and the new score column
+    # Displays all games captured from the JSON
     st.dataframe(df[['date', 'matchup', 'status', 'score']], hide_index=True, width='stretch')
 
     # Prediction Form
@@ -64,7 +65,11 @@ if matchups:
         if not active_games:
             st.warning("No active games available for predictions.")
         else:
-            selected = st.selectbox("Select Matchup", [f"{m['date']} | {m['matchup']}" for m in active_games])
+            # Create a unique list of matchup display strings
+            game_options = [f"{m['date']} | {m['matchup']}" for m in active_games]
+            selected = st.selectbox("Select Matchup", game_options)
+            
+            # Find the specific game based on the selection
             game = next(m for m in active_games if f"{m['date']} | {m['matchup']}" == selected)
             
             hitter = st.selectbox("Select Hitter", game['hitters'])
@@ -88,4 +93,4 @@ if matchups:
                     )
                     st.success(f"Successfully logged {hr} HR(s) for {hitter}!")
 else:
-    st.warning("Data not found. Ensure the collector script has run.")
+    st.warning("No data found. Ensure your collector script is fetching the full league schedule.")
