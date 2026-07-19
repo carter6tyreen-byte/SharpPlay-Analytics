@@ -6,11 +6,9 @@ from datetime import datetime, timedelta
 os.makedirs('data', exist_ok=True)
 
 def fetch_and_save_matchups():
-    # Fetch today and tomorrow
     today = datetime.now().strftime('%Y-%m-%d')
     tomorrow = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
     
-    # URL includes hydration for lineups and pitchers
     url = f"https://statsapi.mlb.com/api/v1/schedule?hydrate=lineups,pitchers&startDate={today}&endDate={tomorrow}&sportId=1"
     
     try:
