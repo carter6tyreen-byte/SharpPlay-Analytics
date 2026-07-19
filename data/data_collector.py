@@ -3,12 +3,16 @@ import json
 import os
 from datetime import datetime
 
+# Path to the file that your Streamlit app reads
+DATA_FILE = 'data/today_matchups.json'
+
 def fetch_and_save_matchups():
-    # 1. Use the current date (2026-07-19)
+    # 1. Get today's date dynamically (2026-07-19)
     today = datetime.now().strftime('%Y-%m-%d')
     
-    # 2. Correct URL for the full league schedule
-    # Note: Removed team-specific filters to ensure ALL games are returned
+    # 2. API call for the full league schedule
+    # sportId=1 ensures we get MLB games
+    # No team filter is used so we get all matchups
     url = f"https://statsapi.mlb.com/api/v1/schedule?hydrate=lineups,pitchers&date={today}&sportId=1"
     
     try:
@@ -17,13 +21,14 @@ def fetch_and_save_matchups():
         data = response.json()
         
         # 3. Ensure the 'data' directory exists
-        os.makedirs('data', exist_ok=True)
-        
-        # 4. Save to the file that app.py reads
-        with open('data/today_matchups.json', 'w') as f:
+        if not os.path.exists('data'):
+            os.makedirs('data')
+            
+        # 4. Overwrite with the fresh data
+        with open(DATA_FILE, 'w') as f:
             json.dump(data, f, indent=4)
             
-        print(f"Successfully saved {len(data.get('dates', [{}])[0].get('games', []))} games for {today}.")
+        print(f"Success: Updated {DATA_FILE} with data for {today}.")
         
     except Exception as e:
         print(f"Error fetching data: {e}")
