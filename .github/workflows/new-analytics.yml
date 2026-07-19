@@ -25,8 +25,8 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          # Executes the updated core analytics script
-          python backend/core_analytics.py
+          # Reverting back to the original script
+          python generate_static_report.py
 
       - name: Commit and push updates
         run: |
@@ -35,4 +35,4 @@ jobs:
           
           # Adds changes to the data directory
           git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update core analytics data [skip ci]" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
