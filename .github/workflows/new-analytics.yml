@@ -25,24 +25,15 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          # Automatically find run_analytics.py anywhere in the repo
-          SCRIPT_PATH=$(find . -name "run_analytics.py" | head -n 1)
-          
-          if [ -z "$SCRIPT_PATH" ]; then
-            echo "Error: run_analytics.py not found!"
-            find . -maxdepth 3
-            exit 1
-          fi
-          
-          echo "Executing script at: $SCRIPT_PATH"
-          python "$SCRIPT_PATH"
+          # Executes the verified existing core analytics script
+          python backend/core_analytics.py
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          # Automatically find the data directory
+          # Automatically find and add the data directory
           DATA_DIR=$(find . -type d -name "data" | head -n 1)
           
           if [ -d "$DATA_DIR" ]; then
