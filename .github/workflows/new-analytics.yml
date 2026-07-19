@@ -24,18 +24,19 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: python generate_static_report.py
+        # This dynamically locates the script regardless of nested folders
+        run: |
+          SCRIPT_PATH=$(find . -name "generate_static_report.py" | head -n 1)
+          echo "Found script at: $SCRIPT_PATH"
+          export PYTHONPATH=$PYTHONPATH:$(dirname "$SCRIPT_PATH")
+          python "$SCRIPT_PATH"
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Only add if the script successfully created the file
-          if [ -f "data/player_distributions.json" ]; then
-            git add data/player_distributions.json
-            git diff --quiet && git diff --staged --quiet || (git commit -m "Update player distributions [skip ci]" && git push)
-          else
-            echo "File data/player_distributions.json not found, skipping commit."
+          # Only attempt to commit if a data file was produced
+          if [ -d "data" ]; then
+            git add data/
+            git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
           fi
