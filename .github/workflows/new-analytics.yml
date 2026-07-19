@@ -24,18 +24,16 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        # This dynamically locates the script regardless of nested folders
+        # Set working directory to the workspace root and run explicitly
+        working-directory: ${{ github.workspace }}
         run: |
-          SCRIPT_PATH=$(find . -name "generate_static_report.py" | head -n 1)
-          echo "Found script at: $SCRIPT_PATH"
-          export PYTHONPATH=$PYTHONPATH:$(dirname "$SCRIPT_PATH")
-          python "$SCRIPT_PATH"
+          python generate_static_report.py
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Only attempt to commit if a data file was produced
+          # Target the root data directory
           if [ -d "data" ]; then
             git add data/
             git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
