@@ -47,15 +47,15 @@ with st.sidebar.form("predict_form"):
 st.subheader("Prediction vs. Actual Results")
 logs = pd.read_csv(LOG_FILE)
 
-# Styling function updated for modern Pandas
+# Styling function
 def color_status(val):
     color = 'green' if val == 'Finished' else 'orange'
     return f'background-color: {color}'
 
-# Using .map() instead of .applymap() to fix AttributeError
+# Updated to use width='stretch' per Streamlit's new requirements
 st.dataframe(
     logs.style.map(color_status, subset=['status']),
-    use_container_width=True
+    width='stretch' 
 )
 
 if not logs.empty:
