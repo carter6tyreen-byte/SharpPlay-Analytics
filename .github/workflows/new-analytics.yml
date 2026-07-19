@@ -25,17 +25,29 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          # The file was confirmed to be inside the nested directory structure
-          # Navigate into the subfolder to execute the script and maintain imports
-          cd SharpPlay-Analytics
-          python run_analytics.py
+          # Automatically find run_analytics.py anywhere in the repo
+          SCRIPT_PATH=$(find . -name "run_analytics.py" | head -n 1)
+          
+          if [ -z "$SCRIPT_PATH" ]; then
+            echo "Error: run_analytics.py not found!"
+            find . -maxdepth 3
+            exit 1
+          fi
+          
+          echo "Executing script at: $SCRIPT_PATH"
+          python "$SCRIPT_PATH"
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           
-          # Ensure we are in the correct directory to find the data folder
-          cd SharpPlay-Analytics
-          git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
+          # Automatically find the data directory
+          DATA_DIR=$(find . -type d -name "data" | head -n 1)
+          
+          if [ -d "$DATA_DIR" ]; then
+            git add "$DATA_DIR"
+            git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
+          else
+            echo "No data directory found to commit."
+          fi
