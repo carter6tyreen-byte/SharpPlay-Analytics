@@ -1,3 +1,3 @@
-mlb-starsapi
+mlb-statsapi
 streamlit
 pandas
