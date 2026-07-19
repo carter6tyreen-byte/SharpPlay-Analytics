@@ -1,0 +1,31 @@
+import json
+import pandas as pd
+import os
+
+def generate_player_distributions(input_csv='data/master_player_metrics.csv', output_json='data/player_distributions.json'):
+    # Load your initialized metrics data
+    if not os.path.exists(input_csv):
+        print("Metrics file not found. Please run the collector first.")
+        return
+
+    df = pd.read_csv(input_csv)
+
+    # Example Logic: Calculate rates for each player
+    # Here we group by player and calculate their average metrics
+    distributions = df.groupby('player_name').agg({
+        'exit_velocity': 'mean',
+        'launch_angle': 'mean',
+        'is_hard_hit': 'mean' # This gives the 'hard hit' percentage
+    }).to_dict(orient='index')
+
+    # Ensure the data directory exists
+    os.makedirs('data', exist_ok=True)
+
+    # Save the processed distributions as JSON
+    with open(output_json, 'w') as f:
+        json.dump(distributions, f, indent=4)
+        
+    print(f"Distributions successfully generated at {output_json}")
+
+if __name__ == "__main__":
+    generate_player_distributions()
