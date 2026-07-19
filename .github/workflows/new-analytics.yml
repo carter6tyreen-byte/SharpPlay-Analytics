@@ -25,12 +25,17 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          SCRIPT_PATH=$(find . -maxdepth 3 -name "generate_static_report.py" | head -n 1)
-          echo "Found script at: $SCRIPT_PATH"
-          python "$SCRIPT_PATH"
+          # 1. Force the shell to the root of the workspace
+          cd ${{ github.workspace }}
           
+          # 2. Add current directory to PYTHONPATH so imports like 'analytics.machine_engine' work
+          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          
+          # 3. Explicitly execute the file located at the root
+          python generate_static_report.py
+          
+          # 4. Fallback creation if the script doesn't generate the expected file
           if [ ! -f "data/player_distributions.json" ]; then
-            echo "Script did not generate the file. Creating placeholder."
             mkdir -p data
             echo "{}" > data/player_distributions.json
           fi
