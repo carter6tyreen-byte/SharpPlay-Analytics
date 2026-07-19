@@ -25,13 +25,27 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          python generate_static_report.py
+          # Try the nested directory first, then the root directory
+          if [ -f "SharpPlay-Analytics/generate_static_report.py" ]; then
+            cd SharpPlay-Analytics
+            python generate_static_report.py
+          elif [ -f "generate_static_report.py" ]; then
+            python generate_static_report.py
+          else
+            echo "Error: generate_static_report.py not found in root or nested folder."
+            exit 1
+          fi
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          if [ -d "data" ]; then
+          
+          # Check both locations for a data directory to commit
+          if [ -d "SharpPlay-Analytics/data" ]; then
+            git add SharpPlay-Analytics/data/
+          elif [ -d "data" ]; then
             git add data/
-            git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
           fi
+          
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
