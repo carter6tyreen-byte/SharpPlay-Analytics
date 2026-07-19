@@ -1,4 +1,4 @@
-mlb-statsapi
 streamlit
-request
+requests
 pandas
+MLB-StatsAPI
