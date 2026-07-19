@@ -10,49 +10,37 @@ class AnalyticsEngine:
         try:
             response = requests.get(url, params=params, timeout=10)
             response.raise_for_status()
-            data = response.json()
-            # Diagnostic: check if the 'leagueLeaders' key exists
-            print(f"DEBUG: Data keys: {list(data.keys())}", flush=True)
-            return data
+            return response.json()
         except Exception as e:
             print(f"API Error: {e}", flush=True)
             return None
 
-    def get_pitcher_data(self):
-        # Correct parameters for the leaders endpoint
+    def _get_data(self, stat_group, category):
+        # We use the 'stats' endpoint with 'type=season' to get the full list
         params = {
-            "sportId": 1, 
-            "statGroup": "pitching", 
-            "statType": "season", 
-            "leaderCategories": "era", 
-            "season": 2025
+            "sportId": 1,
+            "group": stat_group,
+            "type": "season",
+            "sortStat": category,
+            "season": 2025,
+            "limit": 10
         }
-        data = self._fetch_from_api("stats/leaders", params=params)
-        return self._process_data(data)
+        data = self._fetch_from_api("stats", params=params)
+        
+        if not data or 'stats' not in data or not data['stats']:
+            return pd.DataFrame()
+            
+        # The /stats endpoint returns data in the 'splits' list
+        splits = data['stats'][0].get('splits', [])
+        df = pd.json_normalize(splits)
+        
+        # Mapping to clean up common output names
+        # Note: adjust these based on the actual columns found in your logs
+        return df
+
+    def get_pitcher_data(self):
+        # Sorting by ERA usually requires the 'qualified' parameter or specific ranking
+        return self._get_data("pitching", "era")
 
     def get_batter_data(self):
-        # Correct parameters for the leaders endpoint
-        params = {
-            "sportId": 1, 
-            "statGroup": "hitting", 
-            "statType": "season", 
-            "leaderCategories": "homeRuns", 
-            "season": 2025
-        }
-        data = self._fetch_from_api("stats/leaders", params=params)
-        return self._process_data(data)
-
-    def _process_data(self, data):
-        if not data or 'leagueLeaders' not in data:
-            return pd.DataFrame()
-        
-        # Normalize the list of dicts
-        df = pd.json_normalize(data['leagueLeaders'])
-        
-        # Select and rename columns if they exist
-        rename_map = {'person.fullName': 'Player', 'value': 'Value', 'rank': 'Rank'}
-        df = df.rename(columns=rename_map)
-        
-        # Return columns if they exist
-        cols = [c for c in ['Rank', 'Player', 'Value'] if c in df.columns]
-        return df[cols]
+        return self._get_data("hitting", "homeRuns")
