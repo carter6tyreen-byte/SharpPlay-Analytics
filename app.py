@@ -39,8 +39,8 @@ if player_data:
     else:
         hide_injured = st.checkbox("Hide Known Injured Players (Manual Filter)", value=False)
         if hide_injured:
-            # Only put genuinely injured/out players here
-            injured_list = [] 
+            # Place any players you want hidden when the box is checked here
+            injured_list = ["Mookie Betts", "Ronald Acuña Jr."]
             df_dist = df_dist.drop(index=[name for name in injured_list if name in df_dist.index])
 
     st.dataframe(df_dist, width='stretch')
