@@ -20,25 +20,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: |
-          pip install requests pandas numpy
+        run: pip install pandas numpy
 
       - name: Run Analytics Generation Script
-        run: |
-          # Executes the verified existing core analytics script
-          python backend/core_analytics.py
-
-      - name: Commit and push updates
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
-          # Automatically find and add the data directory
-          DATA_DIR=$(find . -type d -name "data" | head -n 1)
-          
-          if [ -d "$DATA_DIR" ]; then
-            git add "$DATA_DIR"
-            git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
-          else
-            echo "No data directory found to commit."
-          fi
+        run: python backend/core_analytics.py
