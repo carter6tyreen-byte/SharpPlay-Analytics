@@ -1,15 +1,15 @@
-name: Update MLB Analytics
+name: update-stats
 
 on:
+  push:
+    branches: [ "main" ]
   schedule:
-    - cron: '0 8 * * *'
-  workflow_dispatch: 
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
-  update-stats:
+  run-analytics:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -17,19 +17,19 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install pandas requests streamlit
+        run: |
+          pip install requests pandas
 
       - name: Run Analytics Generation Script
-        run: python generate_static_report.py
-        working-directory: ./analytics
+        # Corrected path to point to your analytics folder
+        run: python analytics/generate_static_report.py
 
       - name: Commit and push updates
         run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add .
-          git commit -m "Update MLB pitcher and batter analytics" || echo "No changes to commit"
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update stats via automated report" && git push)
