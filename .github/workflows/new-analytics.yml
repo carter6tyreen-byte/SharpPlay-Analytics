@@ -25,24 +25,24 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          # 1. Force the shell to the root of the workspace
-          cd ${{ github.workspace }}
+          # Recursively find the script path from the current directory
+          SCRIPT_PATH=$(find . -type f -name "generate_static_report.py" | head -n 1)
           
-          # 2. Add current directory to PYTHONPATH so imports like 'analytics.machine_engine' work
-          export PYTHONPATH=$PYTHONPATH:$(pwd)
+          echo "Script located at: $SCRIPT_PATH"
           
-          # 3. Explicitly execute the file located at the root
-          python generate_static_report.py
+          # Change to the directory containing the script to ensure local imports work
+          SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+          cd "$SCRIPT_DIR"
           
-          # 4. Fallback creation if the script doesn't generate the expected file
-          if [ ! -f "data/player_distributions.json" ]; then
-            mkdir -p data
-            echo "{}" > data/player_distributions.json
-          fi
+          # Run the script
+          python "$(basename "$SCRIPT_PATH")"
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add data/player_distributions.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
+          # If data folder exists, commit the contents
+          if [ -d "data" ]; then
+            git add data/
+            git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
+          fi
