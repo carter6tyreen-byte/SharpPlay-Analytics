@@ -25,24 +25,14 @@ jobs:
 
       - name: Run Analytics Generation Script
         run: |
-          echo "Current directory:"
-          pwd
-          echo "Full file list (recursive):"
-          find . -maxdepth 3 -name "*.py"
-
-          # Proceed to run if found
-          FILE=$(find . -name "generate_static_report.py" | head -n 1)
-          if [ -f "$FILE" ]; then
-            python "$FILE"
-          else
-            echo "Error: Still could not locate generate_static_report.py"
-            exit 1
-          fi
+          # Executes the updated core analytics script
+          python backend/core_analytics.py
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Add all changes in the data directory
+          
+          # Adds changes to the data directory
           git add data/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update core analytics data [skip ci]" && git push)
