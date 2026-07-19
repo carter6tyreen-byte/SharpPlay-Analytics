@@ -13,17 +13,18 @@ except Exception as e:
     schedule = []
 
 player_distributions = {}
-
-# Directly pull from team rosters for all scheduled games today
 teams_to_process = set()
+
+# Gather all home and away teams playing on today's slate
 for game in schedule:
     if game.get('home_name'):
         teams_to_process.add(game.get('home_name'))
     if game.get('away_name'):
         teams_to_process.add(game.get('away_name'))
 
-print(f"Found {len(teams_to_process)} teams playing today. Fetching rosters...")
+print(f"Found {len(teams_to_process)} teams on today's slate. Pulling rosters...")
 
+# Loop through each team playing today and pull their active roster players
 for team_name in teams_to_process:
     try:
         team_id = statsapi.lookup_team(team_name)[0]['id']
@@ -33,20 +34,21 @@ for team_name in teams_to_process:
                 parts = line.split('-')
                 if len(parts) > 1:
                     player_name = parts[1].strip()
-                    # Initialize with baseline stats/distributions
+                    # Assign baseline metrics ready for your optimizer breakdown
                     player_distributions[player_name] = {
                         "HR": 0.08,
                         "SO": 0.20
                     }
     except Exception as ex:
-        print(f"Could not fetch roster for {team_name}: {ex}")
+        print(f"Skipping roster for {team_name}: {ex}")
 
-# Fallback if no games are scheduled today at all
+# Final safety check fallback if no schedule is found
 if len(player_distributions) == 0:
-    print("No active slate found, adding default players...")
+    print("No active players found, loading fallback data...")
     player_distributions = {
         "Aaron Judge": {"HR": 0.12, "SO": 0.25},
-        "Shohei Ohtani": {"HR": 0.1, "SO": 0.2}
+        "Shohei Ohtani": {"HR": 0.1, "SO": 0.2},
+        "Mookie Betts": {"HR": 0.08, "SO": 0.15}
     }
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
