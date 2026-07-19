@@ -1,16 +1,41 @@
-from analytics.machine_engine import AnalyticsEngine
+name: update-stats
 
-def main():
-    engine = AnalyticsEngine()
-    
-    # 1. Fetch both datasets
-    pitcher_df = engine.get_pitcher_data()
-    batter_df = engine.get_batter_data()
-    
-    # 2. Process and save to your index/dashboard
-    # Example: Writing both tables into your HTML or JSON storage
-    # This matches your existing logic but handles both objects
-    save_to_dashboard(pitcher_df, batter_df)
+on:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
-if __name__ == "__main__":
-    main()
+jobs:
+  run-analytics:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install requests pandas numpy
+
+      - name: Run Analytics Generation Script
+        run: |
+          # The file was confirmed to be inside the nested directory structure
+          # Navigate into the subfolder to execute the script and maintain imports
+          cd SharpPlay-Analytics
+          python run_analytics.py
+
+      - name: Commit and push updates
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Ensure we are in the correct directory to find the data folder
+          cd SharpPlay-Analytics
+          git add data/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
