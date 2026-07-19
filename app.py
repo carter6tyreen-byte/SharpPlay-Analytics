@@ -8,6 +8,17 @@ if os.path.exists(collector_path):
         subprocess.run(["python", collector_path], check=True)
     except Exception as e:
         print(f"Error running data collector on startup: {e}")
+
+import subprocess
+import os
+
+# Automatically run the data collector script on app startup to ensure the full slate is loaded
+collector_path = os.path.join(os.path.dirname(__file__), "data", "data_collector.py")
+if os.path.exists(collector_path):
+    try:
+        subprocess.run(["python", collector_path], check=True)
+    except Exception as e:
+        print(f"Error running data collector on startup: {e}")
 import streamlit as st
 import json
 import os
