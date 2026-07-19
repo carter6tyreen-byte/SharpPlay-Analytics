@@ -1,38 +1,45 @@
 import streamlit as st
 import json
+import os
 import pandas as pd
-import requests
 
 st.set_page_config(page_title="SharpPlay Analytics: ODE Optimizer", layout="wide")
 
 st.title("SharpPlay Analytics: ODE Optimizer")
 
-# Direct URL to the raw JSON file on your GitHub repository main branch
-# (Make sure to replace USERNAME and REPO with your actual GitHub details if needed)
-GITHUB_RAW_URL = "https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/data/player_distributions.json"
+DISTRIBUTIONS_PATH = "data/player_distributions.json"
+AUDIT_PATH = "data/audit_results.json"
 
-@st.cache_data(ttl=60)
-def load_data_from_github(url):
+player_data = None
+if os.path.exists(DISTRIBUTIONS_PATH):
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.json()
+        with open(DISTRIBUTIONS_PATH, "r") as f:
+            content = f.read().strip()
+            if content:
+                player_data = json.loads(content)
     except Exception as e:
-        return None
-    return None
-
-# Load the data
-player_data = load_data_from_github(GITHUB_RAW_URL)
+        st.error(f"Error parsing JSON: {e}")
 
 if player_data:
-    st.success("Data successfully loaded from GitHub repository!")
+    st.success("Player distributions successfully loaded!")
     st.subheader("Player Performance Distributions")
     df_dist = pd.DataFrame.from_dict(player_data, orient='index')
     st.dataframe(df_dist, use_container_width=True)
 else:
     st.warning("⚠️ Could not fetch data from GitHub raw URL yet.")
-    st.info("Check if your GitHub Action has successfully completed and pushed `data/player_distributions.json` to the `main` branch.")
+    st.info("Check if your GitHub Action has successfully completed and pushed data/player_distributions.json to the main branch.")
+
+if os.path.exists(AUDIT_PATH):
+    st.subheader("Audit & Model Accuracy Loop")
+    try:
+        with open(AUDIT_PATH, "r") as f:
+            audit_content = f.read().strip()
+            if audit_content:
+                audit_data = json.loads(audit_content)
+                if audit_data:
+                    st.dataframe(pd.DataFrame(audit_data), use_container_width=True)
+    except Exception as e:
+        st.warning(f"Could not load audit results: {e}")
 
 if st.button("Force Refresh"):
-    st.cache_data.clear()
     st.rerun()
