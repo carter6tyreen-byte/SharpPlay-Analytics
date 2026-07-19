@@ -50,7 +50,7 @@ if matchups:
     df = pd.DataFrame(matchups)
     st.subheader("Upcoming Slate")
     # Updated to resolve deprecation warning by using width=None for standard behavior
-    st.dataframe(df[['date', 'matchup', 'status']], hide_index=True, width=None)
+    st.dataframe(df[['date', 'matchup', 'status']], hide_index=True, width='stretch')
 
     # Prediction Form
     st.subheader("Add New Prediction")
