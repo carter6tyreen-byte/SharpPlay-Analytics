@@ -7,12 +7,13 @@ from datetime import datetime
 LOG_FILE = 'predictions_log.csv'
 
 def initialize_log():
+    """Ensure the log file exists with proper headers."""
     if not os.path.exists(LOG_FILE):
         df = pd.DataFrame(columns=['timestamp', 'game_id', 'matchup', 'hitter', 'pred_hr', 'actual_hr', 'status'])
         df.to_csv(LOG_FILE, index=False)
 
 def log_prediction(game_id, matchup, hitter, pred_hr):
-    # This function logs your pre-game insight
+    """Saves a new recommendation to the tracker."""
     new_data = {
         'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M"),
         'game_id': game_id,
@@ -31,7 +32,7 @@ st.title("⚾ ProAnalytics Performance Tracker")
 
 initialize_log()
 
-# Sidebar for manual testing of the tracker
+# Sidebar for manual testing
 st.sidebar.header("Add Prediction")
 with st.sidebar.form("predict_form"):
     gid = st.text_input("Game ID")
@@ -40,17 +41,20 @@ with st.sidebar.form("predict_form"):
     if st.form_submit_button("Log Entry"):
         log_prediction(gid, "N/A", hit, hr)
         st.success("Logged!")
+        st.rerun()
 
 # Performance Display
 st.subheader("Prediction vs. Actual Results")
 logs = pd.read_csv(LOG_FILE)
 
+# Styling function updated for modern Pandas
 def color_status(val):
     color = 'green' if val == 'Finished' else 'orange'
     return f'background-color: {color}'
 
+# Using .map() instead of .applymap() to fix AttributeError
 st.dataframe(
-    logs.style.applymap(color_status, subset=['status']),
+    logs.style.map(color_status, subset=['status']),
     use_container_width=True
 )
 
