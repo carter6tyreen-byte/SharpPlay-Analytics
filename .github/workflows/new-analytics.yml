@@ -24,13 +24,12 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        run: python analytics/generate_static_report.py
+        # Updated to run from the root, as path issues caused previous failures
+        run: python generate_static_report.py
 
       - name: Commit and push updates
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Add the specific generated file
           git add data/player_distributions.json
-          # Check for changes, commit, and push if data was updated
           git diff --quiet && git diff --staged --quiet || (git commit -m "Update player distributions [skip ci]" && git push)
