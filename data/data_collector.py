@@ -10,7 +10,6 @@ player_distributions = {}
 teams_to_process = set()
 
 try:
-    # Fetch schedule directly from MLB Stats API endpoint
     schedule_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today}"
     response = requests.get(schedule_url)
     schedule_data = response.json()
@@ -28,12 +27,10 @@ try:
 except Exception as e:
     print(f"Error fetching schedule: {e}")
 
-print(f"Found {len(teams_to_process)} teams on today's slate. Pulling rosters...")
+print(f"Found {len(teams_to_process)} teams on today's slate. Pulling full active lineups...")
 
-# If we couldn't fetch via schedule, use a direct team lookup endpoint or fallback
 for team_name in teams_to_process:
     try:
-        # Search team ID
         team_search_url = f"https://statsapi.mlb.com/api/v1/teams?sportId=1"
         teams_resp = requests.get(team_search_url).json().get('teams', [])
         team_id = None
@@ -43,7 +40,8 @@ for team_name in teams_to_process:
                 break
         
         if team_id:
-            roster_url = f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster"
+            # Fetch active roster to ensure full lineup/roster capability
+            roster_url = f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster?rosterType=active"
             roster_resp = requests.get(roster_url).json()
             roster_list = roster_resp.get('roster', [])
             for entry in roster_list:
@@ -54,16 +52,7 @@ for team_name in teams_to_process:
                         "SO": 0.20
                     }
     except Exception as ex:
-        print(f"Skipping roster for {team_name}: {ex}")
-
-# Fallback safety net if anything fails
-if len(player_distributions) == 0:
-    print("Loading default slate fallback...")
-    player_distributions = {
-        "Aaron Judge": {"HR": 0.12, "SO": 0.25},
-        "Shohei Ohtani": {"HR": 0.1, "SO": 0.2},
-        "Mookie Betts": {"HR": 0.08, "SO": 0.15}
-    }
+        print(f"Skipping active roster for {team_name}: {ex}")
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(script_dir, "data")
@@ -73,4 +62,4 @@ output_path = os.path.join(data_dir, "player_distributions.json")
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump(player_distributions, f, indent=4)
 
-print(f"Successfully saved {len(player_distributions)} pre-game players to {output_path}.")
+print(f"Successfully generated full slate of {len(player_distributions)} active players to {output_path}.")
