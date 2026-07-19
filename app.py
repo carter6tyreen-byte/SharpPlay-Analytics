@@ -28,20 +28,14 @@ if os.path.exists("data"):
 
 if player_data:
     st.success(f"Player distributions successfully loaded from `{loaded_path}`!")
-    st.subheader("Player Performance Distributions")
+    st.subheader(f"Player Performance Distributions ({len(player_data)} Players Loaded)")
     
     df_dist = pd.DataFrame.from_dict(player_data, orient='index')
     
-    if "status" in df_dist.columns:
-        active_only = st.checkbox("Hide Injured Players", value=True)
-        if active_only:
-            df_dist = df_dist[df_dist["status"].str.lower() != "injured"]
-    else:
-        hide_injured = st.checkbox("Hide Known Injured Players (Manual Filter)", value=False)
-        if hide_injured:
-            # Place any players you want hidden when the box is checked here
-            injured_list = ["Mookie Betts", "Ronald Acuña Jr."]
-            df_dist = df_dist.drop(index=[name for name in injured_list if name in df_dist.index])
+    hide_injured = st.checkbox("Hide Known Injured Players (Manual Filter)", value=False)
+    if hide_injured:
+        injured_list = []  # Keep empty unless specific players are out
+        df_dist = df_dist.drop(index=[name for name in injured_list if name in df_dist.index])
 
     st.dataframe(df_dist, width='stretch')
 else:
