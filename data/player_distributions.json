@@ -1,10 +1,39 @@
-{
-    "Aaron Judge": {
-        "HR": 0.12,
-        "SO": 0.25
-    },
-    "Shohei Ohtani": {
-        "HR": 0.1,
-        "SO": 0.2
-    }
-}
+import json
+import os
+import statsapi  # using the MLB-StatsAPI wrapper
+import datetime
+
+# Get today's date
+today = datetime.date.today().strftime("%Y-%m-%d")
+
+# Fetch today's schedule
+schedule = statsapi.schedule(date=today)
+
+player_distributions = {}
+
+for game in schedule:
+    game_pk = game['game_id']
+    boxscore = statsapi.boxscore_data(game_pk)
+    
+    # Parse both home and away teams from the boxscore
+    for team_key in ['home', 'away']:
+        players = boxscore.get(team_key, {}).get('players', {})
+        for player_id, p_info in players.items():
+            name = p_info.get('person', {}).get('fullName')
+            if name:
+                # Extract your metrics or set default performance distributions
+                # (Replace these placeholders with your actual distribution extraction logic)
+                player_distributions[name] = {
+                    "HR": p_info.get('stats', {}).get('batting', {}).get('homeRuns', 0),
+                    "SO": p_info.get('stats', {}).get('pitching', {}).get('strikeouts', 0)
+                }
+
+# Ensure data directory exists
+os.makedirs("data", exist_ok=True)
+
+# Save the full slate to player_distributions.json
+output_path = "data/player_distributions.json"
+with open(output_path, "w", encoding="utf-8") as f:
+    json.dump(player_distributions, f, indent=4)
+
+print(f"Successfully fetched full slate for {today}: {len(player_distributions)} players loaded.")
