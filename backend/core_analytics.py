@@ -1,22 +1,22 @@
-import numpy as np
-
-def check_alert_threshold(data_to_process):
-    """
-    Processes the data through the threshold logic.
-    Currently returns all data as-is for analysis.
-    """
-    return data_to_process
+import json
+import os
 
 def main():
-    # Placeholder for your engine's raw data
-    raw_data = {"Player Name": {"HR": 0.1, "SO": 0.3, "BB": 0.3, "H": 0.3}}
+    # Keep directory creation consistent
+    os.makedirs('data', exist_ok=True)
     
-    # Process the data
-    processed = check_alert_threshold(raw_data)
+    # Logic for player distributions
+    data = {
+        "Aaron Judge": {"HR": 0.12, "SO": 0.25},
+        "Shohei Ohtani": {"HR": 0.10, "SO": 0.20}
+    }
     
-    # Logic is now contained within the execution flow without file I/O
-    print("Analytics processing complete.")
-    print(f"Processed output: {processed}")
+    # Save to the root-level data/ folder
+    output_path = os.path.join('data', 'player_distributions.json')
+    with open(output_path, 'w') as f:
+        json.dump(data, f, indent=4)
+        
+    print(f"Analytics successfully saved to {output_path}")
 
 if __name__ == "__main__":
     main()
