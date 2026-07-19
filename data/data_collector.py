@@ -1,37 +1,54 @@
 import json
 import os
-import statsapi
 import datetime
+import requests
 
 today = datetime.date.today().strftime("%Y-%m-%d")
 print(f"Fetching full pre-game MLB slate for {today}...")
 
-try:
-    schedule = statsapi.schedule(date=today)
-except Exception as e:
-    print(f"Error fetching schedule: {e}")
-    schedule = []
-
 player_distributions = {}
 teams_to_process = set()
 
-for game in schedule:
-    if game.get('home_name'):
-        teams_to_process.add(game.get('home_name'))
-    if game.get('away_name'):
-        teams_to_process.add(game.get('away_name'))
+try:
+    # Fetch schedule directly from MLB Stats API endpoint
+    schedule_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today}"
+    response = requests.get(schedule_url)
+    schedule_data = response.json()
+    
+    dates = schedule_data.get('dates', [])
+    if dates:
+        games = dates[0].get('games', [])
+        for game in games:
+            home_team = game.get('teams', {}).get('home', {}).get('team', {}).get('name')
+            away_team = game.get('teams', {}).get('away', {}).get('team', {}).get('name')
+            if home_team:
+                teams_to_process.add(home_team)
+            if away_team:
+                teams_to_process.add(away_team)
+except Exception as e:
+    print(f"Error fetching schedule: {e}")
 
 print(f"Found {len(teams_to_process)} teams on today's slate. Pulling rosters...")
 
+# If we couldn't fetch via schedule, use a direct team lookup endpoint or fallback
 for team_name in teams_to_process:
     try:
-        team_id = statsapi.lookup_team(team_name)[0]['id']
-        roster_text = statsapi.roster(team_id)
-        for line in roster_text.splitlines():
-            if line.strip():
-                parts = line.split('-')
-                if len(parts) >= 2:
-                    player_name = parts[1].strip()
+        # Search team ID
+        team_search_url = f"https://statsapi.mlb.com/api/v1/teams?sportId=1"
+        teams_resp = requests.get(team_search_url).json().get('teams', [])
+        team_id = None
+        for t in teams_resp:
+            if t.get('name', '').lower() == team_name.lower():
+                team_id = t.get('id')
+                break
+        
+        if team_id:
+            roster_url = f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster"
+            roster_resp = requests.get(roster_url).json()
+            roster_list = roster_resp.get('roster', [])
+            for entry in roster_list:
+                player_name = entry.get('person', {}).get('fullName')
+                if player_name:
                     player_distributions[player_name] = {
                         "HR": 0.08,
                         "SO": 0.20
@@ -39,6 +56,7 @@ for team_name in teams_to_process:
     except Exception as ex:
         print(f"Skipping roster for {team_name}: {ex}")
 
+# Fallback safety net if anything fails
 if len(player_distributions) == 0:
     print("Loading default slate fallback...")
     player_distributions = {
