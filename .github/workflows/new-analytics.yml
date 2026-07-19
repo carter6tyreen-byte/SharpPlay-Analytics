@@ -24,19 +24,17 @@ jobs:
           pip install requests pandas numpy
 
       - name: Run Analytics Generation Script
-        # Move into the nested directory where your files actually live
-        working-directory: SharpPlay-Analytics
+        # REMOVED: working-directory
         run: |
           python generate_static_report.py
 
       - name: Commit and push updates
-        # Move into the nested directory to ensure git finds the 'data' folder
-        working-directory: SharpPlay-Analytics
+        # REMOVED: working-directory
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          # Check for changes in the data directory
           if [ -d "data" ]; then
             git add data/
             git diff --quiet && git diff --staged --quiet || (git commit -m "Update analytics data [skip ci]" && git push)
           fi
+l
