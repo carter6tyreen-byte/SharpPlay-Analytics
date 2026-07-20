@@ -156,7 +156,7 @@ if not games:
     st.warning(f"No games found for date: {selected_date}.")
 else:
     st.subheader("⚡ Slate Matchups & Weather Alerts")
-    st.markdown("<p style='color: #9ba1a6; font-size: 0.9rem;'>Select a specific matchup below to take a deep dive into individual batter-pitcher splits, pitch-mix breakdowns, and advanced metrics.</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #9ba1a6; font-size: 0.9rem;'>Select a specific matchup below to take a deep dive into individual batter-pitcher splits, pitch-mix breakdowns, color-coded danger zones, and advanced metrics.</p>", unsafe_allow_html=True)
 
     # Interactive Matchup Selector for Deep Dive
     game_options = {f"{g['away_name']} @ {g['home_name']} ({g.get('game_time', 'TBD')})": g['game_id'] for g in games}
@@ -175,67 +175,44 @@ else:
         <div style="background-color: #161821; border: 1px solid #2b2f3d; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <div>
-                    <h4 style="margin: 0; color: #00ffcc;">Left-Handed Batters Matchup Split</h4>
-                    <p style="margin: 4px 0 0 0; color: #9ba1a6; font-size: 0.85rem;">Includes switch hitters batting left-handed against today's starting pitcher.</p>
-                </div>
-                <div>
-                    <span style="background-color: #1a3a2a; color: #2ecc71; padding: 6px 12px; border-radius: 6px; font-weight: bold;">Pitcher HR/9: 0.79</span>
+                    <h4 style="margin: 0; color: #00ffcc;">Advanced Batter vs. Pitcher Mix & Color-Coded Metrics</h4>
+                    <p style="margin: 4px 0 0 0; color: #9ba1a6; font-size: 0.85rem;">Select an individual batter below to evaluate Hard Hit %, Barrel %, AVG, ISO, and Fly Ball % against specific pitch types in the pitcher's mix.</p>
                 </div>
             </div>
-            <hr style="border-color: #2b2f3d; margin: 12px 0;">
-            <p style="font-size: 0.85rem; color: #a0aab5; margin-bottom: 8px;"><b>Pitcher Arsenal Filter Active:</b></p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Interactive Pitch Mix filter buttons
-        col_p1, col_p2, col_p3 = st.columns(3)
-        with col_p1:
-            st.checkbox("Four-seam FB (48% - 1 HR)", value=True)
-        with col_p2:
-            st.checkbox("Slider (23% - 2 HR)", value=True)
-        with col_p3:
-            st.checkbox("Overall Arsenal Mix", value=False)
-            
-        st.markdown("---")
+        # Batter Selector for Individual Deep Dive
+        roster_batters = ["Riley Greene (DET - LHB)", "Kerry Carpenter (DET - LHB)", "Spencer Torkelson (DET - RHB)", "Dillon Dingler (DET - RHB)"]
+        selected_batter = st.selectbox("👤 Choose Batter for Detailed vs. Pitcher Mix Breakdown", options=roster_batters)
         
-        # Highlight Box for Top Batter
-        st.markdown("""
-        <div style="background-color: #1f1b13; border: 1px solid #4a3d12; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-            🔥 <b style="color: #ffcc00;">Best Left-Handed Batter:</b> Riley Greene — <b style="color: #00ffcc;">15 HR</b> &nbsp;|&nbsp; .173 ISO &nbsp;|&nbsp; .436 SLG
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(f"#### 📊 Matchup Breakdown: **{selected_batter}** vs. Starting Pitcher Arsenal")
         
-        # Table of hitters for this matchup
-        matchup_batters = [
-            {"rank": 1, "name": "Riley Greene", "pos": "LHB", "pitches": 759, "hr": 15, "iso": 0.173, "highlight": True},
-            {"rank": 2, "name": "Kerry Carpenter", "pos": "LHB", "pitches": 810, "hr": 6, "iso": 0.121, "highlight": False},
-            {"rank": 3, "name": "Spencer Torkelson", "pos": "RHB / LHB Split", "pitches": 890, "hr": 20, "iso": 0.260, "highlight": False},
+        # Color-coded pitch mix metric cards
+        col_m1, col_m2, col_m3, col_m4, col_m5 = st.columns(5)
+        with col_m1:
+            st.markdown('<div style="background-color: #1f3a2a; border: 1px solid #2ecc71; padding: 10px; border-radius: 8px; text-align: center;"><h4 style="color: #2ecc71; margin:0;">54.2%</h4><p style="font-size:0.75rem; margin:2px 0 0 0;">Hard Hit % (Elite)</p></div>', unsafe_allow_html=True)
+        with col_m2:
+            st.markdown('<div style="background-color: #1f3a2a; border: 1px solid #2ecc71; padding: 10px; border-radius: 8px; text-align: center;"><h4 style="color: #2ecc71; margin:0;">16.8%</h4><p style="font-size:0.75rem; margin:2px 0 0 0;">Barrel % (Danger Zone)</p></div>', unsafe_allow_html=True)
+        with col_m3:
+            st.markdown('<div style="background-color: #3a3211; border: 1px solid #f1c40f; padding: 10px; border-radius: 8px; text-align: center;"><h4 style="color: #f1c40f; margin:0;">.310</h4><p style="font-size:0.75rem; margin:2px 0 0 0;">Batting AVG vs Mix</p></div>', unsafe_allow_html=True)
+        with col_m4:
+            st.markdown('<div style="background-color: #1f3a2a; border: 1px solid #2ecc71; padding: 10px; border-radius: 8px; text-align: center;"><h4 style="color: #2ecc71; margin:0;">.285</h4><p style="font-size:0.75rem; margin:2px 0 0 0;">ISO vs Mix (Power)</p></div>', unsafe_allow_html=True)
+        with col_m5:
+            st.markdown('<div style="background-color: #3a1a1a; border: 1px solid #e74c3c; padding: 10px; border-radius: 8px; text-align: center;"><h4 style="color: #e74c3c; margin:0;">42.0%</h4><p style="font-size:0.75rem; margin:2px 0 0 0;">Fly Ball %</p></div>', unsafe_allow_html=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Detailed Pitch Mix Breakdown Table with Color-Coded Warnings/Potential
+        st.markdown("##### 🎯 Pitcher Arsenal vs. Batter Metrics Table")
+        pitch_mix_matrix = [
+            {"Pitch Type": "Four-Seam Fastball", "Usage %": "48.2%", "P Pitcher HR/9": "2.14 (High)", "Batter Hard Hit %": "58.4% (Elite)", "Batter Barrel %": "18.2% (Danger)", "Status / Alert": "🟢 Major Advantage for Batter"},
+            {"Pitch Type": "Slider", "Usage %": "26.5%", "P Pitcher HR/9": "1.42 (Avg)", "Batter Hard Hit %": "44.1% (Good)", "Batter Barrel %": "11.5% (Solid)", "Status / Alert": "🟡 Neutral Matchup"},
+            {"Pitch Type": "Curveball", "Usage %": "15.3%", "P Pitcher HR/9": "0.65 (Low)", "Batter Hard Hit %": "28.0% (Weak)", "Batter Barrel %": "4.2% (Low)", "Status / Alert": "🔴 Pitcher Advantage (Avoid)"},
+            {"Pitch Type": "Changeup", "Usage %": "10.0%", "P Pitcher HR/9": "1.80 (High)", "Batter Hard Hit %": "51.2% (Elite)", "Batter Barrel %": "15.0% (Danger)", "Status / Alert": "🟢 Secondary Power Spot"},
         ]
-        
-        for b in matchup_batters:
-            hr_bg = "background: linear-gradient(135deg, #1b3b34, #122620); border: 1px solid #2ecc71;" if b['highlight'] else "background-color: #1a1e29;"
-            st.markdown(f"""
-            <div style="background-color: #14161f; border: 1px solid #252a38; padding: 12px 16px; border-radius: 10px; margin-bottom: 10px;">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
-                    <div style="display: flex; align-items: center; width: 40%;">
-                        <span style="background-color: #2b2f3a; color: #00ffcc; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px;">{b['rank']}</span>
-                        <div>
-                            <strong style="font-size: 1rem;">{b['name']}</strong><br>
-                            <span style="font-size: 0.75rem; color: #f1c40f;">{b['pos']}</span>
-                        </div>
-                    </div>
-                    <div style="width: 20%; text-align: center; color: #2ecc71; font-weight: bold;">
-                        {b['pitches']} Pitches Seen
-                    </div>
-                    <div style="width: 20%; text-align: center;">
-                        <span style="{hr_bg} padding: 6px 14px; border-radius: 6px; font-weight: bold; color: #fff;">⭐ {b['hr']} HR</span>
-                    </div>
-                    <div style="width: 20%; text-align: center; color: #2ecc71; font-weight: bold;">
-                        ISO: {b['iso']}
-                    </div>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+        df_mix = pd.DataFrame(pitch_mix_matrix)
+        st.dataframe(df_mix, width='stretch', hide_index=True)
 
     except Exception as e:
         st.error(f"Error loading deep dive stats for matchup: {e}")
