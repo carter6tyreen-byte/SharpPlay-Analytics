@@ -8,22 +8,23 @@ st.set_page_config(page_title="SharpPlay Analytics - MLB Matchups", layout="wide
 
 st.title("⚾ SharpPlay Analytics: Matchups, Lineups & Pitcher vs. Batter")
 
-# Date configuration sidebar with a submit/search button
+# Initialize session state for date immediately
 today_str = datetime.now().strftime("%m/%d/%Y")
+if "query_date" not in st.session_state:
+    st.session_state.query_date = today_str
+
 st.sidebar.header("Configuration")
-date_input = st.sidebar.text_input("Query Date (MM/DD/YYYY)", value=today_str)
 
-# Search button so mobile users can trigger updates cleanly after typing
-search_clicked = st.sidebar.button("Search Date", type="primary")
+# Use a form so pressing Enter or clicking submit triggers the app cleanly
+with st.sidebar.form(key="date_form"):
+    date_input = st.text_input("Query Date (MM/DD/YYYY)", value=st.session_state.query_date)
+    submit_button = st.form_submit_button(label="Search Date", type="primary")
 
-# Persist the selected date in session state to handle re-runs
-if "selected_date" not in st.session_state:
-    st.session_state.selected_date = today_str
+if submit_button:
+    st.session_state.query_date = date_input
+    st.rerun()
 
-if search_clicked:
-    st.session_state.selected_date = date_input
-
-selected_date = st.session_state.selected_date
+selected_date = st.session_state.query_date
 
 @st.cache_data
 def fetch_mlb_schedule(date_str):
@@ -141,3 +142,4 @@ else:
     
     df_games = pd.DataFrame(matchup_list)
     st.dataframe(df_games, width='stretch')
+
