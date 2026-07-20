@@ -7,9 +7,6 @@ st.set_page_config(page_title="SharpPlay Analytics: ODE Optimizer", layout="wide
 
 st.title("SharpPlay Analytics: ODE Optimizer")
 
-if "selected_game" not in st.session_state:
-    st.session_state.selected_game = None
-
 today = datetime.date.today().strftime("%Y-%m-%d")
 schedule_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today}&hydrate=team,linescore"
 
@@ -19,8 +16,8 @@ try:
     data = resp.json()
     dates = data.get("dates", [])
     if dates:
-        for game in dates[0].get("games", []):
-            game_id = game.get("gamePk")
+        for idx, game in enumerate(dates[0].get("games", [])):
+            game_id = game.get("gamePk", idx)
             away_team = game.get("teams", {}).get("away", {}).get("team", {}).get("name", "Away")
             home_team = game.get("teams", {}).get("home", {}).get("team", {}).get("name", "Home")
             status = game.get("status", {}).get("detailedState", "Scheduled")
@@ -30,7 +27,8 @@ try:
             if game_date_str:
                 try:
                     dt_utc = datetime.datetime.strptime(game_date_str, "%Y-%m-%dT%H:%M:%SZ")
-                    display_time = dt_utc.strftime("%b %d, %Y - %I:%M %p UTC")
+                    dt_et = dt_utc - datetime.timedelta(hours=4)
+                    display_time = f"{dt_et.strftime('%b %d, %Y - %I:%M %p ET')} ({dt_utc.strftime('%I:%M %p UTC')})"
                 except Exception:
                     display_time = game_date_str
 
@@ -52,25 +50,23 @@ if not games_list:
     games_list = [{
         "gamePk": 0, 
         "matchup": "New York Yankees @ Boston Red Sox", 
-        "time": "Today, 7:05 PM UTC", 
+        "time": "Today, 03:05 PM ET (07:05 PM UTC)", 
         "status": "Preview", 
         "away": "New York Yankees", 
         "home": "Boston Red Sox"
     }]
 
-for g in games_list:
-    cols = st.columns([3, 2, 2])
-    with cols[0]:
-        st.write(f"**{g['matchup']}**")
-    with cols[1]:
-        st.caption(f"🕒 {g['time']}\nStatus: {g['status']}")
-    with cols[2]:
-        if st.button("View Matchup", key=f"btn_game_{g['gamePk']}"):
-            st.session_state.selected_game = g
+matchup_options = {g["matchup"]: g for g in games_list}
+
+selected_matchup_name = st.selectbox(
+    "Select a Matchup for Deep Dive:",
+    options=list(matchup_options.keys()),
+    index=0
+)
+
+selected_game = matchup_options[selected_matchup_name]
 
 st.markdown("---")
-
-selected_game = st.session_state.selected_game
 
 if selected_game:
     st.header(f"Matchup Deep Dive: {selected_game['matchup']}")
@@ -106,5 +102,3 @@ if selected_game:
             "Run Value": ["+2.1", "+4.5", "+1.2", "+0.8"]
         })
         st.dataframe(pitch_mix_df)
-else:
-    st.info("👆 Click **'View Matchup'** on any game above to open the full color-graded breakdown, pitcher vs. batter stats, and pitch mix analysis.")
