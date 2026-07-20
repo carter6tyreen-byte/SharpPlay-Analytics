@@ -8,10 +8,22 @@ st.set_page_config(page_title="SharpPlay Analytics - MLB Matchups", layout="wide
 
 st.title("⚾ SharpPlay Analytics: Matchups, Lineups & Pitcher vs. Batter")
 
-# Date configuration sidebar
+# Date configuration sidebar with a submit/search button
 today_str = datetime.now().strftime("%m/%d/%Y")
 st.sidebar.header("Configuration")
-selected_date = st.sidebar.text_input("Query Date (MM/DD/YYYY)", value=today_str)
+date_input = st.sidebar.text_input("Query Date (MM/DD/YYYY)", value=today_str)
+
+# Search button so mobile users can trigger updates cleanly after typing
+search_clicked = st.sidebar.button("Search Date", type="primary")
+
+# Persist the selected date in session state to handle re-runs
+if "selected_date" not in st.session_state:
+    st.session_state.selected_date = today_str
+
+if search_clicked:
+    st.session_state.selected_date = date_input
+
+selected_date = st.session_state.selected_date
 
 @st.cache_data
 def fetch_mlb_schedule(date_str):
@@ -55,7 +67,6 @@ else:
         away_team_data = boxscore.get('away', {})
         home_team_data = boxscore.get('home', {})
         
-        # Extract starting pitchers if available
         away_pitchers = away_team_data.get('pitchers', [])
         home_pitchers = home_team_data.get('pitchers', [])
         
@@ -69,7 +80,7 @@ else:
         
         with col_away:
             st.markdown(f"### ✈️ {away_team_data.get('team', {}).get('name', 'Away Team')} Lineup")
-            st.caption(vs_label := f"vs. Opposing Pitcher: **{home_sp_name}**")
+            st.caption(f"vs. Opposing Pitcher: **{home_sp_name}**")
             away_batters = away_team_data.get('batters', [])
             
             if away_batters:
@@ -79,19 +90,6 @@ else:
                     person = player_info.get('person', {})
                     position = player_info.get('position', {}).get('abbreviation', '')
                     batter_name = person.get('fullName', 'Unknown')
-                    
-                    # Fetch batter vs pitcher stats if IDs are available
-                    vs_stats = "0-0"
-                    if home_sp_id:
-                        try:
-                            # statsapi call for batter vs pitcher data
-                            b_v_p = statsapi.player_stat_data(batter_id, group="hitting", type="vsPlayer", stat_type="career")
-                            # Extract stats against specific pitcher if present
-                            vs_stats = statsapi.get('people', {'personId': batter_id, 'hydrate': f'stats(group=[hitting],type=[vsPlayer],opposingPlayerId=[{home_sp_id}],season=2026)'})
-                            # Fallback safe representation if data is sparse
-                        except Exception:
-                            pass
-                            
                     away_lineup_rows.append({"Player": batter_name, "Pos": position})
                     
                 st.dataframe(pd.DataFrame(away_lineup_rows), width='stretch', hide_index=True)
@@ -110,7 +108,6 @@ else:
                     person = player_info.get('person', {})
                     position = player_info.get('position', {}).get('abbreviation', '')
                     batter_name = person.get('fullName', 'Unknown')
-                    
                     home_lineup_rows.append({"Player": batter_name, "Pos": position})
                     
                 st.dataframe(pd.DataFrame(home_lineup_rows), width='stretch', hide_index=True)
