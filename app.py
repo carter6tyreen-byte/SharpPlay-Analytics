@@ -1,5 +1,8 @@
 import json
 import os
+import streamlit as st
+
+st.title("SharpPlay Analytics: ODE Optimizer")
 
 data_path = os.path.join("data", "player_distributions.json")
 
@@ -21,3 +24,9 @@ if not player_distributions:
         "Mookie Betts": {"HR": 0.08, "SO": 0.15},
         "Yordan Alvarez": {"HR": 0.11, "SO": 0.22}
     }
+
+st.success(f"Player distributions successfully loaded ({len(player_distributions)} players loaded)!")
+
+# Render the data table
+st.subheader("Player Performance Distributions")
+st.dataframe(player_distributions)
