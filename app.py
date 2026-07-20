@@ -85,7 +85,7 @@ if selected_game:
             f"Away Team ({selected_game['away']})": ["B+", "74", "78%", "24%", "82.4"],
             f"Home Team ({selected_game['home']})": ["A-", "81", "82%", "21%", "88.1"]
         })
-        st.dataframe(overview_data, width="stretch")
+        st.dataframe(overview_data, width=None)
         
     with tab_pitcher_batter:
         st.subheader("Pitcher vs Batter Comparative Board")
@@ -105,6 +105,6 @@ if selected_game:
             "Whiff %": ["25%", "38%", "33%", "30%"],
             "Run Value": ["+2.1", "+4.5", "+1.2", "+0.8"]
         })
-        st.dataframe(pitch_mix_df, width="stretch")
+        st.dataframe(pitch_mix_df, width=None)
 else:
     st.info("👆 Click **'View Matchup'** on any game above to open the full color-graded breakdown, pitcher vs. batter stats, and pitch mix analysis.")
