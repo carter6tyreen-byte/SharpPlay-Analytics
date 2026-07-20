@@ -8,7 +8,6 @@ st.set_page_config(page_title="SharpPlay Analytics: ODE Optimizer", layout="wide
 st.title("SharpPlay Analytics: ODE Optimizer")
 
 today = datetime.date.today().strftime("%Y-%m-%d")
-# Hydrate teams, linescore, and probablePitchers
 schedule_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today}&hydrate=team,linescore,probablePitcher"
 
 games_list = []
@@ -25,7 +24,6 @@ try:
             away_team = away_team_info.get("team", {}).get("name", "Away")
             home_team = home_team_info.get("team", {}).get("name", "Home")
             
-            # Extract probable pitchers from schedule endpoint
             away_probable = away_team_info.get("probablePitcher", {}).get("fullName", "TBD (Probable)")
             home_probable = home_team_info.get("probablePitcher", {}).get("fullName", "TBD (Probable)")
             
@@ -68,7 +66,6 @@ if not games_list:
 
 matchup_options = {g["matchup"]: g for g in games_list}
 
-# Sidebar control for deep dive
 st.sidebar.header("🔍 Deep Dive Control")
 selected_matchup_name = st.sidebar.selectbox(
     "Select Matchup for Analysis:",
@@ -77,7 +74,6 @@ selected_matchup_name = st.sidebar.selectbox(
 
 selected_game = matchup_options[selected_matchup_name]
 
-# Helper function to fetch real lineups/boxscore; falls back to probables if official lineup isn't published yet
 def fetch_lineups_or_probables(game_pk, away_prob, home_prob):
     away_lineup = []
     home_lineup = []
@@ -109,16 +105,11 @@ def fetch_lineups_or_probables(game_pk, away_prob, home_prob):
         except Exception:
             pass
             
-    # Fallback to Probables list if official batting order isn't live yet
     if not away_lineup:
-        away_lineup = [{"Position": "SP (Probable)", "Batter / Hitter": away_prob, "Source": "Probable Pitcher / Unreleased Lineup"}]
-        for i in range(2, 10):
-            away_lineup.append({"Position": f"B{i}", "Batter / Hitter": f"Pending Lineup Slot {i}", "Source": "Pending Official Release"})
+        away_lineup = [{"Position": "SP (Probable)", "Batter / Hitter": away_prob, "Source": "Probable Pitcher"}]
             
     if not home_lineup:
-        home_lineup = [{"Position": "SP (Probable)", "Batter / Hitter": home_prob, "Source": "Probable Pitcher / Unreleased Lineup"}]
-        for i in range(2, 10):
-            home_lineup.append({"Position": f"B{i}", "Batter / Hitter": f"Pending Lineup Slot {i}", "Source": "Pending Official Release"})
+        home_lineup = [{"Position": "SP (Probable)", "Batter / Hitter": home_prob, "Source": "Probable Pitcher"}]
         
     return away_lineup, home_lineup
 
@@ -128,32 +119,32 @@ away_batters, home_batters = fetch_lineups_or_probables(
     selected_game.get("home_probable")
 )
 
-# Main screen layout prioritizing scoreboard view
-st.subheader("Today's Full Slate Scoreboard & Matchup Overview")
-st.caption("Review all games scheduled for today below. Use the sidebar to pull up specific deep-dive metrics.")
-
-for g in games_list:
-    with st.container():
-        cols = st.columns([3, 3, 2])
-        with cols[0]:
-            st.markdown(f"**{g['matchup']}**")
-            st.caption(str(f"Probables: {g['away_probable']} vs {g['home_probable']}"))
-        with cols[1]:
-            st.caption(f"🕒 {g['time']}")
-        with cols[2]:
-            st.text(f"Status: {g['status']}")
-    st.divider()
-
-st.markdown("---")
 st.header(f"Matchup Deep Dive: {selected_game['matchup']}")
 st.caption(f"Scheduled Time: {selected_game['time']} | Status: {selected_game['status']}")
 
-tab_overview, tab_lineups, tab_pitcher_batter, tab_pitch_mix = st.tabs([
+tab_full_slate, tab_overview, tab_lineups, tab_pitcher_batter, tab_pitch_mix = st.tabs([
+    "📅 Full Slate",
     "Overview & Grades", 
     "Lineups / Probables", 
     "Pitcher vs Batter", 
     "Pitch Mix Breakdown"
 ])
+
+with tab_full_slate:
+    st.subheader("Today's Full Slate Scoreboard & Probables")
+    st.caption("Review all games scheduled for today below. Use the sidebar to switch the active deep-dive matchup.")
+
+    for g in games_list:
+        with st.container():
+            cols = st.columns([3, 3, 2])
+            with cols[0]:
+                st.markdown(f"**{g['matchup']}**")
+                st.caption(f"🎯 Probables: {g['away_probable']} vs {g['home_probable']}")
+            with cols[1]:
+                st.caption(f"🕒 {g['time']}")
+            with cols[2]:
+                st.text(f"Status: {g['status']}")
+        st.divider()
 
 with tab_overview:
     st.subheader("Color-Coded Matchup Grades")
