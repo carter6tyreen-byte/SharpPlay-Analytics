@@ -16,7 +16,7 @@ selected_date = st.sidebar.text_input("Query Date (MM/DD/YYYY)", value=today_str
 @st.cache_data
 def fetch_mlb_schedule(date_str):
     try:
-        # Explicitly passing start and end dates to avoid empty results
+        # Fetch raw schedule data using date string
         schedule = statsapi.schedule(start_date=date_str, end_date=date_str)
         return schedule
     except Exception as e:
@@ -33,14 +33,18 @@ else:
     
     matchup_list = []
     for game in games:
+        # Extract live API time and status fields correctly
+        game_time = game.get('game_time', 'TBD')
+        status = game.get('status', 'Scheduled')
+        
         matchup_list.append({
             "Game": f"{game['away_name']} @ {game['home_name']}",
-            "Time": game.get('game_time', 'TBD'),
+            "Time": game_time,
             "Venue": game.get('venue_name', 'Unknown'),
-            "Status": game.get('status', 'Scheduled')
+            "Status": status
         })
     
     df_games = pd.DataFrame(matchup_list)
     
-    # Updated to use width='stretch' instead of use_container_width=True
+    # Render dataframe with proper column sizing
     st.dataframe(df_games, width='stretch')
