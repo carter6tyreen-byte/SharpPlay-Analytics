@@ -33,7 +33,7 @@ else:
     
     matchup_list = []
     for game in games:
-        # Extract live API time and status fields correctly
+        # Cleanly extract game times and statuses directly from the dictionary keys
         game_time = game.get('game_time', 'TBD')
         status = game.get('status', 'Scheduled')
         
@@ -46,5 +46,5 @@ else:
     
     df_games = pd.DataFrame(matchup_list)
     
-    # Render dataframe with proper column sizing
+    # Render dataframe with proper column sizing using width='stretch'
     st.dataframe(df_games, width='stretch')
