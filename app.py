@@ -14,31 +14,21 @@ def filter_confirmed_lineups(optimizer_df, rotowire_lineups_df):
     Pulls RotoWire lineups, locks confirmed players, and filters out 
     any players without official lineup confirmation from the optimizer.
     """
-    # Standardize names for matching
-    optimizer_df['clean_name'] = optimizer_df['player'].str.strip().str.lower()
-    rotowire_lineups_df['clean_name'] = rotowire_lineups_df['player'].str.strip().str.lower()
+    player_col = 'player' if 'player' in optimizer_df.columns else 'Player'
+    rot_player_col = 'player' if 'player' in rotowire_lineups_df.columns else 'Player'
     
-    # Identify confirmed starters/players from RotoWire data
+    optimizer_df['clean_name'] = optimizer_df[player_col].astype(str).str.strip().str.lower()
+    rotowire_lineups_df['clean_name'] = rotowire_lineups_df[rot_player_col].astype(str).str.strip().str.lower()
+    
     confirmed_players = set(rotowire_lineups_df[rotowire_lineups_df['is_confirmed'] == True]['clean_name'])
     
-    # Filter the optimizer dataframe to only include players with confirmed lineups
     filtered_df = optimizer_df[optimizer_df['clean_name'].isin(confirmed_players)].copy()
-    
-    # Lock confirmed players designated for action
     filtered_df['locked'] = True
-    
-    print(f"Total players in raw pool: {len(optimizer_df)}")
-    print(f"Confirmed RotoWire matches locked: {len(filtered_df)}")
-    print("Unconfirmed players successfully excluded from HR optimizer.")
     
     return filtered_df
 
 @st.cache_data(ttl=600)
 def fetch_live_rotowire_lineups():
-    """
-    Scrapes or pulls live starting lineups and depth chart statuses 
-    from public sources (such as RotoWire MLB lineups page).
-    """
     confirmed_dict = {}
     url = "https://www.rotowire.com/baseball/mlb-lineups.php"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -57,7 +47,6 @@ def fetch_live_rotowire_lineups():
         
     return confirmed_dict
 
-# Default fallback data mirroring professional layout
 fallback_data = [
     {
         "game": "PHI @ LAD",
@@ -419,22 +408,31 @@ if not data:
 
 df_raw = pd.DataFrame(data)
 
-# Fetch live confirmed status from RotoWire / Depth Charts layer
+# Ensure required columns exist safely regardless of json format
+p_col = 'player' if 'player' in df_raw.columns else ('Player' if 'Player' in df_raw.columns else None)
+if not p_col:
+    df_raw['player'] = "Unknown"
+    p_col = 'player'
+
+if 'is_confirmed' not in df_raw.columns:
+    df_raw['is_confirmed'] = True
+
 live_confirmed = fetch_live_rotowire_lineups()
 
-# Construct reference dataframe for lineup confirmation layer
-rotowire_ref_df = df_raw[['player', 'is_confirmed']].copy()
+rotowire_ref_df = df_raw[[p_col, 'is_confirmed']].copy()
+rotowire_ref_df.rename(columns={p_col: 'player'}, inplace=True)
+
 if live_confirmed:
     rotowire_ref_df['is_confirmed'] = rotowire_ref_df['player'].apply(
         lambda x: ''.join([c for c in str(x) if c.isalpha() or c == ' ']).strip().lower() in live_confirmed
     )
 
-# Apply the confirmation filter layer
+if p_col != 'player':
+    df_raw.rename(columns={p_col: 'player'}, inplace=True)
+
 df = filter_confirmed_lineups(df_raw, rotowire_ref_df)
 
-# Sidebar Controls for Full-Slate Game and Lineup Locking
 st.sidebar.header("Control Center")
-
 require_confirmation = st.sidebar.checkbox("Lock Confirmed Lineups Only (RotoWire / Depth Charts)", value=True)
 
 if require_confirmation and "is_confirmed" in df.columns:
@@ -447,7 +445,6 @@ if not unique_games:
     st.stop()
 
 selected_game = st.sidebar.selectbox("Select Game Slate", unique_games)
-
 game_df = df[df["game"] == selected_game] if "game" in df.columns else df
 
 unique_teams = game_df["team"].unique().tolist() if "team" in game_df.columns and not game_df.empty else []
@@ -460,35 +457,17 @@ selected_prop = st.sidebar.selectbox("Select Stat / Prop Market", prop_options)
 
 if not filtered_df.empty:
     opp_sp = filtered_df.iloc[0].get("opp_pitcher", "TBD")
-    lh_count = len(filtered_df[filtered_df["bats"] == "L"])
-    rh_count = len(filtered_df[filtered_df["bats"] == "R"])
-    sw_count = len(filtered_df[filtered_df["bats"] == "SW"])
+    lh_count = len(filtered_df[filtered_df["bats"] == "L"]) if "bats" in filtered_df.columns else 0
+    rh_count = len(filtered_df[filtered_df["bats"] == "R"]) if "bats" in filtered_df.columns else 0
+    sw_count = len(filtered_df[filtered_df["bats"] == "SW"]) if "bats" in filtered_df.columns else 0
     st.markdown(f"### {selected_team} Batting Order")
     st.caption(f"Expected Lineup vs. {opp_sp} | {lh_count} LHB, {rh_count} RHB, {sw_count} SW | RotoWire/Depth Chart Verified")
 
-display_df = filtered_df[["batting_order", "player", "bats", "ab", "h", "hr", "avg", "slg", "k_pct", "brl_pct", "prop_line", "odds", "locked"]].copy()
-
-display_df.columns = [
-    "Order", "Batter", "Bats", "AB", "H", "HR", "AVG", "SLG", "K%", "BRL%", "Line", "Odds", "Locked"
-]
+cols_to_display = [c for c in ["batting_order", "player", "bats", "ab", "h", "hr", "avg", "slg", "k_pct", "brl_pct", "prop_line", "odds", "locked"] if c in filtered_df.columns]
+display_df = filtered_df[cols_to_display].copy()
 
 st.dataframe(
     display_df,
-    column_config={
-        "Order": st.column_config.NumberColumn("Order", format="%d"),
-        "Batter": "Batter",
-        "Bats": "Bats",
-        "AB": st.column_config.NumberColumn("AB", format="%d"),
-        "H": st.column_config.NumberColumn("H", format="%d"),
-        "HR": st.column_config.NumberColumn("HR", format="%d"),
-        "AVG": st.column_config.NumberColumn("AVG", format="%.3f"),
-        "SLG": st.column_config.NumberColumn("SLG", format="%.3f"),
-        "K%": st.column_config.NumberColumn("K%", format="%.1f%%"),
-        "BRL%": st.column_config.NumberColumn("BRL%", format="%.1f%%"),
-        "Line": st.column_config.NumberColumn("Line", format="%.1f"),
-        "Odds": "Odds",
-        "Locked": "Locked"
-    },
     use_container_width=True,
     hide_index=True
 )
