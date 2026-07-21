@@ -76,7 +76,7 @@ class SafeSeasonNormLayer:
                             if pos != "P":
                                 person = p_info.get("person", {})
                                 collected.append({
-                                    "name": person.get(ophagy := "fullName", f"Player {p_id}"),
+                                    "name": person.get("fullName", f"Player {p_id}"),
                                     "position": pos
                                 })
                             break
@@ -234,10 +234,10 @@ with col1:
     st.markdown(f'<div class="section-title">🔴 {current["away"]} Lineup</div>', unsafe_allow_html=True)
     if current["away_lineup"]:
         df_a = pd.DataFrame(current["away_lineup"]).set_index("Batting Slot")
-        st.dataframe(df_a.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), use_container_width=True)
+        st.dataframe(df_a.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), width='stretch')
 
 with col2:
     st.markdown(f'<div class="section-title">🔵 {current["home"]} Lineup</div>', unsafe_allow_html=True)
     if current["home_lineup"]:
         df_h = pd.DataFrame(current["home_lineup"]).set_index("Batting Slot")
-        st.dataframe(df_h.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), use_container_width=True)
+        st.dataframe(df_h.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), width='stretch')
