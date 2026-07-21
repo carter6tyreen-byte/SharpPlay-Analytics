@@ -61,7 +61,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+500",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - Low Sample / Low Barrels"
     },
     {
         "game": "PHI @ LAD",
@@ -80,7 +81,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+251",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "HR Over (+251) - Elite Barrel Rate & SLG"
     },
     {
         "game": "PHI @ LAD",
@@ -99,7 +101,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+475",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - High K% and 0% Barrel Rate"
     },
     {
         "game": "PHI @ LAD",
@@ -118,7 +121,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+650",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - Zero Slugging & Production"
     },
     {
         "game": "PHI @ LAD",
@@ -137,7 +141,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+750",
-        "is_confirmed": False
+        "is_confirmed": False,
+        "true_prop": "Pass"
     },
     {
         "game": "PHI @ LAD",
@@ -156,7 +161,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+625",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "HR Value (+625) - High SLG & Max Barrel Rate"
     },
     {
         "game": "PHI @ LAD",
@@ -175,7 +181,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+650",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - Low Sample & High K%"
     },
     {
         "game": "PHI @ LAD",
@@ -194,7 +201,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+650",
-        "is_confirmed": False
+        "is_confirmed": False,
+        "true_prop": "Pass"
     },
     {
         "game": "PHI @ LAD",
@@ -213,7 +221,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+950",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - No Extra-Base Output"
     },
     {
         "game": "PHI @ LAD",
@@ -232,7 +241,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+251",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "HR Over (+251) - Elite .667 AVG / 1.167 SLG"
     },
     {
         "game": "PHI @ LAD",
@@ -251,7 +261,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+600",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - Small Sample, Zero Hits"
     },
     {
         "game": "PHI @ LAD",
@@ -270,7 +281,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+500",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - Low Power/Slugging in Large Sample"
     },
     {
         "game": "PHI @ LAD",
@@ -289,7 +301,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+700",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - 0 for 8 vs Wheeler"
     },
     {
         "game": "PHI @ LAD",
@@ -308,7 +321,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+430",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - High Strikeout Risk vs Elite RHP"
     },
     {
         "game": "PHI @ LAD",
@@ -327,7 +341,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+650",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - Poor Batting Average Matchup"
     },
     {
         "game": "PHI @ LAD",
@@ -346,7 +361,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+700",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - High K% Concerns Despite Power"
     },
     {
         "game": "PHI @ LAD",
@@ -365,7 +381,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+500",
-        "is_confirmed": False
+        "is_confirmed": False,
+        "true_prop": "Pass"
     },
     {
         "game": "PHI @ LAD",
@@ -384,7 +401,8 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+1000",
-        "is_confirmed": True
+        "is_confirmed": True,
+        "true_prop": "Pass - Zero Home Run History"
     }
 ]
 
@@ -411,6 +429,9 @@ if not p_col:
 
 if 'is_confirmed' not in df_raw.columns:
     df_raw['is_confirmed'] = True
+
+if 'true_prop' not in df_raw.columns:
+    df_raw['true_prop'] = "Pass"
 
 live_confirmed = fetch_live_rotowire_lineups()
 
@@ -484,6 +505,13 @@ if selected_batter:
     if not batter_row.empty:
         b_data = batter_row.iloc[0]
         st.success(f"Loaded Deep-Dive for **{selected_batter}** ({b_data.get('team', '')}) vs {b_data.get('opp_pitcher', '')}")
+        
+        true_prop_val = b_data.get('true_prop', 'Pass')
+        if "Pass" in true_prop_val:
+            st.warning(f"🎯 **StarWorld True Prop Recommendation:** `{true_prop_val}`")
+        else:
+            st.balloons()
+            st.success(f"🔥 **StarWorld True Prop Recommendation:** `{true_prop_val}`")
         
         col_a, col_b, col_c = st.columns(3)
         with col_a:
