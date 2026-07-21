@@ -32,7 +32,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Active Active-Roster Fallback Engine • Live Learning & Tracking</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Star-Prioritized Active Roster & Lineup Engine • Live Tracking Log</div>', unsafe_allow_html=True)
 
 if "prop_audit_tracker" not in st.session_state:
     st.session_state.prop_audit_tracker = []
@@ -119,8 +119,8 @@ with col_ctrl2:
 
 st.markdown("""
 <div class="audit-box">
-    <b>🛡️ ACTIVE-ROSTER FALLBACK ENGINE ENGAGED:</b><br>
-    <i>If official boxscore batting orders are unreleased, the terminal instantly defaults to active roster players to ensure live analytics load uninterrupted.</i>
+    <b>🛡️ STAR-PRIORITY ENGINE ENGAGED:</b><br>
+    <i>Active roster fallback sorting ensures premier power hitters like Shohei Ohtani and Kyle Schwarber are accurately highlighted and prioritized.</i>
 </div>
 """, unsafe_allow_html=True)
 
@@ -153,7 +153,7 @@ def build_active_roster_lineup(team_name, team_id, game_pk, matchup_label):
     try:
         verified_batters = []
         
-        # Try boxscore batting order first
+        # 1. Attempt official boxscore order first
         if game_pk:
             box_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
             box_resp = requests.get(box_url, timeout=3)
@@ -175,9 +175,13 @@ def build_active_roster_lineup(team_name, team_id, game_pk, matchup_label):
                     if not any(b["id"] == p_id for b in verified_batters):
                         verified_batters.append({"id": p_id, "name": name, "pos": pos})
 
-        # Fallback to active roster if boxscore order is empty
+        # 2. Fallback roster with star/heavy hitter priority sorting
         if len(verified_batters) < 9:
             fallback_roster = StrictHRPredictionEngine.fetch_strict_roster(team_name, team_id)
+            
+            star_names = ["Shohei Ohtani", "Kyle Schwarber", "Bryce Harper", "Freddie Freeman", "Mookie Betts", "Yordan Alvarez", "Aaron Judge", "Juan Soto", "Trea Turner", "Corey Seager"]
+            fallback_roster.sort(key=lambda x: 0 if x["name"] in star_names else 1)
+
             for player in fallback_roster:
                 if not any(b["id"] == player["id"] for b in verified_batters):
                     verified_batters.append(player)
