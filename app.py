@@ -67,26 +67,43 @@ slate_games = {
     "Washington Nationals @ Colorado Rockies": {
         "time": "8:40 PM EDT", "weather": "84°F | Wind 12 mph Out to CF", "grade": "BOOSTED +18% (A+)", "away": "Washington Nationals", "home": "Colorado Rockies",
         "away_win_prob": "58.4%", "home_win_prob": "41.6%", "model_edge": "Washington Nationals (-135)",
-        "away_pitcher": "S. Freeland (LHP) - Fastball 44%, Slider 28%, Changeup 18%",
-        "home_pitcher": "M. Gore (LHP) - 4-Seam 48%, Curveball 26%, Changeup 16%"
+        "away_pitcher": "S. Freeland (LHP)", "away_arsenal": "Fastball 44% | Slider 28% | Changeup 18%",
+        "home_pitcher": "M. Gore (LHP)", "home_arsenal": "4-Seam 48% | Curveball 26% | Changeup 16%", "status": "Upcoming"
     },
     "San Diego Padres @ Atlanta Braves": {
         "time": "BOT 5th", "weather": "72°F | Wind 8 mph In", "grade": "Neutral (C)", "away": "San Diego Padres", "home": "Atlanta Braves",
         "away_win_prob": "48.2%", "home_win_prob": "51.8%", "model_edge": "Atlanta Braves (-110)",
-        "away_pitcher": "M. King (RHP) - Sinker 42%, Sweeper 30%, Changeup 18%",
-        "home_pitcher": "C. Sale (LHP) - 4-Seam 52%, Slider 32%, Changeup 16%"
+        "away_pitcher": "M. King (RHP)", "away_arsenal": "Sinker 42% | Sweeper 30% | Changeup 18%",
+        "home_pitcher": "C. Sale (LHP)", "home_arsenal": "4-Seam 52% | Slider 32% | Changeup 16%", "status": "Live"
     }
 }
 
-st.markdown('<div class="section-title">📅 Tap Game to Load Analytics</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">📅 Slate & Filter Options</div>', unsafe_allow_html=True)
+filter_mode = st.radio("Filter Slate", ["All Games", "🌟 A+ Boosted Only", "⚡ Live Games Only"], horizontal=True, label_visibility="collapsed")
 
+st.markdown('<div class="section-title">Tap Game to Load Analytics</div>', unsafe_allow_html=True)
+
+filtered_games = {}
 for matchup_key, info in slate_games.items():
-    is_active = (st.session_state.selected_matchup == matchup_key)
-    btn_label = f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key} ({info['time']}) | Win Prob: {info['away']} {info['away_win_prob']} / {info['home']} {info['home_win_prob']}"
-    
-    if st.button(btn_label, key=f"game_btn_{matchup_key}"):
-        st.session_state.selected_matchup = matchup_key
-        st.rerun()
+    if filter_mode == "🌟 A+ Boosted Only" and "A+" not in info["grade"]:
+        continue
+    if filter_mode == "⚡ Live Games Only" and info["status"] != "Live":
+        continue
+    filtered_games[matchup_key] = info
+
+if not filtered_games:
+    st.info("No games match the current filter selection.")
+else:
+    for matchup_key, info in filtered_games.items():
+        is_active = (st.session_state.selected_matchup == matchup_key)
+        btn_label = f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key} ({info['time']}) | Win Prob: {info['away']} {info['away_win_prob']} / {info['home']} {info['home_win_prob']}"
+        
+        if st.button(btn_label, key=f"game_btn_{matchup_key}"):
+            st.session_state.selected_matchup = matchup_key
+            st.rerun()
+
+if st.session_state.selected_matchup not in slate_games:
+    st.session_state.selected_matchup = list(slate_games.keys())[0]
 
 current_game_info = slate_games[st.session_state.selected_matchup]
 away_team, home_team = current_game_info["away"], current_game_info["home"]
@@ -131,27 +148,43 @@ with col_home_lineup:
     styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA'])
     st.dataframe(styled_home, use_container_width=True, hide_index=True)
 
-# Interactive Deep-Dive: Batter vs Pitcher Arsenal Inspector
+# FULL-VIEW PITCHER ARSENAL & MATCHUP MATRIX (No dropdowns needed!)
 st.markdown("---")
-st.markdown('<div class="section-title">🎯 Deep-Dive: Batter vs. Pitcher Arsenal Matrix</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">🎯 Starting Pitcher Arsenals & Full Matchup Breakdown</div>', unsafe_allow_html=True)
 
-col_inspect_1, col_inspect_2 = st.columns(2)
-with col_inspect_1:
-    selected_batter = st.selectbox("Select Batter for Breakdown", ["C. Carrigg (CF)", "J. Wood (LF)", "C. Crews (RF)", "E. Tovar (SS)", "R. McMahon (3B)", "B. Doyle (CF)"])
-with col_inspect_2:
-    st.markdown(f"<p style='color: #9ba1a6; font-size: 0.85rem; margin-top: 25px;'>Opposing Starting Pitcher Arsenal:<br><b style='color: #00ffcc;'>{current_game_info['away_pitcher']}</b></p>", unsafe_allow_html=True)
+col_pitcher_1, col_pitcher_2 = st.columns(2)
+with col_pitcher_1:
+    st.markdown(f"""
+    <div class="card-box">
+        <h4 style="margin: 0; color: #00ffcc;">{away_team} Pitcher</h4>
+        <p style="margin: 4px 0 8px 0; font-size: 0.9rem;"><b>{current_game_info['away_pitcher']}</b></p>
+        <p style="margin: 0; color: #ccc; font-size: 0.85rem;"><b>Arsenal:</b> {current_game_info['away_arsenal']}</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Dynamic breakdown card based on selection
-st.markdown(f"""
-<div class="card-box">
-    <h4 style="margin: 0; color: #00ffcc;">Detailed Matchup Breakdown: {selected_batter}</h4>
-    <p style="margin: 6px 0 0 0; color: #ccc; font-size: 0.9rem;">
-        • <b>Fastball Advantage:</b> High damage output against primary 4-seam/sinker usage.<br>
-        • <b>Offspeed Vulnerability:</b> Moderate chase rate on breaking pitches located low-away.<br>
-        • <b>Model Verdict:</b> Favorable matchup profile for extra-base production in today's weather conditions.
-    </p>
-</div>
-""", unsafe_allow_html=True)
+with col_pitcher_2:
+    st.markdown(f"""
+    <div class="card-box">
+        <h4 style="margin: 0; color: #00ffcc;">{home_team} Pitcher</h4>
+        <p style="margin: 4px 0 8px 0; font-size: 0.9rem;"><b>{current_game_info['home_pitcher']}</b></p>
+        <p style="margin: 0; color: #ccc; font-size: 0.85rem;"><b>Arsenal:</b> {current_game_info['home_arsenal']}</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# Comprehensive visible breakdown table for all key hitters
+st.markdown('<p style="color: #9ba1a6; font-size: 0.9rem; margin-top: 15px;"><b>Full Slate Arsenal Vulnerability & Matchup Matrix:</b></p>', unsafe_allow_html=True)
+
+matrix_data = [
+    {"Hitter": "C. Carrigg (CF)", "Team": away_team, "Primary Threat": "Fastball Damage", "Vulnerability": "Low-Away Breaking", "Verdict": "🟢 Favorable Edge"},
+    {"Hitter": "J. Wood (LF)", "Team": away_team, "Primary Threat": "Elite Exit Velocity", "Vulnerability": "High Heat", "Verdict": "🟢 Massive Edge"},
+    {"Hitter": "C. Crews (RF)", "Team": away_team, "Primary Threat": "Line Drive Rate", "Vulnerability": "Changeup Chase", "Verdict": "🟡 Neutral"},
+    {"Hitter": "E. Tovar (SS)", "Team": home_team, "Primary Threat": "Contact Consistency", "Vulnerability": "Sliders Away", "Verdict": "🟢 Favorable Edge"},
+    {"Hitter": "R. McMahon (3B)", "Team": home_team, "Primary Threat": "Power / Hard%", "Vulnerability": "LHP Fastballs", "Verdict": "🟢 Elite Edge"},
+    {"Hitter": "B. Doyle (CF)", "Team": home_team, "Primary Threat": "Speed & Gap Power", "Vulnerability": "Breaking Balls", "Verdict": "🟢 Favorable Edge"}
+]
+
+df_matrix = pd.DataFrame(matrix_data)
+st.dataframe(df_matrix, use_container_width=True, hide_index=True)
 
 st.markdown("---")
 st.markdown("<p style='color: #555960; text-align: center; font-size: 0.8rem;'>doinksports.com • SharpPLAY Analytics Terminal</p>", unsafe_allow_html=True)
