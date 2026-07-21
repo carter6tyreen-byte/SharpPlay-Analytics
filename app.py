@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # Page configuration
 st.set_page_config(page_title="SharpPLAY Analytics Terminal", layout="wide")
@@ -113,7 +114,6 @@ with col_away_lineup:
         {"Bat": "3. C. Crews (RF)", "Matchup": "🟢 Good (.350 wOBA)", "AVG": ".265", "SLG": ".460", "wOBA": ".348", "Hard%": "40.2%"}
     ]
     df_away = pd.DataFrame(away_lineup_data)
-    # Using .map() instead of deprecated .applymap()
     styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA'])
     st.dataframe(styled_away, use_container_width=True, hide_index=True)
 
@@ -125,9 +125,32 @@ with col_home_lineup:
         {"Bat": "3. B. Doyle (CF)", "Matchup": "🟢 Elite (.380 wOBA)", "AVG": ".268", "SLG": ".465", "wOBA": ".345", "Hard%": "46.2%"}
     ]
     df_home = pd.DataFrame(home_lineup_data)
-    # Using .map() instead of deprecated .applymap()
     styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA'])
     st.dataframe(styled_home, use_container_width=True, hide_index=True)
+
+# Model Tracking & Brier Score Audit Section
+st.markdown("---")
+st.markdown('<div class="section-title">📊 Model Tracking & Brier Score Audit</div>', unsafe_allow_html=True)
+
+health_log_path = "data/system_health_log.csv"
+if os.path.exists(health_log_path):
+    df_health = pd.read_csv(health_log_path)
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        total_runs = len(df_health)
+        st.metric(label="Total Pipeline Runs", value=total_runs)
+    with col2:
+        success_pct = f"{df_health['success'].mean() * 100:.1f}%" if total_runs > 0 else "0%"
+        st.metric(label="System Reliability", value=success_pct)
+    with col3:
+        avg_runtime = f"{df_health['runtime_sec'].mean():.1f}s" if total_runs > 0 else "0s"
+        st.metric(label="Avg Runtime", value=avg_runtime)
+        
+    st.markdown('<p style="color: #9ba1a6; font-size: 0.85rem; margin-top: 10px;">Recent System Execution History:</p>', unsafe_allow_html=True)
+    st.dataframe(df_health.tail(5), use_container_width=True, hide_index=True)
+else:
+    st.info("System health log data will appear here once the automated pipeline finishes its next logging cycle.")
 
 st.markdown("---")
 st.markdown("<p style='color: #555960; text-align: center; font-size: 0.8rem;'>doinksports.com • SharpPLAY Analytics Terminal</p>", unsafe_allow_html=True)
