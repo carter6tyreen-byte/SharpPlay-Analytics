@@ -32,7 +32,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Strict Tier-1 HR Threshold Calibration • Live API Integrity Engine</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Strict Tier-1 HR Threshold Calibration • Mobile-Optimized Matrix View</div>', unsafe_allow_html=True)
 
 class StrictHRPredictionEngine:
     @staticmethod
@@ -193,7 +193,6 @@ def build_calibrated_lineup(team_name, team_id):
             name = p_obj["name"]
             pos = p_obj["pos"]
             
-            # Fetch live real-time stats bound to team_id and p_id for clean refresh
             f_avg, f_slg, f_woba, f_iso = fetch_player_live_stats(team_id, p_id)
             
             seed = abs(hash(str(team_id) + str(p_id)))
@@ -206,7 +205,6 @@ def build_calibrated_lineup(team_name, team_id):
             else:
                 f_barrel = round(4.5 + (seed % 65) / 10.0, 1)
 
-            # STRICT TIER-1 HR THRESHOLDS
             is_elite_power = (f_woba >= 0.360) and (f_iso >= 0.220) and (f_barrel >= 10.5)
             
             prop_status = "🎯 Target (HR Prop)" if is_elite_power else "❌ Pass"
@@ -249,16 +247,24 @@ def color_cells(val):
         return 'background-color: #381313; color: #e74c3c; font-weight: 600;'
     return ''
 
-st.markdown(f'<div class="section-title">🔴 {current["away"]} Lineup (Calibrated HR Thresholds)</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">📊 Lineup Analytics Matrix</div>', unsafe_allow_html=True)
+view_mode = st.radio("Select Table View:", ["Matchup & Verdicts", "Advanced Metrics (AVG/SLG/ISO)"], horizontal=True)
+
+if view_mode == "Matchup & Verdicts":
+    cols_to_show = ["Batter", "Matchup", "HR Prop Verdict", "Confidence"]
+else:
+    cols_to_show = ["Batter", "AVG", "SLG", "wOBA", "ISO", "Barrel%"]
+
+st.markdown(f'<div class="section-title">🔴 {current["away"]} Lineup</div>', unsafe_allow_html=True)
 if current_away_lineup:
     df_a = pd.DataFrame(current_away_lineup).set_index("Batting Slot")
-    st.dataframe(df_a.style.map(color_cells, subset=['Matchup', 'HR Prop Verdict']), use_container_width=True)
+    st.dataframe(df_a[cols_to_show].style.map(color_cells, subset=['Matchup'] if view_mode == "Matchup & Verdicts" else ['wOBA']), use_container_width=True)
 else:
     st.info("⚠️ Compiling calibrated lineup...")
 
-st.markdown(f'<div class="section-title">🔵 {current["home"]} Lineup (Calibrated HR Thresholds)</div>', unsafe_allow_html=True)
+st.markdown(f'<div class="section-title">🔵 {current["home"]} Lineup</div>', unsafe_allow_html=True)
 if current_home_lineup:
     df_h = pd.DataFrame(current_home_lineup).set_index("Batting Slot")
-    st.dataframe(df_h.style.map(color_cells, subset=['Matchup', 'HR Prop Verdict']), use_container_width=True)
+    st.dataframe(df_h[cols_to_show].style.map(color_cells, subset=['Matchup'] if view_mode == "Matchup & Verdicts" else ['wOBA']), use_container_width=True)
 else:
     st.info("⚠️ Compiling calibrated lineup...")
