@@ -32,49 +32,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Strict Tier-1 HR Threshold Calibration • Live Learning & Tracking Engine</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Strict Official Lineup Verification • Live Learning & Tracking Engine</div>', unsafe_allow_html=True)
 
-# Initialize Session State for Prop Learning Log
 if "prop_audit_tracker" not in st.session_state:
     st.session_state.prop_audit_tracker = []
-
-class StrictHRPredictionEngine:
-    @staticmethod
-    def get_team_id(team_name):
-        try:
-            r = requests.get("https://statsapi.mlb.com/api/v1/teams", params={"sportId": 1}, timeout=3)
-            teams = r.json().get("teams", [])
-            for t in teams:
-                if t.get("name", "").lower() == team_name.lower():
-                    return t.get("id")
-        except Exception:
-            pass
-        return None
-
-    @staticmethod
-    def fetch_strict_roster(team_name, team_id):
-        if not team_id:
-            team_id = StrictHRPredictionEngine.get_team_id(team_name)
-        
-        valid_batters = []
-        if not team_id:
-            return valid_batters
-
-        try:
-            roster_url = f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster?rosterType=active"
-            resp = requests.get(roster_url, timeout=3)
-            data = resp.json()
-            
-            for entry in data.get("roster", []):
-                pos_code = entry.get("position", {}).get("abbreviation", "").upper()
-                p_id = entry.get("person", {}).get("id")
-                name = entry.get("person", {}).get("fullName")
-                
-                if p_id and name and pos_code != "P" and pos_code != "TWP":
-                    valid_batters.append({"id": p_id, "name": name, "pos": pos_code})
-        except Exception:
-            pass
-        return valid_batters
 
 def fetch_matchups():
     today_str = datetime.today().strftime('%Y-%m-%d')
@@ -93,6 +54,7 @@ def fetch_matchups():
                     "away": away, "home": home,
                     "away_id": game["teams"]["away"]["team"].get("id"),
                     "home_id": game["teams"]["home"]["team"].get("id"),
+                    "game_pk": game.get("gamePk"),
                     "model_edge": f"{away} (-110)", "grade": "BOOSTED +15% (A+)"
                 }
         return slate
@@ -104,7 +66,7 @@ if not slate_games:
     m = "Seattle Mariners @ Houston Astros"
     away, home = m.split(" @ ")
     slate_games[m] = {
-        "away": away, "home": home, "away_id": None, "home_id": None,
+        "away": away, "home": home, "away_id": None, "home_id": None, "game_pk": None,
         "model_edge": f"{away} (-115)", "grade": "BOOSTED (A+)"
     }
 
@@ -119,8 +81,8 @@ with col_ctrl2:
 
 st.markdown("""
 <div class="audit-box">
-    <b>🛡️ LIVE LEARNING & TRACKING ENGINE:</b><br>
-    <i>Favorable props meeting criteria are automatically filtered, surfaced, and recorded to the model's tracking log for retroactive learning.</i>
+    <b>🛡️ OFFICIAL LINEUP VERIFICATION ENGAGED:</b><br>
+    <i>Rosters are strictly validated against official MLB game boxscores. Unreleased batting orders display a pending status to prevent unverified data display.</i>
 </div>
 """, unsafe_allow_html=True)
 
@@ -149,26 +111,24 @@ def fetch_player_live_stats(team_id, p_id):
         pass
     return None, None, None, None
 
-def build_calibrated_lineup(team_name, team_id, matchup_label):
+def build_verified_lineup(team_name, team_id, game_pk, matchup_label):
     try:
-        today_str = datetime.today().strftime('%Y-%m-%d')
-        sched_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today_str}&teamId={team_id}&hydrate=lineup"
-        sched_resp = requests.get(sched_url, timeout=3)
-        sched_data = sched_resp.json()
+        if not game_pk:
+            return None, "Game PK missing."
+
+        box_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
+        box_resp = requests.get(box_url, timeout=3)
+        box_data = box_resp.json()
+        teams_data = box_data.get("teams", {})
         
-        batting_order = []
-        box_players = {}
-        dates = sched_data.get("dates", [])
-        if dates and dates[0].get("games"):
-            game_pk = dates[0]["games"][0].get("gamePk")
-            box_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
-            box_resp = requests.get(box_url, timeout=3)
-            box_data = box_resp.json()
-            teams_data = box_data.get("teams", {})
-            target_side = "away" if teams_data.get("away", {}).get("team", {}).get("name", "").lower() == team_name.lower() else "home"
-            side_info = teams_data.get(target_side, {})
-            batting_order = side_info.get("battingOrder", [])
-            box_players = side_info.get("players", {})
+        target_side = "away" if teams_data.get("away", {}).get("team", {}).get("name", "").lower() == team_name.lower() else "home"
+        side_info = teams_data.get(target_side, {})
+        batting_order = side_info.get("battingOrder", [])
+        box_players = side_info.get("players", {})
+
+        # If official batting order slots haven't been published yet by MLB, stop here
+        if not batting_order:
+            return None, "Official starting lineup pending release."
 
         verified_batters = []
         for p_id_raw in batting_order:
@@ -181,14 +141,6 @@ def build_calibrated_lineup(team_name, team_id, matchup_label):
             if pos and pos != "P" and pos != "TWP" and name:
                 if not any(b["id"] == p_id for b in verified_batters):
                     verified_batters.append({"id": p_id, "name": name, "pos": pos})
-
-        if len(verified_batters) < 9:
-            fallback_roster = StrictHRPredictionEngine.fetch_strict_roster(team_name, team_id)
-            for player in fallback_roster:
-                if not any(b["id"] == player["id"] for b in verified_batters):
-                    verified_batters.append(player)
-                if len(verified_batters) >= 9:
-                    break
 
         ordered_output = []
         for slot_idx, p_obj in enumerate(verified_batters[:9]):
@@ -208,14 +160,12 @@ def build_calibrated_lineup(team_name, team_id, matchup_label):
             else:
                 f_barrel = round(4.5 + (seed % 65) / 10.0, 1)
 
-            # STRICT TIER-1 HR THRESHOLDS
             is_elite_power = (f_woba >= 0.360) and (f_iso >= 0.220) and (f_barrel >= 10.5)
             
             prop_status = "🎯 Target (HR Prop)" if is_elite_power else "❌ Pass"
             prefix = "🟢 Elite Power" if is_elite_power else ("🟡 Neutral" if f_woba >= 0.320 else "🔴 Poor")
             confidence_val = 80 + (seed % 15)
 
-            # Track favorable targets for learning log
             if is_elite_power:
                 record_entry = {
                     "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -242,12 +192,12 @@ def build_calibrated_lineup(team_name, team_id, matchup_label):
                 "Confidence": f"{confidence_val}%"
             })
             
-        return ordered_output if len(ordered_output) > 0 else None
-    except Exception:
-        return None
+        return ordered_output if len(ordered_output) > 0 else None, "Success"
+    except Exception as e:
+        return None, str(e)
 
-current_away_lineup = build_calibrated_lineup(current["away"], current["away_id"], st.session_state.selected_matchup)
-current_home_lineup = build_calibrated_lineup(current["home"], current["home_id"], st.session_state.selected_matchup)
+current_away_lineup, away_msg = build_verified_lineup(current["away"], current["away_id"], current["game_pk"], st.session_state.selected_matchup)
+current_home_lineup, home_msg = build_verified_lineup(current["home"], current["home_id"], current["game_pk"], st.session_state.selected_matchup)
 
 st.markdown("---")
 st.markdown(f"""
@@ -278,16 +228,15 @@ if current_away_lineup:
     df_a = pd.DataFrame(current_away_lineup).set_index("Batting Slot")
     st.dataframe(df_a[cols_to_show].style.map(color_cells, subset=['Matchup'] if view_mode == "Matchup & Verdicts" else ['wOBA']), use_container_width=True)
 else:
-    st.info("⚠️ Compiling calibrated lineup...")
+    st.warning(f"⚠️ {away_msg}")
 
 st.markdown(f'<div class="section-title">🔵 {current["home"]} Lineup</div>', unsafe_allow_html=True)
 if current_home_lineup:
     df_h = pd.DataFrame(current_home_lineup).set_index("Batting Slot")
     st.dataframe(df_h[cols_to_show].style.map(color_cells, subset=['Matchup'] if view_mode == "Matchup & Verdicts" else ['wOBA']), use_container_width=True)
 else:
-    st.info("⚠️ Compiling calibrated lineup...")
+    st.warning(f"⚠️ {home_msg}")
 
-# Dedicated Favorable Prop Learning & Tracking Dashboard
 st.markdown("---")
 st.markdown('<div class="section-title">🎯 Favorable Prop Tracking & Learning Log</div>', unsafe_allow_html=True)
 st.markdown("<i>Surfaces all elite-tier props meeting exact criteria across checked slates for backtesting and performance tracking.</i>", unsafe_allow_html=True)
@@ -299,4 +248,4 @@ if len(st.session_state.prop_audit_tracker) > 0:
         st.session_state.prop_audit_tracker = []
         st.rerun()
 else:
-    st.info("ℹ️ No active favorable props meeting strict criteria logged in current session session yet. Switch or refresh matchups to scan.")
+    st.info("ℹ️ No active favorable props meeting strict criteria logged in current session yet. Switch or refresh matchups to scan.")
