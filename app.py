@@ -66,13 +66,11 @@ if "selected_matchup" not in st.session_state:
 slate_games = {
     "Washington Nationals @ Colorado Rockies": {
         "time": "8:40 PM EDT", "weather": "84°F | Wind 12 mph Out to CF", "grade": "BOOSTED +18% (A+)", "away": "Washington Nationals", "home": "Colorado Rockies",
-        "away_arsenal": {"4-Seam Fastball": "45%", "Curveball": "30%", "Slider": "15%", "Sinker": "10%"},
-        "home_arsenal": {"Fastball": "42%", "Slider": "28%", "Changeup": "18%", "Curveball": "12%"}
+        "away_win_prob": "58.4%", "home_win_prob": "41.6%", "model_edge": "Washington Nationals (-135)"
     },
     "San Diego Padres @ Atlanta Braves": {
         "time": "BOT 5th", "weather": "72°F | Wind 8 mph In", "grade": "Neutral (C)", "away": "San Diego Padres", "home": "Atlanta Braves",
-        "away_arsenal": {"Sinker": "40%", "Slider": "30%", "Changeup": "20%", "4-Seam Fastball": "10%"},
-        "home_arsenal": {"4-Seam Fastball": "50%", "Slider": "25%", "Splitter": "15%", "Curveball": "10%"}
+        "away_win_prob": "48.2%", "home_win_prob": "51.8%", "model_edge": "Atlanta Braves (-110)"
     }
 }
 
@@ -80,7 +78,7 @@ st.markdown('<div class="section-title">📅 Tap Game to Load Analytics</div>', 
 
 for matchup_key, info in slate_games.items():
     is_active = (st.session_state.selected_matchup == matchup_key)
-    btn_label = f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key} ({info['time']}) | 🌤️ {info['weather']} | Grade: {info['grade']}"
+    btn_label = f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key} ({info['time']}) | Win Prob: {info['away']} {info['away_win_prob']} / {info['home']} {info['home_win_prob']}"
     
     if st.button(btn_label, key=f"game_btn_{matchup_key}"):
         st.session_state.selected_matchup = matchup_key
@@ -92,8 +90,9 @@ away_team, home_team = current_game_info["away"], current_game_info["home"]
 st.markdown("---")
 st.markdown(f"""
 <div class="card-box" style="border-color: #00ffcc;">
-    <h3 style="margin: 0; color: #00ffcc;">⚡ Active Analysis: {st.session_state.selected_matchup}</h3>
-    <p style="margin: 5px 0 0 0; color: #ccc;">🌤️ Weather Conditions: {current_game_info['weather']} &nbsp;|&nbsp; <b>Weather Grade: {current_game_info['grade']}</b></p>
+    <h3 style="margin: 0; color: #00ffcc;">⚡ Active Prediction & Analysis: {st.session_state.selected_matchup}</h3>
+    <p style="margin: 8px 0 0 0; color: #fff;"><b>Model Win Probabilities:</b> {away_team} ({current_game_info['away_win_prob']}) vs {home_team} ({current_game_info['home_win_prob']})</p>
+    <p style="margin: 4px 0 0 0; color: #00ffcc;"><b>Recommended Model Edge:</b> {current_game_info['model_edge']} &nbsp;|&nbsp; Weather Grade: {current_game_info['grade']}</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -127,30 +126,6 @@ with col_home_lineup:
     df_home = pd.DataFrame(home_lineup_data)
     styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA'])
     st.dataframe(styled_home, use_container_width=True, hide_index=True)
-
-# Model Tracking & Brier Score Audit Section
-st.markdown("---")
-st.markdown('<div class="section-title">📊 Model Tracking & Brier Score Audit</div>', unsafe_allow_html=True)
-
-health_log_path = "data/system_health_log.csv"
-if os.path.exists(health_log_path):
-    df_health = pd.read_csv(health_log_path)
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        total_runs = len(df_health)
-        st.metric(label="Total Pipeline Runs", value=total_runs)
-    with col2:
-        success_pct = f"{df_health['success'].mean() * 100:.1f}%" if total_runs > 0 else "0%"
-        st.metric(label="System Reliability", value=success_pct)
-    with col3:
-        avg_runtime = f"{df_health['runtime_sec'].mean():.1f}s" if total_runs > 0 else "0s"
-        st.metric(label="Avg Runtime", value=avg_runtime)
-        
-    st.markdown('<p style="color: #9ba1a6; font-size: 0.85rem; margin-top: 10px;">Recent System Execution History:</p>', unsafe_allow_html=True)
-    st.dataframe(df_health.tail(5), use_container_width=True, hide_index=True)
-else:
-    st.info("System health log data will appear here once the automated pipeline finishes its next logging cycle.")
 
 st.markdown("---")
 st.markdown("<p style='color: #555960; text-align: center; font-size: 0.8rem;'>doinksports.com • SharpPLAY Analytics Terminal</p>", unsafe_allow_html=True)
