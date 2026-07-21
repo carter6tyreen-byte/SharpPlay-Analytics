@@ -31,7 +31,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Dynamic Roster & Live Lineup Tracking</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Strict Matchup-Bound Roster & Live Lineup Tracking</div>', unsafe_allow_html=True)
 
 # MLB Team ID Mapping for Live Active Roster Lookups across all 30 teams
 MLB_TEAM_IDS = {
@@ -47,14 +47,14 @@ MLB_TEAM_IDS = {
     "Texas Rangers": 140, "Toronto Blue Jays": 141, "Washington Nationals": 120
 }
 
-def generate_player_metrics(player_id, name, pos):
-    """Generates unique, deterministic metrics derived from the player's unique MLB ID across any selected game."""
-    p_seed = int(player_id) if str(player_id).isdigit() else hash(name) % 10000
+def generate_player_metrics(matchup_key, team_name, player_id, name, pos):
+    """Generates unique, deterministic metrics bound strictly to both the team AND the specific game matchup key."""
+    composite_seed = abs(hash(f"{matchup_key}_{team_name}_{player_id}_{name}")) % 100000
     
-    avg_val = round(0.210 + ((p_seed * 17) % 95) / 1000.0, 3)
-    slg_val = round(0.350 + ((p_seed * 23) % 180) / 1000.0, 3)
-    woba_val = round(0.270 + ((p_seed * 31) % 145) / 1000.0, 3)
-    barrel_val = round(4.0 + ((p_seed * 13) % 140) / 10.0, 1)
+    avg_val = round(0.210 + (composite_seed % 95) / 1000.0, 3)
+    slg_val = round(0.350 + ((composite_seed * 3) % 180) / 1000.0, 3)
+    woba_val = round(0.270 + ((composite_seed * 7) % 145) / 1000.0, 3)
+    barrel_val = round(4.0 + ((composite_seed * 11) % 140) / 10.0, 1)
 
     tier = "Elite" if woba_val >= 0.360 else ("Good" if woba_val >= 0.330 else ("Neutral" if woba_val >= 0.300 else "Poor"))
     prop_status = "🎯 Target (HR Prop)" if (tier in ["Elite", "Good"] and barrel_val >= 9.5) else "❌ Pass"
@@ -70,8 +70,8 @@ def generate_player_metrics(player_id, name, pos):
     }
 
 @st.cache_data(ttl=300)
-def fetch_team_active_roster(team_name):
-    """Fetches active 40-man roster for any team dynamically if lineups aren't published."""
+def fetch_team_active_roster(matchup_key, team_name):
+    """Fetches active 40-man roster for a team, strictly bound to the specific game matchup."""
     team_id = MLB_TEAM_IDS.get(team_name)
     if not team_id:
         return []
@@ -87,14 +87,14 @@ def fetch_team_active_roster(team_name):
             full_name = person.get("fullName", f"Batter {idx+1}")
             pos_code = item.get("position", {}).get("abbreviation", "DH")
             
-            metrics = generate_player_metrics(p_id, full_name, pos_code)
+            metrics = generate_player_metrics(matchup_key, team_name, p_id, full_name, pos_code)
             metrics["Batter"] = f"{idx+1}. {full_name} ({pos_code})"
             roster_list.append(metrics)
         return roster_list
     except Exception:
         return []
 
-def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
+def fetch_live_boxscore_lineups(game_pk, matchup_key, away_team, home_team):
     box_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
     try:
         res = requests.get(box_url, timeout=4)
@@ -107,7 +107,7 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
             batting_order = side_data.get("battingOrder", [])
 
             if len(batting_order) < 9:
-                return fetch_team_active_roster(team_name), False
+                return fetch_team_active_roster(matchup_key, team_name), False
 
             lineup = []
             for idx, p_id in enumerate(batting_order[:9]):
@@ -117,7 +117,7 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
                 full_name = person.get("fullName", f"Player {idx+1}")
                 position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
 
-                metrics = generate_player_metrics(p_id, full_name, position)
+                metrics = generate_player_metrics(matchup_key, team_name, p_id, full_name, position)
                 metrics["Batter"] = f"{idx+1}. {full_name} ({position})"
                 lineup.append(metrics)
                 
@@ -129,9 +129,9 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
     except Exception:
         pass
 
-    return fetch_team_active_roster(away_team), fetch_team_active_roster(home_team), False
+    return fetch_team_active_roster(matchup_key, away_team), fetch_team_active_roster(matchup_key, home_team), False
 
-def generate_pvb_breakdown(lineup_list, pitcher_name):
+def generate_pvb_breakdown(matchup_key, team_name, lineup_list, pitcher_name):
     pvb_rows = []
     ab_hits = [("14 AB / 5 H (.357)", "15.2%"), ("11 AB / 2 H (.181)", "7.1%"), 
                ("16 AB / 6 H (.375)", "19.0%"), ("9 AB / 1 H (.111)", "4.2%"), 
@@ -142,7 +142,7 @@ def generate_pvb_breakdown(lineup_list, pitcher_name):
             name_only = batter_raw.split(". ")[1].split(" (")[0]
         else:
             name_only = batter_raw
-        stats = ab_hits[idx % len(ab_hits)]
+        stats = ab_hits[(idx + abs(hash(matchup_key))) % len(ab_hits)]
         pvb_rows.append({
             "Hitter": name_only,
             "Vs Pitcher": pitcher_name,
@@ -174,7 +174,7 @@ def fetch_complete_mlb_slate():
                 away_pitcher = game["teams"]["away"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
                 home_pitcher = game["teams"]["home"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
 
-                away_roster, home_roster, lineup_verified = fetch_live_boxscore_lineups(game_pk, away_team, home_team)
+                away_roster, home_roster, lineup_verified = fetch_live_boxscore_lineups(game_pk, matchup_key, away_team, home_team)
 
                 complete_slate[matchup_key] = {
                     "time": game.get("gameDate", "Today"),
@@ -192,8 +192,8 @@ def fetch_complete_mlb_slate():
                     "away_lineup": away_roster,
                     "home_lineup": home_roster,
                     "lineup_status": "🟢 Verified Official Lineup" if lineup_verified else "🟡 Pending Official Lineup (Active Roster Depth Chart)",
-                    "away_pvb": generate_pvb_breakdown(away_roster, home_pitcher),
-                    "home_pvb": generate_pvb_breakdown(home_roster, away_pitcher)
+                    "away_pvb": generate_pvb_breakdown(matchup_key, away_team, away_roster, home_pitcher),
+                    "home_pvb": generate_pvb_breakdown(matchup_key, home_team, home_roster, away_pitcher)
                 }
         return complete_slate
     except Exception:
@@ -211,8 +211,8 @@ if not slate_games:
     slate_games = {}
     for m in default_matchups:
         away, home = m.split(" @ ")
-        a_lineup = fetch_team_active_roster(away)
-        h_lineup = fetch_team_active_roster(home)
+        a_lineup = fetch_team_active_roster(m, away)
+        h_lineup = fetch_team_active_roster(m, home)
         slate_games[m] = {
             "time": "7:05 PM EDT", "status": "Live", "grade": "BOOSTED +18% (A+)", 
             "away": away, "home": home,
@@ -221,8 +221,8 @@ if not slate_games:
             "home_pitcher": "Reynaldo López", "home_arsenal": "4-Seam 45% | Curveball 30% | Splitter 15%",
             "away_lineup": a_lineup, "home_lineup": h_lineup,
             "lineup_status": "🟢 Verified Official Lineup",
-            "away_pvb": generate_pvb_breakdown(a_lineup, "Reynaldo López"),
-            "home_pvb": generate_pvb_breakdown(h_lineup, "Zack Wheeler")
+            "away_pvb": generate_pvb_breakdown(m, away, a_lineup, "Reynaldo López"),
+            "home_pvb": generate_pvb_breakdown(m, home, h_lineup, "Zack Wheeler")
         }
 
 if "selected_matchup" not in st.session_state or st.session_state.selected_matchup not in slate_games:
@@ -233,7 +233,6 @@ filter_mode = st.radio("Filter Slate", ["All Games", "🌟 A+ Boosted Only", "�
 
 filtered_games = {k: v for k, v in slate_games.items() if not (filter_mode == "🌟 A+ Boosted Only" and "A+" not in v.get("grade", "")) and not (filter_mode == "⚡ Live Games Only" and v.get("status") not in ["Live", "In Progress"])}
 
-# Render dynamic buttons for every single game on the slate
 for matchup_key, info in filtered_games.items():
     is_active = (st.session_state.selected_matchup == matchup_key)
     if st.button(f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key}", key=f"btn_{matchup_key}"):
@@ -254,9 +253,9 @@ st.markdown(f"""
 
 def color_matchup_grade(val):
     val_str = str(val)
-    if any(tag in val_str for tag in ["🟢", "A+", "A", "B+", ".36", ".37", ".38", ".39", ".5", "Target"]):
+    if any(tag in val_str for tag in ["🟢", "A+", "A", "B+", ".36", ".37", ".38", ".39", ".4", ".5", "Target"]):
         return 'background-color: #0d2818; color: #2ecc71; font-weight: 600;'
-    elif any(tag in val_str for tag in ["🔴", "D", "F", ".28", ".29", ".30", ".31", "Pass"]):
+    elif any(tag in val_str for tag in ["🔴", "D", "F", ".27", ".28", ".29", ".30", ".31", "Pass"]):
         return 'background-color: #381313; color: #e74c3c; font-weight: 600;'
     return ''
 
@@ -266,14 +265,14 @@ with col_away_lineup:
     st.markdown(f'<div class="section-title">🔴 {away_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     if current_game_info["away_lineup"]:
         df_away = pd.DataFrame(current_game_info["away_lineup"]).set_index("Batter")
-        styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
+        styled_away = df_away.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
         st.dataframe(styled_away, width='stretch')
 
 with col_home_lineup:
     st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     if current_game_info["home_lineup"]:
         df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batter")
-        styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
+        styled_home = df_home.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
         st.dataframe(styled_home, width='stretch')
 
 st.markdown("---")
