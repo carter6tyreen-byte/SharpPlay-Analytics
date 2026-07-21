@@ -54,27 +54,30 @@ class SafeSeasonNormLayer:
             batting_order = side_data.get("battingOrder", [])
             
             collected = []
-            if isinstance(batting_order, list):
+            if isinstance(batting_order, list) and len(batting_order) > 0:
                 for p_id in batting_order:
+                    player_key = None
                     for k in [f"ID{p_id}", f"id{p_id}", str(p_id)]:
                         if k in players_dict:
-                            p_info = players_dict[k]
-                            pos = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
-                            if pos != "P":
-                                person = p_info.get("person", {})
-                                full_name = person.get("fullName")
-                                if not full_name:
-                                    first = person.get("firstName", "")
-                                    last = person.get("lastName", "")
-                                    full_name = f"{first} {last}".strip()
-                                if not full_name:
-                                    full_name = f"Player ID {p_id}"
-                                
-                                collected.append({
-                                    "name": full_name,
-                                    "position": pos
-                                })
+                            player_key = k
                             break
+                    
+                    if player_key:
+                        p_info = players_dict[player_key]
+                        pos = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
+                        if pos != "P":
+                            person = p_info.get("person", {})
+                            full_name = person.get("fullName") or f"{person.get('firstName', '')} {person.get('lastName', '')}".strip()
+                            
+                            stats = p_info.get("stats", {}).get("batting", {})
+                            collected.append({
+                                "name": full_name or f"Player {p_id}",
+                                "position": pos,
+                                "woba": stats.get("wOBA", 0.320),
+                                "slg": stats.get("slugging", 0.400),
+                                "avg": stats.get("avg", "0.250"),
+                                "barrel": stats.get("barrelPercentage", 8.0)
+                            })
             
             if len(collected) < 9:
                 return SafeSeasonNormLayer.get_fallback(team_name), False
@@ -85,29 +88,28 @@ class SafeSeasonNormLayer:
 
     @staticmethod
     def get_fallback(team_name):
-        # Generate unique team-specific placeholder names using hash seed
         positions = ["CF", "SS", "RF", "1B", "DH", "LF", "3B", "2B", "C"]
-        first_names = ["Jordan", "Taylor", "Morgan", "Sam", "Chris", "Pat", "Riley", "Cameron", "Dakota", "Casey", "Avery", "Skyler"]
-        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Wilson", "Anderson", "Thomas", "Jackson"]
+        first_names = ["Logan", "Tyler", "Connor", "Caleb", "Wyatt", "Hunter", "Cole", "Dylan", "Brandon", "Austin", "Justin", "Gavin"]
+        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Garcia", "Rodriguez", "Martinez", "Hernandez"]
         
         lineup = []
         for idx, pos in enumerate(positions, 1):
-            seed = abs(hash(f"{team_name}_{idx}"))
+            seed = abs(hash(f"{team_name}_{pos}_{idx}"))
             f_name = first_names[seed % len(first_names)]
-            l_name = last_names[(seed // 7) % len(last_names)]
-            name = f"{f_name} {l_name}"
+            l_name = last_names[(seed // 5) % len(last_names)]
             
-            woba = round(0.280 + (seed % 120) / 1000.0, 3)
-            slg = round(0.360 + ((seed * 3) % 160) / 1000.0, 3)
-            avg = round(0.220 + (seed % 80) / 1000.0, 3)
-            barrel = round(5.0 + ((seed * 7) % 100) / 10.0, 1)
+            woba = round(0.280 + (seed % 100) / 1000.0, 3)
+            slg = round(0.360 + ((seed * 3) % 150) / 1000.0, 3)
+            avg = round(0.220 + (seed % 70) / 1000.0, 3)
+            barrel = round(5.0 + ((seed * 7) % 90) / 10.0, 1)
+            
             tier = "Elite" if woba >= 0.360 else ("Good" if woba >= 0.330 else ("Neutral" if woba >= 0.300 else "Poor"))
             prop_status = "🎯 Target (HR Prop)" if (tier in ["Elite", "Good"] and barrel >= 9.5) else "❌ Pass"
             prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
 
             lineup.append({
                 "Batting Slot": idx,
-                "Batter": f"{name} ({pos})",
+                "Batter": f"{f_name} {l_name} ({pos})",
                 "Matchup": f"{prefix} ({woba:.3f} wOBA)",
                 "AVG": f"{avg:.3f}".lstrip('0'),
                 "SLG": f"{slg:.3f}".lstrip('0'),
@@ -123,20 +125,14 @@ class SafeSeasonNormLayer:
         scored = []
         for idx, p in enumerate(player_list):
             seed = abs(hash(f"{team_name}_{p['name']}_{idx}")) % 100000
-            woba = round(0.270 + (seed % 145) / 1000.0, 3)
-            slg = round(0.350 + ((seed * 3) % 180) / 1000.0, 3)
-            avg = round(0.210 + (seed % 95) / 1000.0, 3)
-            barrel = round(4.0 + ((seed * 11) % 140) / 10.0, 1)
+            woba = round(p.get("woba", 0.270 + (seed % 145) / 1000.0), 3)
+            slg = round(p.get("slg", 0.350 + ((seed * 3) % 180) / 1000.0), 3)
+            avg = round(float(p.get("avg", 0.210 + (seed % 95) / 1000.0)), 3)
+            barrel = round(p.get("barrel", 4.0 + ((seed * 11) % 140) / 10.0), 1)
             scored.append({**p, "woba": woba, "slg": slg, "avg": avg, "barrel": barrel})
 
-        scored.sort(key=lambda x: x["woba"], reverse=True)
-        count = len(scored)
-        ordered = scored + [scored[-1]] * (9 - count) if count < 9 else [
-            scored[1], scored[3], scored[0], scored[2], scored[4], scored[5], scored[6], scored[7], scored[8]
-        ]
-        
         final_lineup = []
-        for slot_idx, player in enumerate(ordered[:9], 1):
+        for slot_idx, player in enumerate(scored[:9], 1):
             tier = "Elite" if player["woba"] >= 0.360 else ("Good" if player["woba"] >= 0.330 else ("Neutral" if player["woba"] >= 0.300 else "Poor"))
             prop_status = "🎯 Target (HR Prop)" if (tier in ["Elite", "Good"] and player["barrel"] >= 9.5) else "❌ Pass"
             prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
