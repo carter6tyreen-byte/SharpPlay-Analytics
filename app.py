@@ -85,14 +85,18 @@ class SafeSeasonNormLayer:
 
     @staticmethod
     def get_fallback(team_name):
-        mock_names = [
-            ("Aaron Judge", "CF"), ("Juan Soto", "SS"), ("Giancarlo Stanton", "RF"),
-            ("Anthony Rizzo", "1B"), ("Austin Wells", "DH"), ("Alex Verdugo", "LF"),
-            ("DJ LeMahieu", "3B"), ("Gleyber Torres", "2B"), ("Jose Trevino", "C")
-        ]
+        # Generate unique team-specific placeholder names using hash seed
+        positions = ["CF", "SS", "RF", "1B", "DH", "LF", "3B", "2B", "C"]
+        first_names = ["Jordan", "Taylor", "Morgan", "Sam", "Chris", "Pat", "Riley", "Cameron", "Dakota", "Casey", "Avery", "Skyler"]
+        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Miller", "Davis", "Wilson", "Anderson", "Thomas", "Jackson"]
+        
         lineup = []
-        for idx, (name, pos) in enumerate(mock_names, 1):
-            seed = abs(hash(f"{team_name}_{idx}")) % 100000
+        for idx, pos in enumerate(positions, 1):
+            seed = abs(hash(f"{team_name}_{idx}"))
+            f_name = first_names[seed % len(first_names)]
+            l_name = last_names[(seed // 7) % len(last_names)]
+            name = f"{f_name} {l_name}"
+            
             woba = round(0.280 + (seed % 120) / 1000.0, 3)
             slg = round(0.360 + ((seed * 3) % 160) / 1000.0, 3)
             avg = round(0.220 + (seed % 80) / 1000.0, 3)
