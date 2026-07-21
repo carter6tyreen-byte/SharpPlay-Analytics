@@ -265,14 +265,14 @@ with col_away_lineup:
     st.markdown(f'<div class="section-title">🔴 {away_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     if current_game_info["away_lineup"]:
         df_away = pd.DataFrame(current_game_info["away_lineup"]).set_index("Batter")
-        styled_away = df_away.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
+        styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
         st.dataframe(styled_away, width='stretch')
 
 with col_home_lineup:
     st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     if current_game_info["home_lineup"]:
         df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batter")
-        styled_home = df_home.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
+        styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
         st.dataframe(styled_home, width='stretch')
 
 st.markdown("---")
