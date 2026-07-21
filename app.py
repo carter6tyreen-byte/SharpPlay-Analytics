@@ -305,7 +305,7 @@ if not data:
             "avg": 0.200,
             "slg": 0.800,
             "k_pct": 40.0,
-            "brl%": 33.3,
+            "brl_pct": 33.3,
             "prop_type": "HRs",
             "prop_line": 0.5,
             "odds": "+700"
@@ -352,12 +352,18 @@ df = pd.DataFrame(data)
 
 # Sidebar Controls for Full-Slate Game and Prop Dissection
 st.sidebar.header("Control Center")
-unique_games = df["game"].unique().tolist() if "game" in df.columns else []
+
+unique_games = df["game"].unique().tolist() if "game" in df.columns and not df.empty else []
+
+if not unique_games:
+    st.error("No game data available in dataset. Please check `odds_matrix.json`.")
+    st.stop()
+
 selected_game = st.sidebar.selectbox("Select Game Slate", unique_games)
 
 game_df = df[df["game"] == selected_game] if "game" in df.columns else df
 
-unique_teams = game_df["team"].unique().tolist() if "team" in game_df.columns else []
+unique_teams = game_df["team"].unique().tolist() if "team" in game_df.columns and not game_df.empty else []
 selected_team = st.sidebar.selectbox("Select Batting Order / Lineup", unique_teams)
 
 filtered_df = game_df[game_df["team"] == selected_team] if "game" in game_df.columns else game_df
@@ -367,7 +373,7 @@ prop_options = ["HRs", "Hits", "RBIs", "Bases", "Runs"]
 selected_prop = st.sidebar.selectbox("Select Stat / Prop Market", prop_options)
 
 if not filtered_df.empty:
-    opp_sp = filtered_df.iloc[0]["opp_pitcher"]
+    opp_sp = filtered_df.iloc[0].get("opp_pitcher", "TBD")
     lh_count = len(filtered_df[filtered_df["bats"] == "L"])
     rh_count = len(filtered_df[filtered_df["bats"] == "R"])
     sw_count = len(filtered_df[filtered_df["bats"] == "SW"])
