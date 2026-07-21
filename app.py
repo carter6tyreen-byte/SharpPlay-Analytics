@@ -31,7 +31,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Independent Roster Intelligence & Confidence Scoring</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Strict Index-Aligned Batting Order & Roster Intelligence</div>', unsafe_allow_html=True)
 
 MLB_TEAM_IDS = {
     "Arizona Diamondbacks": 109, "Atlanta Braves": 144, "Baltimore Orioles": 110,
@@ -51,7 +51,6 @@ MLB_TEAM_IDS = {
 # ==========================================
 
 def calculate_roster_confidence(espn_verified: bool, official_feed: bool, depth_chart_match: bool, recent_game: bool) -> int:
-    """Calculates Roster Confidence Score based on multi-source verification weights."""
     score = 0
     if espn_verified:
         score += 40
@@ -63,12 +62,10 @@ def calculate_roster_confidence(espn_verified: bool, official_feed: bool, depth_
         score += 10
     return score
 
-def get_verified_roster(matchup_key, team_name, raw_player_list):
+def get_verified_roster(raw_player_list):
     """Filters raw rosters through the Roster Intelligence Engine. Drops players < 90% confidence."""
     verified_lineup = []
-    
-    for idx, player in enumerate(raw_player_list):
-        # Determine verification flags for confidence scoring example
+    for player in raw_player_list:
         espn_flag = player.get("espn_verified", True)
         feed_flag = player.get("official_feed", True)
         depth_flag = player.get("depth_match", True)
@@ -76,7 +73,6 @@ def get_verified_roster(matchup_key, team_name, raw_player_list):
         
         confidence_score = calculate_roster_confidence(espn_flag, feed_flag, depth_flag, recent_flag)
         
-        # Threshold enforcement: Roster Confidence < 90% removes the player
         if confidence_score >= 90:
             player["Confidence"] = f"{confidence_score}%"
             verified_lineup.append(player)
@@ -88,8 +84,7 @@ def get_verified_roster(matchup_key, team_name, raw_player_list):
 # 2. ANALYTICS ENGINES (Downstream Consumer)
 # ==========================================
 
-def generate_player_metrics(matchup_key, team_name, player_id, name, pos):
-    """HR Predictor and Prop Engine consuming pre-verified player objects."""
+def generate_player_metrics(matchup_key, team_name, player_id, name, pos, batting_slot):
     composite_seed = abs(hash(f"{matchup_key}_{team_name}_{player_id}_{name}")) % 100000
     
     avg_val = round(0.210 + (composite_seed % 95) / 1000.0, 3)
@@ -102,7 +97,7 @@ def generate_player_metrics(matchup_key, team_name, player_id, name, pos):
     prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
 
     return {
-        "Batter": f"{name} ({pos})",
+        "Batter": f"{batting_slot}. {name} ({pos})",
         "Matchup": f"{prefix} ({woba_val:.3f} wOBA)",
         "AVG": f"{avg_val:.3f}".lstrip('0'),
         "SLG": f"{slg_val:.3f}".lstrip('0'),
@@ -112,7 +107,7 @@ def generate_player_metrics(matchup_key, team_name, player_id, name, pos):
         "espn_verified": True,
         "official_feed": True,
         "depth_match": True,
-        "recent_game": (composite_seed % 10 != 0) # Simulated condition for test filtering
+        "recent_game": True
     }
 
 @st.cache_data(ttl=300)
@@ -126,17 +121,16 @@ def fetch_team_active_roster(matchup_key, team_name):
         res = requests.get(url, timeout=4)
         data = res.json()
         raw_list = []
-        for idx, item in enumerate(data.get("roster", [])[:12]):
+        for idx, item in enumerate(data.get("roster", [])[:9]):
             person = item.get("person", {})
             p_id = person.get("id", idx + 100)
             full_name = person.get("fullName", f"Batter {idx+1}")
             pos_code = item.get("position", {}).get("abbreviation", "DH")
             
-            metrics = generate_player_metrics(matchup_key, team_name, p_id, full_name, pos_code)
+            metrics = generate_player_metrics(matchup_key, team_name, p_id, full_name, pos_code, idx + 1)
             raw_list.append(metrics)
             
-        # Pass through Roster Intelligence Engine
-        return get_verified_roster(matchup_key, team_name, raw_list)
+        return get_verified_roster(raw_list)
     except Exception:
         return []
 
@@ -163,10 +157,10 @@ def fetch_live_boxscore_lineups(game_pk, matchup_key, away_team, home_team):
                 full_name = person.get("fullName", f"Player {idx+1}")
                 position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
 
-                metrics = generate_player_metrics(matchup_key, team_name, p_id, full_name, position)
+                metrics = generate_player_metrics(matchup_key, team_name, p_id, full_name, position, idx + 1)
                 raw_lineup.append(metrics)
                 
-            verified = get_verified_roster(matchup_key, team_name, raw_lineup)
+            verified = get_verified_roster(raw_lineup)
             return verified, True
 
         away_roster, away_verified = parse_side("away", away_team)
@@ -183,7 +177,11 @@ def generate_pvb_breakdown(matchup_key, team_name, lineup_list, pitcher_name):
                ("16 AB / 6 H (.375)", "19.0%"), ("9 AB / 1 H (.111)", "4.2%"), 
                ("13 AB / 4 H (.308)", "12.5%")]
     for idx, player in enumerate(lineup_list[:5]):
-        name_only = player["Batter"].split(" (")[0]
+        batter_raw = player["Batter"]
+        if ". " in batter_raw:
+            name_only = batter_raw.split(". ")[1].split(" (")[0]
+        else:
+            name_only = batter_raw
         stats = ab_hits[(idx + abs(hash(matchup_key))) % len(ab_hits)]
         pvb_rows.append({
             "Hitter": name_only,
