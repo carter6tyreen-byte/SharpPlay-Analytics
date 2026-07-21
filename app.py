@@ -7,13 +7,9 @@ from bs4 import BeautifulSoup
 
 st.set_page_config(page_title="SharpPLAY Dashboard", layout="wide")
 
-st.title("⚾ SharpPLAY Full-Slate Lineup & Matchup Matrix")
+st.title("⚾ SharpPLAY Full-Slate Matchup & Arsenal Matrix")
 
 def filter_confirmed_lineups(optimizer_df, rotowire_lineups_df):
-    """
-    Pulls RotoWire lineups, locks confirmed players, and filters out 
-    any players without official lineup confirmation from the optimizer.
-    """
     player_col = 'player' if 'player' in optimizer_df.columns else 'Player'
     rot_player_col = 'player' if 'player' in rotowire_lineups_df.columns else 'Player'
     
@@ -350,7 +346,7 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+700",
-        "is_confirmed": True
+        "is_confirmed": true
     },
     {
         "game": "PHI @ LAD",
@@ -369,7 +365,7 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+500",
-        "is_confirmed": False
+        "is_confirmed": false
     },
     {
         "game": "PHI @ LAD",
@@ -388,7 +384,7 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+1000",
-        "is_confirmed": True
+        "is_confirmed": true
     }
 ]
 
@@ -421,8 +417,6 @@ live_confirmed = fetch_live_rotowire_lineups()
 rotowire_ref_df = df_raw[[p_col, 'is_confirmed']].copy()
 rotowire_ref_df.rename(columns={p_col: 'player'}, inplace=True)
 
-# Only apply live scraped filter if live_confirmed actually returned players; 
-# otherwise, retain the default/fallback confirmation status from the dataset.
 if live_confirmed:
     rotowire_ref_df['is_confirmed'] = rotowire_ref_df['player'].apply(
         lambda x: ''.join([c for c in str(x) if c.isalpha() or c == ' ']).strip().lower() in live_confirmed
@@ -434,7 +428,7 @@ if p_col != 'player':
 df = filter_confirmed_lineups(df_raw, rotowire_ref_df)
 
 st.sidebar.header("Control Center")
-require_confirmation = st.sidebar.checkbox("Lock Confirmed Lineups Only (RotoWire / Depth Charts)", value=True)
+require_confirmation = st.sidebar.checkbox("Lock Confirmed Lineups Only", value=True)
 
 if require_confirmation and "is_confirmed" in df.columns:
     df = df[df["is_confirmed"] == True].copy()
@@ -442,41 +436,66 @@ if require_confirmation and "is_confirmed" in df.columns:
 unique_games = df["game"].unique().tolist() if "game" in df.columns and not df.empty else []
 
 if not unique_games:
-    st.error("No confirmed lineup data available in dataset for the current filter. Uncheck confirmation lock or check data source.")
+    st.error("No confirmed lineup data available.")
     st.stop()
 
 selected_game = st.sidebar.selectbox("Select Game Slate", unique_games)
 game_df = df[df["game"] == selected_game] if "game" in df.columns else df
 
-unique_teams = game_df["team"].unique().tolist() if "team" in game_df.columns and not game_df.empty else []
-selected_team = st.sidebar.selectbox("Select Batting Order / Lineup", unique_teams)
+teams = game_df["team"].unique().tolist() if "team" in game_df.columns else []
 
-filtered_df = game_df[game_df["team"] == selected_team] if "game" in df.columns else game_df
+st.markdown(f"## ⚔️ Game Matchup View: {selected_game}")
 
-prop_options = ["HRs", "Hits", "RBIs", "Bases", "Runs"]
-selected_prop = st.sidebar.selectbox("Select Stat / Prop Market", prop_options)
+col1, col2 = st.columns(2)
 
-if not filtered_df.empty:
-    opp_sp = filtered_df.iloc[0].get("opp_pitcher", "TBD")
-    lh_count = len(filtered_df[filtered_df["bats"] == "L"]) if "bats" in filtered_df.columns else 0
-    rh_count = len(filtered_df[filtered_df["bats"] == "R"]) if "bats" in filtered_df.columns else 0
-    sw_count = len(filtered_df[filtered_df["bats"] == "SW"]) if "bats" in filtered_df.columns else 0
-    st.markdown(f"### {selected_team} Batting Order")
-    st.caption(f"Expected Lineup vs. {opp_sp} | {lh_count} LHB, {rh_count} RHB, {sw_count} SW | RotoWire/Depth Chart Verified")
+selected_batter = None
 
-cols_to_display = [c for c in ["batting_order", "player", "bats", "ab", "h", "hr", "avg", "slg", "k_pct", "brl_pct", "prop_line", "odds", "locked"] if c in filtered_df.columns]
-display_df = filtered_df[cols_to_display].copy()
+def render_team_column(team_name, container):
+    global selected_batter
+    with container:
+        team_df = game_df[game_df["team"] == team_name]
+        opp_sp = team_df.iloc[0].get("opp_pitcher", "TBD") if not team_df.empty else "TBD"
+        st.subheader(f"{team_name}")
+        st.caption(f"Facing Opposing Pitcher: {opp_sp}")
+        
+        if not team_df.empty:
+            display_cols = ["batting_order", "player", "bats", "ab", "h", "hr", "avg", "slg", "odds"]
+            available_cols = [c for c in display_cols if c in team_df.columns]
+            st.dataframe(team_df[available_cols], use_container_width=True, hide_index=True)
+            
+            player_list = team_df["player"].tolist()
+            chosen = st.selectbox(f"Select Batter ({team_name})", player_list, key=f"sel_{team_name}")
+            if chosen:
+                selected_batter = chosen
 
-st.dataframe(
-    display_df,
-    use_container_width=True,
-    hide_index=True
-)
+if len(teams) >= 2:
+    with col1:
+        render_team_column(teams[0], st)
+    with col2:
+        render_team_column(teams[1], st)
+elif len(teams) == 1:
+    render_team_column(teams[0], st)
 
 st.markdown("---")
-st.subheader("Full Master Slate Matrix (Live Filtered)")
-st.dataframe(
-    df,
-    use_container_width=True,
-    hide_index=True
-)
+st.markdown("### 🔬 StarWorld Pitcher Arsenal & Batter Deep-Dive")
+
+if selected_batter:
+    batter_row = game_df[game_df["player"] == selected_batter]
+    if not batter_row.empty:
+        b_data = batter_row.iloc[0]
+        st.success(f"Loaded Deep-Dive for **{selected_batter}** ({b_data.get('team', '')}) vs {b_data.get('opp_pitcher', '')}")
+        
+        col_a, col_b, col_c = st.columns(3)
+        with col_a:
+            st.metric("Batting Average vs Pitcher Type", f"{b_data.get('avg', 0.0):.3f}")
+            st.metric("At-Bats Sample Size", int(b_data.get('ab', 0)))
+        with col_b:
+            st.metric("Slugging Percentage", f"{b_data.get('slg', 0.0):.3f}")
+            st.metric("Home Run Prop Odds", b_data.get('odds', 'N/A'))
+        with col_c:
+            st.metric("Strikeout Rate (K%)", f"{b_data.get('k_pct', 0.0)}%")
+            st.metric("Barrel Rate", f"{b_data.get('brl_pct', 0.0)}%")
+        
+        st.info("💡 **StarWorld Arsenal Insight:** Tracking pitch-mix tracking metrics, velocity splits, and optimal launch angle zones against opposing starter's primary pitch catalog.")
+else:
+    st.info("Select a batter from either team's lineup above to load the StarWorld pitch-arsenal breakdown.")
