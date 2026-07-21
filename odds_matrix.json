@@ -1,0 +1,23 @@
+[
+  {
+    "player": "Hunter Goodman",
+    "team": "Colorado Rockies",
+    "hr_1_odds": "+186",
+    "hr_2_odds": "+1500",
+    "last_5_total": 3
+  },
+  {
+    "player": "James Wood",
+    "team": "Washington Nationals",
+    "hr_1_odds": "+200",
+    "hr_2_odds": "+1600",
+    "last_5_total": 1
+  },
+  {
+    "player": "Mike Trout",
+    "team": "Los Angeles Angels",
+    "hr_1_odds": "+320",
+    "hr_2_odds": "+3500",
+    "last_5_total": 0
+  }
+]
