@@ -82,7 +82,6 @@ def fetch_live_mlb_slate():
                 away_pitcher = game["teams"]["away"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
                 home_pitcher = game["teams"]["home"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
                 
-                # Fetch live boxscore/lineups directly from MLB live feed if available
                 away_roster, home_roster = fetch_live_boxscore_lineups(game_pk, away_team, home_team)
 
                 live_slate[matchup_key] = {
@@ -121,9 +120,7 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
             batting_order = box_data.get("teams", {}).get(side_key, {}).get("battingOrder", [])
             
             lineup = []
-            # Fallback if battingOrder not published yet
             if not batting_order:
-                # gather all batters from players
                 batting_ids = box_data.get("teams", {}).get(side_key, {}).get("batters", [])
                 batting_order = batting_ids[:9]
 
@@ -135,14 +132,11 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
                 name = person.get("fullName", f"Batter {idx+1}")
                 position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
                 
-                stats = p_info.get("stats", {}).get("batting", {})
                 season_stats = p_info.get("seasonStats", {}).get("batting", {})
                 
                 avg = season_stats.get("avg", ".250")
                 slg = season_stats.get("slg", ".400")
-                obs_woba = season_stats.get("ops", ".750") # approximate wOBA proxy or derive
                 
-                # Mock analytical metrics derived deterministically from player id/stats
                 barrel_val = round(7.0 + ((p_id % 35) * 0.35), 1)
                 woba_val = round(0.300 + ((p_id % 12) * 0.01), 3)
                 
@@ -179,7 +173,6 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
     except Exception:
         pass
     
-    # Ultimate fallback static rosters if live fetch fails
     return get_fallback_roster(away_team), get_fallback_roster(home_team)
 
 TEAM_ROSTERS = {
@@ -312,13 +305,13 @@ with col_away_lineup:
     st.markdown(f'<div class="section-title">🔴 {away_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     df_away = pd.DataFrame(current_game_info["away_lineup"]).set_index("Batter")
     styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
-    st.dataframe(styled_away, use_container_width=True)
+    st.dataframe(styled_away, width='stretch')
 
 with col_home_lineup:
     st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batter")
     styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
-    st.dataframe(styled_home, use_container_width=True)
+    st.dataframe(styled_home, width='stretch')
 
 st.markdown("---")
 st.markdown('<div class="section-title">🎯 Starting Pitcher Arsenals & PvB Breakdown</div>', unsafe_allow_html=True)
@@ -328,12 +321,12 @@ with col_p1:
     st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{away_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['away_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['away_arsenal']}</p></div>""", unsafe_allow_html=True)
     st.markdown("**Key Batters vs. " + current_game_info['away_pitcher'] + "**")
     df_apvb = pd.DataFrame(current_game_info["away_pvb"]).set_index("Hitter")
-    st.dataframe(df_apvb, use_container_width=True)
+    st.dataframe(df_apvb, width='stretch')
 
 with col_p2:
     st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{home_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['home_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['home_arsenal']}</p></div>""", unsafe_allow_html=True)
     st.markdown("**Key Batters vs. " + current_game_info['home_pitcher'] + "**")
     df_hpvb = pd.DataFrame(current_game_info["home_pvb"]).set_index("Hitter")
-    st.dataframe(df_hpvb, use_container_width=True)
+    st.dataframe(df_hpvb, width='stretch')
 
 st.markdown("<p style='color: #555960; text-align: center; font-size: 0.8rem;'>doinksports.com • SharpPLAY Analytics Terminal</p>", unsafe_allow_html=True)
