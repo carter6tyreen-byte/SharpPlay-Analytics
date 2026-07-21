@@ -68,7 +68,6 @@ class RosterValidationLayer:
             if len(batting_order) < 9:
                 return RosterValidationLayer.fallback_active_roster(matchup_key, team_name, team_ids_map), False
             
-            # Ensure we strictly map 1-9 batting slots using exact string keys, filtering out pitchers
             valid_batters = 0
             for idx, p_id in enumerate(batting_order):
                 if valid_batters >= 9:
@@ -82,12 +81,11 @@ class RosterValidationLayer:
                 
                 position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
                 if position == "P":
-                    continue  # Skip starting pitchers appearing in battingOrder dictionary lists
+                    continue
                 
                 person = p_info.get("person", {})
                 full_name = person.get("fullName", f"Batter {valid_batters+1}")
                 
-                # Composite metrics generation bound strictly to assignment slot
                 composite_seed = abs(hash(f"{matchup_key}_{team_name}_{p_id}_{full_name}")) % 100000
                 avg_val = round(0.210 + (composite_seed % 95) / 1000.0, 3)
                 slg_val = round(0.350 + ((composite_seed * 3) % 180) / 1000.0, 3)
@@ -130,19 +128,15 @@ class RosterValidationLayer:
         try:
             res = requests.get(url, timeout=4)
             data = res.json()
-            raw_list = []
-            
-            # Robust filtering for position types and abbreviations to eliminate pitchers completely
             position_players = []
             for item in data.get("roster", []):
                 position_obj = item.get("position", {})
                 pos_code = position_obj.get("abbreviation", "")
                 pos_type = position_obj.get("type", "")
-                
-                # Exclude if code or type indicates a pitcher
                 if pos_code != "P" and pos_type.lower() != "pitcher":
                     position_players.append(item)
             
+            raw_list = []
             for idx, item in enumerate(position_players[:9]):
                 person = item.get("person", {})
                 p_id = person.get("id", idx + 100)
@@ -305,7 +299,7 @@ st.markdown(f"""
 <div class="card-box" style="border-color: #00ffcc;">
     <h3 style="margin: 0; color: #00ffcc;">⚡ Active Analysis: {st.session_state.selected_matchup}</h3>
     <p style="margin: 8px 0 0 0; color: #fff;"><b>Win Probabilities:</b> {away_team} ({current_game_info['away_win_prob']}) vs {home_team} ({current_game_info['home_win_prob']})</p>
-    <p style="margin: 4px 0 0 0; color: #00ffcc;"><b>Edge:</b> {current_game_info['model_edge']} &nbsp;|&nbsp; Grade: {current_game_info['grade']} &nbsp;|&nbsp; <b>{current_game_info.get('lineup_status', '')}</b></p>
+    <p style="margin: 4px 0 0 0; color: #00ffcc;"><b>Edge:</b> {current_game_info['model_edge']} &nbsp;|&nbsp; Grade: {current_game_info['grade']} &nbsp;|&nbsp; <b>{current_game_info.get('lineup_style', '')}</b></p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -329,7 +323,7 @@ with col_away_lineup:
 with col_home_lineup:
     st.markdown(f'<div class="section-title">🔵 {home_team} Verified Lineup</div>', unsafe_allow_html=True)
     if current_game_info["home_lineup"]:
-        df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batter")
+        df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("DataFrameIndexPlaceholder" if False else "Batter")
         styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
         st.dataframe(styled_home, use_container_width=True)
 
@@ -340,11 +334,13 @@ col_p1, col_p2 = st.columns(2)
 with col_p1:
     st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{away_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['away_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['away_arsenal']}</p></div>""", unsafe_allow_html=True)
     st.markdown("**Key Batters vs. " + current_game_info['home_pitcher'] + "**")
-    df_apvb = pd.DataFrame(current_game_info["away_pvb"]).set_index("Hitter")
-    st.dataframe(df_apvb, use_container_width=True)
+    if current_game_info["away_pvb"]:
+        df_apvb = pd.DataFrame(current_game_info["away_pvb"]).set_index("Hitter")
+        st.dataframe(df_apvb, use_container_width=True)
 
 with col_p2:
-    st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{home_team} Starter</h4><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['home_arsenal']}</p></div>""", unsafe_allow_html=True)
-    st.markdown("**Key Stats vs. Pitcher**")
-    df_hpvb = pd.DataFrame(current_game_info["home_pvb"]).set_index("Hitter")
-    st.dataframe(df_hpvb, use_container_width=True)
+    st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{home_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['home_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['home_arsenal']}</p></div>""", unsafe_allow_html=True)
+    st.markdown("**Key Batters vs. " + current_game_info['away_pitcher'] + "**")
+    if current_game_info["home_pvb"]:
+        df_hpvb = pd.DataFrame(current_game_info["home_pvb"]).set_index("Hitter")
+        st.dataframe(df_hpvb, use_container_width=True)
