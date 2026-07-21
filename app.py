@@ -68,8 +68,11 @@ class RosterValidationLayer:
             if len(batting_order) < 9:
                 return RosterValidationLayer.fallback_active_roster(matchup_key, team_name, team_ids_map), False
             
-            # Ensure we strictly map 1-9 batting slots using exact string keys
-            for idx, p_id in enumerate(batting_order[:9]):
+            # Ensure we strictly map 1-9 batting slots using exact string keys, filtering out pitchers
+            valid_batters = 0
+            for idx, p_id in enumerate(batting_order):
+                if valid_batters >= 9:
+                    break
                 possible_keys = [f"ID{p_id}", f"id{p_id}", str(p_id)]
                 p_info = {}
                 for k in possible_keys:
@@ -77,9 +80,12 @@ class RosterValidationLayer:
                         p_info = players_dict[k]
                         break
                 
-                person = p_info.get("person", {})
-                full_name = person.get("fullName", f"Batter {idx+1}")
                 position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
+                if position == "P":
+                    continue  # Skip starting pitchers appearing in battingOrder dictionary lists
+                
+                person = p_info.get("person", {})
+                full_name = person.get("fullName", f"Batter {valid_batters+1}")
                 
                 # Composite metrics generation bound strictly to assignment slot
                 composite_seed = abs(hash(f"{matchup_key}_{team_name}_{p_id}_{full_name}")) % 100000
@@ -92,8 +98,9 @@ class RosterValidationLayer:
                 prop_status = "🎯 Target (HR Prop)" if (tier in ["Elite", "Good"] and barrel_val >= 9.5) else "❌ Pass"
                 prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
 
+                valid_batters += 1
                 validated_lineup.append({
-                    "Batter": f"{idx + 1}. {full_name} ({position})",
+                    "Batter": f"{valid_batters}. {full_name} ({position})",
                     "Matchup": f"{prefix} ({woba_val:.3f} wOBA)",
                     "AVG": f"{avg_val:.3f}".lstrip('0'),
                     "SLG": f"{slg_val:.3f}".lstrip('0'),
@@ -102,6 +109,9 @@ class RosterValidationLayer:
                     "HR Prop Verdict": prop_status,
                     "Confidence": "100%"
                 })
+                
+            if len(validated_lineup) < 9:
+                return RosterValidationLayer.fallback_active_roster(matchup_key, team_name, team_ids_map), False
                 
             return validated_lineup, True
 
@@ -121,7 +131,19 @@ class RosterValidationLayer:
             res = requests.get(url, timeout=4)
             data = res.json()
             raw_list = []
-            for idx, item in enumerate(data.get("roster", [])[:9]):
+            
+            # Robust filtering for position types and abbreviations to eliminate pitchers completely
+            position_players = []
+            for item in data.get("roster", []):
+                position_obj = item.get("position", {})
+                pos_code = position_obj.get("abbreviation", "")
+                pos_type = position_obj.get("type", "")
+                
+                # Exclude if code or type indicates a pitcher
+                if pos_code != "P" and pos_type.lower() != "pitcher":
+                    position_players.append(item)
+            
+            for idx, item in enumerate(position_players[:9]):
                 person = item.get("person", {})
                 p_id = person.get("id", idx + 100)
                 full_name = person.get("fullName", f"Batter {idx+1}")
@@ -323,6 +345,6 @@ with col_p1:
 
 with col_p2:
     st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{home_team} Starter</h4><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['home_arsenal']}</p></div>""", unsafe_allow_html=True)
-    st.markdown("**Key Batters vs. " + current_game_info['away_pitcher'] + "**")
+    st.markdown("**Key Stats vs. Pitcher**")
     df_hpvb = pd.DataFrame(current_game_info["home_pvb"]).set_index("Hitter")
     st.dataframe(df_hpvb, use_container_width=True)
