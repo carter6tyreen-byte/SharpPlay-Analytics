@@ -37,11 +37,16 @@ st.header(f"Starting Lineup Analysis: {selected_team}")
 
 filtered_df = df[df["team"] == selected_team] if "team" in df.columns else df
 
-# Comprehensive column config mapping to ensure every column displays cleanly with custom labels
+# Define exact column order to guarantee predictable presentation
+columns_order = ["slot", "player", "matchup", "verdict", "confidence", "hr_1_odds", "hr_2_odds", "last_5_total"]
+existing_columns = [col for col in columns_order if col in df.columns]
+
+filtered_df = filtered_df[existing_columns]
+master_df = df[existing_columns]
+
 column_configuration = {
     "slot": st.column_config.NumberColumn("Lineup Slot", format="%d"),
     "player": "Batter",
-    "team": "Team",
     "matchup": "Matchup Rating",
     "verdict": "Model Verdict",
     "confidence": "Confidence",
@@ -60,7 +65,7 @@ st.dataframe(
 st.markdown("---")
 st.subheader("Full Master Tracking Matrix")
 st.dataframe(
-    df, 
+    master_df, 
     column_config=column_configuration,
     use_container_width=True,
     hide_index=True
