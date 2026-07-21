@@ -13,99 +13,99 @@ st.markdown("""
         color: #ffffff;
     }
     .terminal-header {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         font-weight: 700;
         color: #ffffff;
         text-align: center;
         margin-bottom: 5px;
     }
     .terminal-sub {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #9ba1a6;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
     .section-title {
-        font-size: 1.2rem;
+        font-size: 1.15rem;
         font-weight: 600;
         color: #00ffcc;
-        margin-top: 25px;
-        margin-bottom: 10px;
+        margin-top: 20px;
+        margin-bottom: 8px;
     }
     .card-box {
         background-color: #12141a;
         border: 1px solid #222632;
         border-radius: 10px;
-        padding: 15px;
+        padding: 12px;
         margin-bottom: 10px;
     }
-    /* Style radio buttons to look like clean selectable terminal items */
-    .stRadio > label {
-        color: #00ffcc !important;
-        font-weight: 700 !important;
-        font-size: 1.1rem !important;
+    /* Make buttons full-width and touch-friendly on mobile */
+    .stButton > button {
+        width: 100%;
+        background-color: #161b22;
+        color: #00ffcc;
+        border: 1px solid #00ffcc;
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 10px;
+        margin-top: 5px;
+    }
+    .stButton > button:hover {
+        background-color: #00ffcc;
+        color: #0b0c10;
     }
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="terminal-header">⚾ SharpPLAY: Full Slate & Lineup Analytics Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Live Game Selector, Weather Impact Ratings, and Full Team Lineup Breakdowns</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-header">⚾ SharpPLAY: Lineup & Analytics Terminal</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Tap a game below to instantly load full team lineups & weather impact</div>', unsafe_allow_html=True)
 
-# Top Navigation Tabs
-nav_col1, nav_col2, nav_col3, nav_col4 = st.columns(4)
-with nav_col1:
-    st.markdown('<div class="card-box" style="border-color: #00ffcc; text-align: center;"><b style="color: #00ffcc;">Matchups & Lineups</b></div>', unsafe_allow_html=True)
-with nav_col2:
-    st.markdown('<div class="card-box" style="text-align: center; color: #9ba1a6;">Weather Man</div>', unsafe_allow_html=True)
-with nav_col3:
-    st.markdown('<div class="card-box" style="text-align: center; color: #9ba1a6;">Hit Rater</div>', unsafe_allow_html=True)
-with nav_col4:
-    st.markdown('<div class="card-box" style="text-align: center; color: #9ba1a6;">Trending Insights</div>', unsafe_allow_html=True)
+# Initialize Session State for active game selection
+if "selected_matchup" not in st.session_state:
+    st.session_state.selected_matchup = "Washington Nationals @ Colorado Rockies"
 
-st.markdown("---")
-
-# FULL SLATE & WEATHER IMPACT SELECTOR
-st.markdown('<div class="section-title">📅 Today\'s Full Game Slate & Weather Impact Grades</div>', unsafe_allow_html=True)
-st.markdown("<p style='color: #9ba1a6; font-size: 0.85rem;'>Select a game from the full slate below to instantly load its metrics and weather grade.</p>", unsafe_allow_html=True)
-
-# Comprehensive game slate options with weather impact ratings
+# Game Slate Data Dictionary
 slate_games = {
-    "Washington Nationals @ Colorado Rockies (8:40 PM EDT) | 🌤️ 84°F | Wind 12 mph Out to CF | ⚡ Weather Grade: BOOSTED +18% (A+)": {
-        "away": "Washington Nationals", "home": "Colorado Rockies", "weather": "84°F | Wind 12 mph Out to CF", "grade": "BOOSTED +18% (A+)"
+    "Washington Nationals @ Colorado Rockies": {
+        "time": "8:40 PM EDT", "weather": "84°F | Wind 12 mph Out to CF", "grade": "BOOSTED +18% (A+)", "away": "Washington Nationals", "home": "Colorado Rockies"
     },
-    "San Diego Padres @ Atlanta Braves (BOT 5th) | 🌤️ 72°F | Wind 8 mph In | ⚡ Weather Grade: Neutral (C)": {
-        "away": "San Diego Padres", "home": "Atlanta Braves", "weather": "72°F | Wind 8 mph In", "grade": "Neutral (C)"
+    "San Diego Padres @ Atlanta Braves": {
+        "time": "BOT 5th", "weather": "72°F | Wind 8 mph In", "grade": "Neutral (C)", "away": "San Diego Padres", "home": "Atlanta Braves"
     },
-    "New York Mets @ Milwaukee Brewers (TOP 3RD) | 🌤️ Dome (Closed) | ⚡ Weather Grade: Neutral (C)": {
-        "away": "New York Mets", "home": "Milwaukee Brewers", "weather": "Dome (Closed)", "grade": "Neutral (C)"
+    "New York Mets @ Milwaukee Brewers": {
+        "time": "TOP 3RD", "weather": "Dome (Closed)", "grade": "Neutral (C)", "away": "New York Mets", "home": "Milwaukee Brewers"
     },
-    "Cincinnati Reds @ Seattle Mariners (9:40 PM EDT) | 🌤️ 58°F | Wind 11 mph In | ⚡ Weather Grade: SUPPRESSED -12% (D)": {
-        "away": "Cincinnati Reds", "home": "Seattle Mariners", "weather": "58°F | Wind 11 mph In", "grade": "SUPPRESSED -12% (D)"
+    "Cincinnati Reds @ Seattle Mariners": {
+        "time": "9:40 PM EDT", "weather": "58°F | Wind 11 mph In", "grade": "SUPPRESSED -12% (D)", "away": "Cincinnati Reds", "home": "Seattle Mariners"
     },
-    "Boston Red Sox @ New York Yankees (7:05 PM EDT) | 🌤️ 78°F | Wind 9 mph Out to RF | ⚡ Weather Grade: BOOSTED +8% (B+)": {
-        "away": "Boston Red Sox", "home": "New York Yankees", "weather": "78°F | Wind 9 mph Out to RF", "grade": "BOOSTED +8% (B+)"
+    "Boston Red Sox @ New York Yankees": {
+        "time": "7:05 PM EDT", "weather": "78°F | Wind 9 mph Out to RF", "grade": "BOOSTED +8% (B+)", "away": "Boston Red Sox", "home": "New York Yankees"
     },
-    "Los Angeles Dodgers @ San Francisco Giants (10:10 PM EDT) | 🌤️ 55°F | Wind 14 mph Out from Bay | ⚡ Weather Grade: SUPPRESSED -15% (D-)": {
-        "away": "Los Angeles Dodgers", "home": "San Francisco Giants", "weather": "55°F | Wind 14 mph Out from Bay", "grade": "SUPPRESSED -15% (D-)"
+    "Los Angeles Dodgers @ San Francisco Giants": {
+        "time": "10:10 PM EDT", "weather": "55°F | Wind 14 mph Out from Bay", "grade": "SUPPRESSED -15% (D-)", "away": "Los Angeles Dodgers", "home": "San Francisco Giants"
     }
 }
 
-# Native Radio Selector for foolproof interaction on mobile & desktop
-selected_game_key = st.radio(
-    "Choose Game Matchup:",
-    options=list(slate_games.keys()),
-    label_visibility="collapsed"
-)
+st.markdown('<div class="section-title">📅 Tap Game to Load Analytics</div>', unsafe_allow_html=True)
 
-current_game_info = slate_games[selected_game_key]
+# Render full slate as direct touch-friendly buttons
+for matchup_key, info in slate_games.items():
+    is_active = (st.session_state.selected_matchup == matchup_key)
+    btn_label = f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key} ({info['time']}) | 🌤️ {info['weather']} | Grade: {info['grade']}"
+    
+    if st.button(btn_label, key=f"game_btn_{matchup_key}"):
+        st.session_state.selected_matchup = matchup_key
+        st.rerun()
+
+current_game_info = slate_games[st.session_state.selected_matchup]
 away_team = current_game_info["away"]
 home_team = current_game_info["home"]
 
 st.markdown("---")
 st.markdown(f"""
 <div class="card-box" style="border-color: #00ffcc;">
-    <h3 style="margin: 0; color: #00ffcc;">⚡ Active Analysis: {away_team} @ {home_team}</h3>
-    <p style="margin: 5px 0 0 0; color: #ccc;">🌤️ Weather Conditions: {current_game_info['weather']} &nbsp;|&nbsp; <b>{current_game_info['grade']}</b></p>
+    <h3 style="margin: 0; color: #00ffcc;">⚡ Active Analysis: {st.session_state.selected_matchup}</h3>
+    <p style="margin: 5px 0 0 0; color: #ccc;">🌤️ Weather Conditions: {current_game_info['weather']} &nbsp;|&nbsp; <b>Weather Grade: {current_game_info['grade']}</b></p>
 </div>
 """, unsafe_allow_html=True)
 
