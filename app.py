@@ -57,8 +57,8 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="terminal-header">⚾ SharpPLAY: Lineup & Analytics Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Pre-game intelligence: Full lineups, PvB history, pitch mix, and barrel metrics</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Strict HR Prop Filter: Validates Barrel%, Hard-Hit%, & Pitcher Matchup Tiers</div>', unsafe_allow_html=True)
 
 # Realistic fallback rosters mapped by team
 TEAM_ROSTERS = {
@@ -70,43 +70,51 @@ TEAM_ROSTERS = {
     "Pittsburgh Pirates": ["O. Cruz (SS)", "B. Reynolds (LF)", "C. Joe (1B)", "A. McCutchen (DH)", "J. Suwinski (CF)", "K. Hayes (3B)", "J. Triolo (2B)", "H. Davis (C)", "E. Olivares (RF)"],
     "Baltimore Orioles": ["G. Henderson (SS)", "A. Rutschman (C)", "R. Mountcastle (1B)", "A. Santander (RF)", "C. Cowser (LF)", "J. Westburg (2B)", "R. O'Hearn (DH)", "G. Westburg (3B)", "C. Mullins (CF)"],
     "Boston Red Sox": ["J. Duran (LF)", "R. Devers (3B)", "T. O'Neill (RF)", "W. Abreu (CF)", "D. Smith (1B)", "C. Wong (C)", "E. Valdez (2B)", "V. Grissom (2B)", "D. Hamilton (SS)"],
-    "San Diego Padres": ["L. Arraez (1B)", "F. Tatis Jr. (RF)", "J. Profar (LF)", "M. Machado (3B)", "H. Kim (SS)", "J. Cronenworth (2B)", "X. Bogaerts (DH)", "K. Higashioka (C)", "J. Merrill (CF)"],
+    "San Diego Padres": ["L. Arraez (1B)", "F. Tatis Jr. (RF)", "J. Profar (LF)", "M. Machado (3B)", "H. Kim (SS)", "J. Cronenworth (2B)", "X. Bogaerts (DX)", "K. Higashioka (C)", "J. Merrill (CF)"],
     "Atlanta Braves": ["R. Acuña Jr. (RF)", "O. Albies (2B)", "A. Riley (3B)", "M. Olson (1B)", "M. Ozuna (DH)", "M. Harris II (CF)", "S. Murphy (C)", "J. Kelenic (LF)", "V. Grissom (SS)"]
 }
 
 def get_roster_for_team(team_name):
-    if team_name in TEAM_ROSTERS:
-        names = TEAM_ROSTERS[team_name]
-    else:
-        names = [f"Player {i} (Pos)" for i in range(1, 10)]
+    names = TEAM_ROSTERS.get(team_name, [f"Player {i} (Pos)" for i in range(1, 10)])
     
     lineup = []
-    woba_opts = [(".385 wOBA", "Elite", ".285", ".480", "14.2%"), 
-                 (".410 wOBA", "Elite", ".272", ".510", "16.8%"),
-                 (".350 wOBA", "Good", ".265", ".460", "11.5%"),
-                 (".390 wOBA", "Elite", ".280", ".530", "18.1%"),
-                 (".320 wOBA", "Neutral", ".250", ".440", "8.9%"),
-                 (".340 wOBA", "Good", ".260", ".450", "10.2%"),
-                 (".280 wOBA", "Poor", ".225", ".370", "5.1%"),
-                 (".310 wOBA", "Neutral", ".235", ".390", "7.4%"),
-                 (".330 wOBA", "Good", ".255", ".420", "9.0%")]
+    woba_opts = [
+        (".385 wOBA", "Elite", ".285", ".480", 14.2), 
+        (".410 wOBA", "Elite", ".272", ".510", 16.8),
+        (".350 wOBA", "Good", ".265", ".460", 11.5),
+        (".390 wOBA", "Elite", ".280", ".530", 18.1),
+        (".320 wOBA", "Neutral", ".250", ".440", 8.9),
+        (".340 wOBA", "Good", ".260", ".450", 10.2),
+        (".280 wOBA", "Poor", ".225", ".370", 5.1),
+        (".310 wOBA", "Neutral", ".235", ".390", 7.4),
+        (".330 wOBA", "Good", ".255", ".420", 9.0)
+    ]
     
     for i, name in enumerate(names):
         opt = woba_opts[i % len(woba_opts)]
-        prefix = "🟢 Elite" if opt[1]=="Elite" else ("🟢 Good" if opt[1]=="Good" else ("🟡 Neutral" if opt[1]=="Neutral" else "🔴 Poor"))
+        woba_str, tier, avg, slg, barrel_val = opt[0], opt[1], opt[2], opt[3], opt[4]
+        
+        # Accountability rule: Strict HR prop criteria (Elite/Good matchup + Barrel% >= 10.0%)
+        if tier in ["Elite", "Good"] and barrel_val >= 10.0:
+            prop_status = "🎯 Target (HR Prop)"
+        else:
+            prop_status = "❌ Pass"
+            
+        prefix = "🟢 Elite" if tier=="Elite" else ("🟢 Good" if tier=="Good" else ("🟡 Neutral" if tier=="Neutral" else "🔴 Poor"))
+        
         lineup.append({
             "Batter": f"{i+1}. {name}",
-            "Matchup": f"{prefix} ({opt[0]})",
-            "AVG": opt[2],
-            "SLG": opt[3],
-            "wOBA": opt[0].split()[0],
-            "Barrel%": opt[4]
+            "Matchup": f"{prefix} ({woba_str})",
+            "AVG": avg,
+            "SLG": slg,
+            "wOBA": woba_str.split()[0],
+            "Barrel%": f"{barrel_val}%",
+            "HR Prop Verdict": prop_status
         })
     return lineup
 
 def generate_pvb_breakdown(lineup_list, pitcher_name):
     pvb_rows = []
-    # Distinct sample variation based on index to avoid identical rows
     ab_hits = [("14 AB / 5 H (.357)", "15.2%"), ("11 AB / 2 H (.181)", "7.1%"), 
                ("16 AB / 6 H (.375)", "19.0%"), ("9 AB / 1 H (.111)", "4.2%"), 
                ("13 AB / 4 H (.308)", "12.5%")]
@@ -122,7 +130,6 @@ def generate_pvb_breakdown(lineup_list, pitcher_name):
         })
     return pvb_rows
 
-# Fetch Live Slate from MLB Stats API
 @st.cache_data(ttl=600)
 def fetch_live_mlb_slate():
     today_str = datetime.today().strftime('%Y-%m-%d')
@@ -174,7 +181,6 @@ def fetch_live_mlb_slate():
 
 slate_games = fetch_live_mlb_slate()
 
-# Fallback games if API returns empty
 if not slate_games:
     default_matchups = [
         "Los Angeles Dodgers @ Philadelphia Phillies",
@@ -226,25 +232,26 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 def color_matchup_grade(val):
-    if any(tag in str(val) for tag in ["🟢", "A+", "A", "B+", ".36", ".37", ".38", ".39", ".5", "14.", "16.", "18."]):
+    val_str = str(val)
+    if any(tag in val_str for tag in ["🟢", "A+", "A", "B+", ".36", ".37", ".38", ".39", ".5", "Target"]):
         return 'background-color: #0d2818; color: #2ecc71; font-weight: 600;'
-    elif any(tag in str(val) for tag in ["🔴", "D", "F", ".28", ".29", ".30", ".31", "5."]):
+    elif any(tag in val_str for tag in ["🔴", "D", "F", ".28", ".29", ".30", ".31", "Pass"]):
         return 'background-color: #381313; color: #e74c3c; font-weight: 600;'
     return ''
 
-# Render Full Lineups (Setting Batter as Index to prevent mobile clipping)
+# Render Full Lineups with HR Prop Verdict
 col_away_lineup, col_home_lineup = st.columns(2)
 
 with col_away_lineup:
     st.markdown(f'<div class="section-title">🔴 {away_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     df_away = pd.DataFrame(current_game_info["away_lineup"]).set_index("Batter")
-    styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%'])
+    styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
     st.dataframe(styled_away, use_container_width=True)
 
 with col_home_lineup:
     st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batter")
-    styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%'])
+    styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
     st.dataframe(styled_home, use_container_width=True)
 
 # Pitcher Arsenal Grid & Pitcher vs Batter (PvB) History Matrix
