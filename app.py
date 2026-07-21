@@ -4,10 +4,60 @@ import json
 import os
 import requests
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 st.set_page_config(page_title="SharpPLAY Dashboard", layout="wide")
 
 st.title("⚾ SharpPLAY Full-Slate Matchup & Arsenal Matrix")
+
+def log_learning_loop(player_name, team, opp_pitcher, rec_prop, metrics_dict):
+    log_path = "learning_loop_history.json"
+    entry = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "player": player_name,
+        "team": team,
+        "opp_pitcher": opp_pitcher,
+        "recommendation": rec_prop,
+        "metrics": metrics_dict
+    }
+    history = []
+    if os.path.exists(log_path):
+        try:
+            with open(log_path, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if content:
+                    history = json.loads(content)
+        except Exception:
+            history = []
+    
+    # Avoid duplicate exact consecutive logs for the same user session view
+    if not history or history[-1].get("player") != player_name or history[-1].get("recommendation") != rec_prop:
+        history.append(entry)
+        try:
+            with open(log_path, "w", encoding="utf-8") as f:
+                json.dump(history, f, indent=4)
+        except Exception:
+            pass
+
+def determine_best_prop(b_data):
+    avg = b_data.get('avg', 0.0)
+    slg = b_data.get('slg', 0.0)
+    ab = b_data.get('ab', 0)
+    k_pct = b_data.get('k_pct', 0.0)
+    brl_pct = b_data.get('brl_pct', 0.0)
+    hr_odds = b_data.get('odds', '+500')
+    
+    # Logic matrix to evaluate Home Run, Total Bases, or Hit props
+    if ab >= 3 and avg >= 0.500 and slg >= 0.800:
+        return f"HR Over ({hr_odds}) - Elite SLG & Average"
+    elif ab >= 3 and avg >= 0.400:
+        return "1+ Hits (-200 equivalent) - High Baseline Contact Rate"
+    elif slg >= 0.700 and brl_pct >= 20.0:
+        return f"Over 1.5 Total Bases - Strong Power Metrics"
+    elif avg >= 0.300 and k_pct < 30.0:
+        return "1+ Hits - Consistent Contact Profile"
+    else:
+        return "Pass (No Safe Edge)"
 
 def filter_confirmed_lineups(optimizer_df, rotowire_lineups_df):
     player_col = 'player' if 'player' in optimizer_df.columns else 'Player'
@@ -58,11 +108,10 @@ fallback_data = [
         "slg": 0.000,
         "k_pct": 0.0,
         "brl_pct": 0.0,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+500",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -78,11 +127,10 @@ fallback_data = [
         "slg": 1.250,
         "k_pct": 25.0,
         "brl_pct": 33.3,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+251",
-        "is_confirmed": True,
-        "true_prop": "HR Over (+251)"
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -98,11 +146,10 @@ fallback_data = [
         "slg": 0.500,
         "k_pct": 50.0,
         "brl_pct": 0.0,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+475",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -118,31 +165,10 @@ fallback_data = [
         "slg": 0.000,
         "k_pct": 0.0,
         "brl_pct": 0.0,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+650",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Philadelphia Phillies",
-        "opp_pitcher": "Justin Wrobleski (LHP)",
-        "batting_order": 5,
-        "player": "E. Sosa",
-        "bats": "R",
-        "ab": 0,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.0,
-        "slg": 0.0,
-        "k_pct": 0.0,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+750",
-        "is_confirmed": False,
-        "true_prop": "Pass (HR)"
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -158,71 +184,10 @@ fallback_data = [
         "slg": 1.333,
         "k_pct": 66.7,
         "brl_pct": 100.0,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+625",
-        "is_confirmed": True,
-        "true_prop": "HR Over (+625)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Philadelphia Phillies",
-        "opp_pitcher": "Justin Wrobleski (LHP)",
-        "batting_order": 7,
-        "player": "J. Realmuto",
-        "bats": "R",
-        "ab": 2,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.000,
-        "slg": 0.000,
-        "k_pct": 50.0,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+650",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Philadelphia Phillies",
-        "opp_pitcher": "Justin Wrobleski (LHP)",
-        "batting_order": 8,
-        "player": "D. Hill",
-        "bats": "R",
-        "ab": 0,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.0,
-        "slg": 0.0,
-        "k_pct": 0.0,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+650",
-        "is_confirmed": False,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Philadelphia Phillies",
-        "opp_pitcher": "Justin Wrobleski (LHP)",
-        "batting_order": 9,
-        "player": "B. Stott",
-        "bats": "L",
-        "ab": 4,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.000,
-        "slg": 0.000,
-        "k_pct": 25.0,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+950",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -238,31 +203,10 @@ fallback_data = [
         "slg": 1.167,
         "k_pct": 33.3,
         "brl_pct": 25.0,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+251",
-        "is_confirmed": True,
-        "true_prop": "HR Over (+251)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 2,
-        "player": "A. Pages",
-        "bats": "R",
-        "ab": 3,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.000,
-        "slg": 0.000,
-        "k_pct": 0.0,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+600",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -278,31 +222,10 @@ fallback_data = [
         "slg": 0.429,
         "k_pct": 14.3,
         "brl_pct": 0.0,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+500",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 4,
-        "player": "M. Betts",
-        "bats": "R",
-        "ab": 8,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.000,
-        "slg": 0.000,
-        "k_pct": 25.0,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+700",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -318,91 +241,10 @@ fallback_data = [
         "slg": 1.000,
         "k_pct": 50.0,
         "brl_pct": 0.0,
-        "prop_type": "HRs",
+        "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+430",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 6,
-        "player": "K. Tucker",
-        "bats": "L",
-        "ab": 11,
-        "h": 1,
-        "hr": 1,
-        "avg": 0.091,
-        "slg": 0.364,
-        "k_pct": 27.3,
-        "brl_pct": 12.5,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+650",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 7,
-        "player": "T. Hernández",
-        "bats": "R",
-        "ab": 5,
-        "h": 1,
-        "hr": 1,
-        "avg": 0.200,
-        "slg": 0.800,
-        "k_pct": 40.0,
-        "brl_pct": 33.3,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+700",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 8,
-        "player": "D. Rushing",
-        "bats": "L",
-        "ab": 0,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.0,
-        "slg": 0.0,
-        "k_pct": 0.0,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+500",
-        "is_confirmed": False,
-        "true_prop": "Pass (HR)"
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 9,
-        "player": "T. Edman",
-        "bats": "SW",
-        "ab": 14,
-        "h": 3,
-        "hr": 0,
-        "avg": 0.214,
-        "slg": 0.214,
-        "k_pct": 35.7,
-        "brl_pct": 0.0,
-        "prop_type": "HRs",
-        "prop_line": 0.5,
-        "odds": "+1000",
-        "is_confirmed": True,
-        "true_prop": "Pass (HR)"
+        "is_confirmed": True
     }
 ]
 
@@ -429,9 +271,6 @@ if not p_col:
 
 if 'is_confirmed' not in df_raw.columns:
     df_raw['is_confirmed'] = True
-
-if 'true_prop' not in df_raw.columns:
-    df_raw['true_prop'] = "Pass (HR)"
 
 live_confirmed = fetch_live_rotowire_lineups()
 
@@ -468,7 +307,6 @@ teams = game_df["team"].unique().tolist() if "team" in game_df.columns else []
 st.markdown(f"## ⚔️ Game Matchup View: {selected_game}")
 
 col1, col2 = st.columns(2)
-
 selected_batter = None
 
 def render_team_column(team_name, container):
@@ -503,19 +341,39 @@ st.markdown("### 🔬 StarWorld Pitcher Arsenal & Batter Deep-Dive")
 if selected_batter:
     batter_row = game_df[game_df["player"] == selected_batter]
     if not batter_row.empty:
-        b_data = batter_row.iloc[0]
+        b_data = batter_row.iloc[0].to_dict()
+        
+        # Determine best true prop across HR, Hits, or Bases
+        best_prop = determine_best_prop(b_data)
+        b_data['true_prop'] = best_prop
+        
+        # Log to local learning loop history file automatically
+        log_learning_loop(
+            player_name=selected_batter,
+            team=b_data.get('team', ''),
+            opp_pitcher=b_data.get('opp_pitcher', ''),
+            rec_prop=best_prop,
+            metrics_dict={
+                "avg": b_data.get('avg', 0.0),
+                "slg": b_data.get('slg', 0.0),
+                "ab": int(b_data.get('ab', 0)),
+                "k_pct": b_data.get('k_pct', 0.0),
+                "brl_pct": b_data.get('brl_pct', 0.0)
+            }
+        )
+
         st.success(f"Loaded Deep-Dive for **{selected_batter}** ({b_data.get('team', '')}) vs {b_data.get('opp_pitcher', '')}")
         
-        true_prop_val = b_data.get('true_prop', 'Pass (HR)')
-        if "Pass" in true_prop_val:
-            st.warning(f"🎯 **StarWorld True Prop Recommendation:** `{true_prop_val}`")
+        if "Pass" in best_prop:
+            st.warning(f"🎯 **StarWorld True Prop Recommendation:** `{best_prop}`")
         else:
             st.balloons()
-            st.success(f"🔥 **StarWorld True Prop Recommendation:** `{true_prop_val}`")
+            st.success(f"🔥 **StarWorld True Prop Recommendation:** `{best_prop}`")
+            st.toast("Learning Loop Recorded: Successful playable prop recommendation saved!", icon="📊")
         
         col_a, col_b, col_c = st.columns(3)
         with col_a:
-            st.metric("Batting Average vs Pitcher Type", f"{b_data.get('get', b_data.get('avg', 0.0)):.3f}" if 'avg' in b_data else "0.000")
+            st.metric("Batting Average vs Pitcher Type", f"{b_data.get('avg', 0.0):.3f}")
             st.metric("At-Bats Sample Size", int(b_data.get('ab', 0)))
         with col_b:
             st.metric("Slugging Percentage", f"{b_data.get('slg', 0.0):.3f}")
