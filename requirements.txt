@@ -1,4 +1,4 @@
 streamlit
-requests
 pandas
-MLB-StatsAPI
+requests
+beautifulsoup4
