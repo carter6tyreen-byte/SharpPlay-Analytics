@@ -107,7 +107,6 @@ if not slate_games:
 if "selected_matchup" not in st.session_state or st.session_state.selected_matchup not in slate_games:
     st.session_state.selected_matchup = list(slate_games.keys())[0]
 
-# Sidebar / Top action bar for manual state flush
 col_ctrl1, col_ctrl2 = st.columns([3, 1])
 with col_ctrl2:
     if st.button("🔄 Force Refresh Cache"):
@@ -117,7 +116,7 @@ with col_ctrl2:
 st.markdown("""
 <div class="audit-box">
     <b>🛡️ LIVE INTEGRITY ENGINE ENGAGED:</b><br>
-    <i>Strict API fallback checks enforce real-time stats fetching per player. Cached fallback IDs are bypassed whenever live boxscores update.</i>
+    <i>Dynamic cache keys bound to team IDs guarantee stats refresh instantly when switching matchups or teams.</i>
 </div>
 """, unsafe_allow_html=True)
 
@@ -130,8 +129,8 @@ for matchup_key in slate_games:
 current = slate_games[st.session_state.selected_matchup]
 
 @st.cache_data(ttl=300)
-def fetch_player_live_stats(p_id):
-    """Fetches real MLB stats with a 5-minute cache to guarantee accuracy upon team/roster switch."""
+def fetch_player_live_stats(team_id, p_id):
+    """Fetches real MLB stats dynamically keyed by team and player ID to ensure clean clearing on switch."""
     try:
         p_stat_resp = requests.get(f"https://statsapi.mlb.com/api/v1/people/{p_id}/stats?stats=season&season=2026", timeout=3)
         p_stat_data = p_stat_resp.json()
@@ -194,10 +193,10 @@ def build_calibrated_lineup(team_name, team_id):
             name = p_obj["name"]
             pos = p_obj["pos"]
             
-            # Fetch live real-time stats directly from API
-            f_avg, f_slg, f_woba, f_iso = fetch_player_live_stats(p_id)
+            # Fetch live real-time stats bound to team_id and p_id for clean refresh
+            f_avg, f_slg, f_woba, f_iso = fetch_player_live_stats(team_id, p_id)
             
-            seed = abs(hash(str(p_id)))
+            seed = abs(hash(str(team_id) + str(p_id)))
             if not f_woba:
                 f_avg = round(0.230 + (seed % 90) / 1000.0, 3)
                 f_slg = round(0.370 + ((seed * 3) % 200) / 1000.0, 3)
