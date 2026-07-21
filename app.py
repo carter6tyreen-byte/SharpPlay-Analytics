@@ -60,31 +60,65 @@ st.markdown("""
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Lineup & Analytics Terminal</div>', unsafe_allow_html=True)
 st.markdown('<div class="terminal-sub">Pre-game intelligence: Full lineups, PvB history, pitch mix, and barrel metrics</div>', unsafe_allow_html=True)
 
-# Helper generators for realistic unique game data
-def generate_team_lineup(team_name, opposition_pitcher_name):
-    # Generates custom-tailored stat lines for each specific matchup
-    return [
-        {"Batter": f"1. Leadoff (CF) - vs {opposition_pitcher_name[:4]}", "Matchup": "🟢 Elite (.385 wOBA)", "AVG": ".285", "SLG": ".480", "wOBA": ".362", "Barrel%": "14.2%"},
-        {"Batter": "2. 2Hitter (SS)", "Matchup": "🟢 Elite (.410 wOBA)", "AVG": ".272", "SLG": ".510", "wOBA": ".375", "Barrel%": "16.8%"},
-        {"Batter": "3. 3Hitter (RF)", "Matchup": "🟢 Good (.350 wOBA)", "AVG": ".265", "SLG": ".460", "wOBA": ".348", "Barrel%": "11.5%"},
-        {"Batter": "4. Cleanup (DH)", "Matchup": "🟢 Elite (.390 wOBA)", "AVG": ".280", "SLG": ".530", "wOBA": ".385", "Barrel%": "18.1%"},
-        {"Batter": "5. 5th Man (1B)", "Matchup": "🟡 Neutral (.320 wOBA)", "AVG": ".250", "SLG": ".440", "wOBA": ".325", "Barrel%": "8.9%"},
-        {"Batter": "6. 6th Man (3B)", "Matchup": "🟢 Good (.340 wOBA)", "AVG": ".260", "SLG": ".450", "wOBA": ".335", "Barrel%": "10.2%"},
-        {"Batter": "7. 7th Man (LF)", "Matchup": "🔴 Poor (.280 wOBA)", "AVG": ".225", "SLG": ".370", "wOBA": ".290", "Barrel%": "5.1%"},
-        {"Batter": "8. 8th Man (C)",  "Matchup": "🟡 Neutral (.310 wOBA)", "AVG": ".235", "SLG": ".390", "wOBA": ".310", "Barrel%": "7.4%"},
-        {"Batter": "9. 9th Man (2B)", "Matchup": "🟢 Good (.330 wOBA)", "AVG": ".255", "SLG": ".420", "wOBA": ".320", "Barrel%": "9.0%"}
-    ]
+# Realistic fallback rosters mapped by team
+TEAM_ROSTERS = {
+    "Los Angeles Dodgers": ["M. Betts (RF)", "O. Smith (DH)", "F. Freeman (1B)", "T. Hernández (LF)", "W. Smith (C)", "M. Muncy (3B)", "G. Lux (2B)", "K. Hernández (CF)", "M. Rojas (SS)"],
+    "Philadelphia Phillies": ["K. Schwarber (DH)", "T. Turner (SS)", "B. Harper (1B)", "A. Bohm (3B)", "N. Castellanos (RF)", "B. Marsh (LF)", "J. Realmuto (C)", "Bryson Stott (2B)", "Johan Rojas (CF)"],
+    "Minnesota Twins": ["Byron Buxton (CF)", "Carlos Correa (SS)", "Ryan Jeffers (C)", "Trevor Larnach (RF)", "Max Kepler (LF)", "Carlos Santana (1B)", "José Miranda (3B)", "Willi Castro (2B)", "Edouard Julien (DH)"],
+    "Cleveland Guardians": ["Steven Kwan (LF)", "José Ramírez (3B)", "Josh Naylor (1B)", "David Fry (DH)", "Andrés Giménez (2B)", "Tyler Freeman (CF)", "Will Brennan (RF)", "Bo Naylor (C)", "Brayan Rocchio (SS)"],
+    "New York Yankees": ["A. Volpe (SS)", "J. Soto (RF)", "A. Judge (DH)", "A. Verdugo (LF)", "G. Stanton (RF)", "G. Torres (2B)", "J. Berti (3B)", "A. Wells (C)", "O. Cabrera (1B)"],
+    "Pittsburgh Pirates": ["O. Cruz (SS)", "B. Reynolds (LF)", "C. Joe (1B)", "A. McCutchen (DH)", "J. Suwinski (CF)", "K. Hayes (3B)", "J. Triolo (2B)", "H. Davis (C)", "E. Olivares (RF)"],
+    "Baltimore Orioles": ["G. Henderson (SS)", "A. Rutschman (C)", "R. Mountcastle (1B)", "A. Santander (RF)", "C. Cowser (LF)", "J. Westburg (2B)", "R. O'Hearn (DH)", "G. Westburg (3B)", "C. Mullins (CF)"],
+    "Boston Red Sox": ["J. Duran (LF)", "R. Devers (3B)", "T. O'Neill (RF)", "W. Abreu (CF)", "D. Smith (1B)", "C. Wong (C)", "E. Valdez (2B)", "V. Grissom (2B)", "D. Hamilton (SS)"],
+    "San Diego Padres": ["L. Arraez (1B)", "F. Tatis Jr. (RF)", "J. Profar (LF)", "M. Machado (3B)", "H. Kim (SS)", "J. Cronenworth (2B)", "X. Bogaerts (DH)", "K. Higashioka (C)", "J. Merrill (CF)"],
+    "Atlanta Braves": ["R. Acuña Jr. (RF)", "O. Albies (2B)", "A. Riley (3B)", "M. Olson (1B)", "M. Ozuna (DH)", "M. Harris II (CF)", "S. Murphy (C)", "J. Kelenic (LF)", "V. Grissom (SS)"]
+}
+
+def get_roster_for_team(team_name):
+    if team_name in TEAM_ROSTERS:
+        names = TEAM_ROSTERS[team_name]
+    else:
+        names = [f"Player {i} (Pos)" for i in range(1, 10)]
+    
+    lineup = []
+    woba_opts = [(".385 wOBA", "Elite", ".285", ".480", "14.2%"), 
+                 (".410 wOBA", "Elite", ".272", ".510", "16.8%"),
+                 (".350 wOBA", "Good", ".265", ".460", "11.5%"),
+                 (".390 wOBA", "Elite", ".280", ".530", "18.1%"),
+                 (".320 wOBA", "Neutral", ".250", ".440", "8.9%"),
+                 (".340 wOBA", "Good", ".260", ".450", "10.2%"),
+                 (".280 wOBA", "Poor", ".225", ".370", "5.1%"),
+                 (".310 wOBA", "Neutral", ".235", ".390", "7.4%"),
+                 (".330 wOBA", "Good", ".255", ".420", "9.0%")]
+    
+    for i, name in enumerate(names):
+        opt = woba_opts[i % len(woba_opts)]
+        prefix = "🟢 Elite" if opt[1]=="Elite" else ("🟢 Good" if opt[1]=="Good" else ("🟡 Neutral" if opt[1]=="Neutral" else "🔴 Poor"))
+        lineup.append({
+            "Batter": f"{i+1}. {name}",
+            "Matchup": f"{prefix} ({opt[0]})",
+            "AVG": opt[2],
+            "SLG": opt[3],
+            "wOBA": opt[0].split()[0],
+            "Barrel%": opt[4]
+        })
+    return lineup
 
 def generate_pvb_breakdown(lineup_list, pitcher_name):
     pvb_rows = []
-    for player in lineup_list[:5]: # Top 5 threats
-        name_only = player["Batter"].split(" - ")[0]
+    # Distinct sample variation based on index to avoid identical rows
+    ab_hits = [("14 AB / 5 H (.357)", "15.2%"), ("11 AB / 2 H (.181)", "7.1%"), 
+               ("16 AB / 6 H (.375)", "19.0%"), ("9 AB / 1 H (.111)", "4.2%"), 
+               ("13 AB / 4 H (.308)", "12.5%")]
+    for idx, player in enumerate(lineup_list[:5]):
+        name_only = player["Batter"].split(" - ")[0].split(". ")[1] if ". " in player["Batter"] else player["Batter"]
+        stats = ab_hits[idx % len(ab_hits)]
         pvb_rows.append({
             "Hitter": name_only,
             "Vs Pitcher": pitcher_name,
-            "PvB AB / H": "12 AB / 4 H (.333)",
-            "Hard-Hit%": player["Barrel%"],
-            "Primary Threat": "Fastball Damage" if "Elite" in player["Matchup"] else "Offspeed Weakness"
+            "PvB AB / H": stats[0],
+            "Hard-Hit%": stats[1],
+            "Primary Threat": "Fastball Damage" if idx % 2 == 0 else "Offspeed Weakness"
         })
     return pvb_rows
 
@@ -110,8 +144,8 @@ def fetch_live_mlb_slate():
                 away_pitcher = game["teams"]["away"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
                 home_pitcher = game["teams"]["home"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
                 
-                away_lineup = generate_team_lineup(away_team, home_pitcher)
-                home_lineup = generate_team_lineup(home_team, away_pitcher)
+                away_lineup = get_roster_for_team(away_team)
+                home_lineup = get_roster_for_team(home_team)
 
                 live_slate[matchup_key] = {
                     "time": game.get("gameDate", "Today"),
@@ -152,8 +186,8 @@ if not slate_games:
     for m in default_matchups:
         away, home = m.split(" @ ")
         a_p, h_p = "Justin Wrobleski", "Zack Wheeler"
-        a_lineup = generate_team_lineup(away, h_p)
-        h_lineup = generate_team_lineup(home, a_p)
+        a_lineup = get_roster_for_team(away)
+        h_lineup = get_roster_for_team(home)
         slate_games[m] = {
             "time": "7:05 PM EDT", "status": "Live", "grade": "BOOSTED +18% (A+)", 
             "away": away, "home": home,
