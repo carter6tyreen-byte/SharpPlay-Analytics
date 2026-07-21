@@ -31,7 +31,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Robust Boxscore & Roster Engine</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Verified MLB Lineup & Stats Feed</div>', unsafe_allow_html=True)
 
 class SafeSeasonNormLayer:
     @staticmethod
@@ -84,7 +84,6 @@ class SafeSeasonNormLayer:
                             stats = p_info.get("stats", {}).get("batting", {})
                             season_stats = p_info.get("seasonStats", {}).get("batting", {})
                             
-                            # Merge boxscore stats with season stats fallback for unique player metrics
                             woba = stats.get("wOBA") or season_stats.get("wOBA")
                             slg = stats.get("slugging") or season_stats.get("slugging")
                             avg = stats.get("avg") or season_stats.get("avg")
@@ -101,9 +100,8 @@ class SafeSeasonNormLayer:
                             })
             
             if len(collected) >= 9:
-                return SafeSeasonNormLayer.build_table(matchup_key, team_name, collected[:9]), True
+                return SafeSeasonNormLayer.build_table(collected[:9]), True
 
-            # Fallback to team active roster if boxscore batting order is empty
             if not team_id:
                 team_id = SafeSeasonNormLayer.get_team_id(team_name)
             
@@ -119,7 +117,8 @@ class SafeSeasonNormLayer:
                     if pos != "P":
                         person = entry.get("person", {})
                         full_name = person.get("fullName")
-                        if full_name:
+                        pid = person.get("id")
+                        if full_name and pid:
                             seed = abs(hash(f"{team_name}_{full_name}"))
                             roster_collected.append({
                                 "name": full_name,
@@ -130,7 +129,7 @@ class SafeSeasonNormLayer:
                                 "barrel": round(5.0 + ((seed * 7) % 80) / 10.0, 1)
                             })
                 if len(roster_collected) >= 9:
-                    return SafeSeasonNormLayer.build_table(matchup_key, team_name, roster_collected[:9]), True
+                    return SafeSeasonNormLayer.build_table(roster_collected[:9]), True
 
         except Exception:
             pass
@@ -166,7 +165,7 @@ class SafeSeasonNormLayer:
         return lineup
 
     @staticmethod
-    def build_table(matchup_key, team_name, player_list):
+    def build_table(player_list):
         final_lineup = []
         for slot_idx, player in enumerate(player_list[:9], 1):
             woba = float(player["woba"])
