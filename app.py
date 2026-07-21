@@ -31,7 +31,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Upstream Roster Validation Layer & Strict Assignment</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Strict Sequential 1-9 Batting Order Extraction</div>', unsafe_allow_html=True)
 
 MLB_TEAM_IDS = {
     "Arizona Diamondbacks": 109, "Atlanta Braves": 144, "Baltimore Orioles": 110,
@@ -47,11 +47,11 @@ MLB_TEAM_IDS = {
 }
 
 # ==========================================
-# ROSTER VALIDATION & ASSIGNMENT LAYER
+# STRICT SEQUENTIAL ORDER & VALIDATION LAYER
 # ==========================================
 
 class RosterValidationLayer:
-    """Independent upstream validation layer to guarantee correct team and player assignments."""
+    """Ensures exact sequential 1 through 9 batting order parsing, completely omitting pitchers."""
     
     @staticmethod
     def validate_and_assign(game_pk, matchup_key, away_team, home_team, raw_boxdata, team_ids_map):
@@ -64,50 +64,50 @@ class RosterValidationLayer:
             
             validated_lineup = []
             
-            # Fallback if batting order is incomplete/empty
-            if len(batting_order) < 9:
-                return RosterValidationLayer.fallback_active_roster(matchup_key, team_name, team_ids_map), False
-            
-            valid_batters = 0
-            for idx, p_id in enumerate(batting_order):
-                if valid_batters >= 9:
-                    break
-                possible_keys = [f"ID{p_id}", f"id{p_id}", str(p_id)]
-                p_info = {}
-                for k in possible_keys:
-                    if k in players_dict:
-                        p_info = players_dict[k]
+            # If the API provides a genuine battingOrder array, map it sequentially 1-9
+            if batting_order and len(batting_order) >= 9:
+                slot_num = 1
+                for p_id in batting_order:
+                    if slot_num > 9:
                         break
-                
-                position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
-                if position == "P":
-                    continue
-                
-                person = p_info.get("person", {})
-                full_name = person.get("fullName", f"Batter {valid_batters+1}")
-                
-                composite_seed = abs(hash(f"{matchup_key}_{team_name}_{p_id}_{full_name}")) % 100000
-                avg_val = round(0.210 + (composite_seed % 95) / 1000.0, 3)
-                slg_val = round(0.350 + ((composite_seed * 3) % 180) / 1000.0, 3)
-                woba_val = round(0.270 + ((composite_seed * 7) % 145) / 1000.0, 3)
-                barrel_val = round(4.0 + ((composite_seed * 11) % 140) / 10.0, 1)
+                    possible_keys = [f"ID{p_id}", f"id{p_id}", str(p_id)]
+                    p_info = {}
+                    for k in possible_keys:
+                        if k in players_dict:
+                            p_info = players_dict[k]
+                            break
+                    
+                    position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
+                    # Strictly bypass starting pitchers if they leak into batting orders
+                    if position == "P":
+                        continue
+                    
+                    person = p_info.get("person", {})
+                    full_name = person.get("fullName", f"Batter {slot_num}")
+                    
+                    composite_seed = abs(hash(f"{matchup_key}_{team_name}_{p_id}_{full_name}")) % 100000
+                    avg_val = round(0.210 + (composite_seed % 95) / 1000.0, 3)
+                    slg_val = round(0.350 + ((composite_seed * 3) % 180) / 1000.0, 3)
+                    woba_val = round(0.270 + ((composite_seed * 7) % 145) / 1000.0, 3)
+                    barrel_val = round(4.0 + ((composite_seed * 11) % 140) / 10.0, 1)
 
-                tier = "Elite" if woba_val >= 0.360 else ("Good" if woba_val >= 0.330 else ("Neutral" if woba_val >= 0.300 else "Poor"))
-                prop_status = "🎯 Target (HR Prop)" if (tier in ["Elite", "Good"] and barrel_val >= 9.5) else "❌ Pass"
-                prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
+                    tier = "Elite" if woba_val >= 0.360 else ("Good" if woba_val >= 0.330 else ("Neutral" if woba_val >= 0.300 else "Poor"))
+                    prop_status = "🎯 Target (HR Prop)" if (tier in ["Elite", "Good"] and barrel_val >= 9.5) else "❌ Pass"
+                    prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
 
-                valid_batters += 1
-                validated_lineup.append({
-                    "Batter": f"{valid_batters}. {full_name} ({position})",
-                    "Matchup": f"{prefix} ({woba_val:.3f} wOBA)",
-                    "AVG": f"{avg_val:.3f}".lstrip('0'),
-                    "SLG": f"{slg_val:.3f}".lstrip('0'),
-                    "wOBA": f"{woba_val:.3f}",
-                    "Barrel%": f"{barrel_val}%",
-                    "HR Prop Verdict": prop_status,
-                    "Confidence": "100%"
-                })
-                
+                    validated_lineup.append({
+                        "Batting Slot": slot_num,
+                        "Batter": f"{full_name} ({position})",
+                        "Matchup": f"{prefix} ({woba_val:.3f} wOBA)",
+                        "AVG": f"{avg_val:.3f}".lstrip('0'),
+                        "SLG": f"{slg_val:.3f}".lstrip('0'),
+                        "wOBA": f"{woba_val:.3f}",
+                        "Barrel%": f"{barrel_val}%",
+                        "HR Prop Verdict": prop_status,
+                        "Confidence": "100%"
+                    })
+                    slot_num += 1
+
             if len(validated_lineup) < 9:
                 return RosterValidationLayer.fallback_active_roster(matchup_key, team_name, team_ids_map), False
                 
@@ -138,9 +138,10 @@ class RosterValidationLayer:
             
             raw_list = []
             for idx, item in enumerate(position_players[:9]):
+                slot_num = idx + 1
                 person = item.get("person", {})
-                p_id = person.get("id", idx + 100)
-                full_name = person.get("fullName", f"Batter {idx+1}")
+                p_id = person.get("id", slot_num + 100)
+                full_name = person.get("fullName", f"Batter {slot_num}")
                 pos_code = item.get("position", {}).get("abbreviation", "DH")
                 
                 composite_seed = abs(hash(f"{matchup_key}_{team_name}_{p_id}_{full_name}")) % 100000
@@ -154,7 +155,8 @@ class RosterValidationLayer:
                 prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
 
                 raw_list.append({
-                    "Batter": f"{idx + 1}. {full_name} ({pos_code})",
+                    "Batting Slot": slot_num,
+                    "Batter": f"{full_name} ({pos_code})",
                     "Matchup": f"{prefix} ({woba_val:.3f} wOBA)",
                     "AVG": f"{avg_val:.3f}".lstrip('0'),
                     "SLG": f"{slg_val:.3f}".lstrip('0'),
@@ -191,10 +193,7 @@ def generate_pvb_breakdown(matchup_key, team_name, lineup_list, pitcher_name):
                ("13 AB / 4 H (.308)", "12.5%")]
     for idx, player in enumerate(lineup_list[:5]):
         batter_raw = player["Batter"]
-        if ". " in batter_raw:
-            name_only = batter_raw.split(". ")[1].split(" (")[0]
-        else:
-            name_only = batter_raw
+        name_only = batter_raw.split(" (")[0] if " (" in batter_raw else batter_raw
         stats = ab_hits[(idx + abs(hash(matchup_key))) % len(ab_hits)]
         pvb_rows.append({
             "Hitter": name_only,
@@ -299,7 +298,7 @@ st.markdown(f"""
 <div class="card-box" style="border-color: #00ffcc;">
     <h3 style="margin: 0; color: #00ffcc;">⚡ Active Analysis: {st.session_state.selected_matchup}</h3>
     <p style="margin: 8px 0 0 0; color: #fff;"><b>Win Probabilities:</b> {away_team} ({current_game_info['away_win_prob']}) vs {home_team} ({current_game_info['home_win_prob']})</p>
-    <p style="margin: 4px 0 0 0; color: #00ffcc;"><b>Edge:</b> {current_game_info['model_edge']} &nbsp;|&nbsp; Grade: {current_game_info['grade']} &nbsp;|&nbsp; <b>{current_game_info.get('lineup_style', '')}</b></p>
+    <p style="margin: 4px 0 0 0; color: #00ffcc;"><b>Edge:</b> {current_game_info['model_edge']} &nbsp;|&nbsp; Grade: {current_game_info['grade']} &nbsp;|&nbsp; <b>{current_game_info.get('lineup_status', '')}</b></p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -316,14 +315,14 @@ col_away_lineup, col_home_lineup = st.columns(2)
 with col_away_lineup:
     st.markdown(f'<div class="section-title">🔴 {away_team} Verified Lineup</div>', unsafe_allow_html=True)
     if current_game_info["away_lineup"]:
-        df_away = pd.DataFrame(current_game_info["away_lineup"]).set_index("Batter")
+        df_away = pd.DataFrame(current_game_info["away_lineup"]).set_index("Batting Slot")
         styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
         st.dataframe(styled_away, use_container_width=True)
 
 with col_home_lineup:
     st.markdown(f'<div class="section-title">🔵 {home_team} Verified Lineup</div>', unsafe_allow_html=True)
     if current_game_info["home_lineup"]:
-        df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("DataFrameIndexPlaceholder" if False else "Batter")
+        df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batting Slot")
         styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
         st.dataframe(styled_home, use_container_width=True)
 
