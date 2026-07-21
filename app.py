@@ -75,7 +75,7 @@ TEAM_ROSTERS = {
 
 def get_fallback_roster(team_name):
     names = TEAM_ROSTERS.get(team_name, [
-        f"{team_name[:3].upper()} Batter {i} (DH)" for i in range(1, 10)
+        f"{team_name} Batter {i} (DH)" for i in range(1, 10)
     ])
     lineup = []
     woba_opts = [
@@ -181,24 +181,33 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
         res = requests.get(box_url, timeout=4)
         box_data = res.json()
         
+        teams_data = box_data.get("teams", {})
+        
         def parse_side(side_key, team_name):
-            players_dict = box_data.get("teams", {}).get(side_key, {}).get("players", {})
-            batting_order = box_data.get("teams", {}).get(side_key, {}).get("battingOrder", [])
+            side_data = teams_data.get(side_key, {})
+            players_dict = side_data.get("players", {})
+            batting_order = side_data.get("battingOrder", [])
             
             lineup = []
             if not batting_order:
-                batting_ids = box_data.get("teams", {}).get(side_key, {}).get("batters", [])
-                batting_order = batting_ids[:9]
+                batting_order = side_data.get("batters", [])[:9]
 
             for idx, p_id in enumerate(batting_order[:9]):
-                p_key = f"ID{p_id}" if f"ID{p_id}" in players_dict else [k for k in players_dict if str(players_dict[k].get("person", {}).get("id")) == str(p_id)]
-                p_info = players_dict.get(p_key[0], {}) if isinstance(p_key, list) and p_key else players_dict.get(p_key, {})
-                
+                p_key = f"ID{p_id}"
+                p_info = players_dict.get(p_key)
+                if not p_info:
+                    for k, v in players_dict.items():
+                        if str(v.get("person", {}).get("id")) == str(p_id):
+                            p_info = v
+                            break
+                if not p_info:
+                    p_info = {}
+
                 person = p_info.get("person", {})
                 name = person.get("fullName")
                 if not name:
-                    fallback_names = TEAM_ROSTERS.get(team_name, [])
-                    name = fallback_names[idx] if idx < len(fallback_names) else f"Player {idx+1}"
+                    fallback_list = TEAM_ROSTERS.get(team_name, [])
+                    name = fallback_list[idx].split(" (")[0] if idx < len(fallback_list) else f"{team_name} Player {idx+1}"
                 
                 position = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
                 season_stats = p_info.get("seasonStats", {}).get("batting", {})
@@ -229,6 +238,7 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
                 lineup.append(fallback_full[idx])
             return lineup
 
+        # Explicitly map away and home data cleanly preventing cross-contamination
         away_roster = parse_side("away", away_team)
         home_roster = parse_side("home", home_team)
         return away_roster, home_roster
@@ -306,7 +316,7 @@ with col_away_lineup:
     st.dataframe(styled_away, width='stretch')
 
 with col_home_lineup:
-    st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)`, unsafe_allow_html=True)
     df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batter")
     styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
     st.dataframe(styled_home, width='stretch')
