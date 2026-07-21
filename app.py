@@ -6,7 +6,7 @@ st.set_page_config(page_title="SharpPLAY Dashboard", layout="wide")
 
 st.title("⚾ SharpPLAY Live Lineup & HR Prop Verdicts")
 
-# Load odds matrix data safely
+# Load structured odds matrix data
 try:
     with open("odds_matrix.json", "r") as f:
         data = json.load(f)
@@ -21,8 +21,19 @@ df = pd.DataFrame(data)
 
 st.subheader("Active Tracking Matrix & Evaluated Props")
 
-# Use container width configuration compatible with current Streamlit builds
-st.dataframe(df, use_container_width=True)
+# Display full master table cleanly with all columns visible
+st.dataframe(
+    df, 
+    column_config={
+        "player": "Batter",
+        "team": "Team",
+        "hr_1_odds": "1+ HR Odds",
+        "hr_2_odds": "2+ HR Odds",
+        "last_5_total": "Last 5 HR"
+    },
+    use_container_width=True,
+    hide_index=True
+)
 
 st.sidebar.header("Filter Options")
 unique_teams = df["team"].unique() if "team" in df.columns else ["Colorado Rockies"]
@@ -32,4 +43,14 @@ filtered_df = df[df["team"] == selected_team] if "team" in df.columns else df
 st.subheader(f"Lineup for {selected_team}")
 
 display_columns = [col for col in ['player', 'hr_1_odds', 'hr_2_odds', 'last_5_total'] if col in filtered_df.columns]
-st.table(filtered_df[display_columns])
+st.dataframe(
+    filtered_df[display_columns],
+    column_config={
+        "player": "Batter",
+        "hr_1_odds": "1+ HR Odds",
+        "hr_2_odds": "2+ HR Odds",
+        "last_5_total": "Last 5 HR"
+    },
+    use_container_width=True,
+    hide_index=True
+)
