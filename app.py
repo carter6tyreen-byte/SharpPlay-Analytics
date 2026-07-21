@@ -144,7 +144,7 @@ with col_away_lineup:
         {"Bat": "9. T. Lipscomb (DH)", "Matchup": "🔴 Poor (.280 wOBA)", "AVG": ".235", "SLG": ".380", "wOBA": ".295", "Hard%": "33.5%"}
     ]
     df_away = pd.DataFrame(away_lineup_data)
-    styled_away = df_away.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA'])
+    styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA'])
     st.dataframe(styled_away, use_container_width=True, hide_index=True)
 
 with col_home_lineup:
@@ -161,7 +161,7 @@ with col_home_lineup:
         {"Bat": "9. P. Severino (DH)", "Matchup": "🔴 Poor (.275 wOBA)", "AVG": ".230", "SLG": ".375", "wOBA": ".288", "Hard%": "32.0%"}
     ]
     df_home = pd.DataFrame(home_lineup_data)
-    styled_home = df_home.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA'])
+    styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA'])
     st.dataframe(styled_home, use_container_width=True, hide_index=True)
 
 st.markdown("---")
