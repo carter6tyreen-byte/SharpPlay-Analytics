@@ -70,7 +70,7 @@ TEAM_ROSTERS = {
     "Pittsburgh Pirates": ["O. Cruz (SS)", "B. Reynolds (LF)", "C. Joe (1B)", "A. McCutchen (DH)", "J. Suwinski (CF)", "K. Hayes (3B)", "J. Triolo (2B)", "H. Davis (C)", "E. Olivares (RF)"],
     "Baltimore Orioles": ["G. Henderson (SS)", "A. Rutschman (C)", "R. Mountcastle (1B)", "A. Santander (RF)", "C. Cowser (LF)", "J. Westburg (2B)", "R. O'Hearn (DH)", "G. Westburg (3B)", "C. Mullins (CF)"],
     "Boston Red Sox": ["J. Duran (LF)", "R. Devers (3B)", "T. O'Neill (RF)", "W. Abreu (CF)", "D. Smith (1B)", "C. Wong (C)", "E. Valdez (2B)", "V. Grissom (2B)", "D. Hamilton (SS)"],
-    "San Diego Padres": ["L. Arraez (1B)", "F. Tatis Jr. (RF)", "J. Profar (LF)", "M. Machado (3B)", "H. Kim (SS)", "J. Cronenworth (2B)", "X. Bogaerts (DX)", "K. Higashioka (C)", "J. Merrill (CF)"],
+    "San Diego Padres": ["L. Arraez (1B)", "F. Tatis Jr. (RF)", "J. Profar (LF)", "M. Machado (3B)", "H. Kim (SS)", "J. Cronenworth (2B)", "X. Bogaerts (DH)", "K. Higashioka (C)", "J. Merrill (CF)"],
     "Atlanta Braves": ["R. Acuña Jr. (RF)", "O. Albies (2B)", "A. Riley (3B)", "M. Olson (1B)", "M. Ozuna (DH)", "M. Harris II (CF)", "S. Murphy (C)", "J. Kelenic (LF)", "V. Grissom (SS)"]
 }
 
@@ -94,7 +94,7 @@ def get_roster_for_team(team_name):
         opt = woba_opts[i % len(woba_opts)]
         woba_str, tier, avg, slg, barrel_val = opt[0], opt[1], opt[2], opt[3], opt[4]
         
-        # Accountability rule: Strict HR prop criteria (Elite/Good matchup + Barrel% >= 10.0%)
+        # Strict accountability rule: Must be Elite or Good AND Barrel% >= 10.0%
         if tier in ["Elite", "Good"] and barrel_val >= 10.0:
             prop_status = "🎯 Target (HR Prop)"
         else:
