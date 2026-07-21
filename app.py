@@ -346,7 +346,7 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+700",
-        "is_confirmed": true
+        "is_confirmed": True
     },
     {
         "game": "PHI @ LAD",
@@ -365,7 +365,7 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+500",
-        "is_confirmed": false
+        "is_confirmed": False
     },
     {
         "game": "PHI @ LAD",
@@ -384,7 +384,7 @@ fallback_data = [
         "prop_type": "HRs",
         "prop_line": 0.5,
         "odds": "+1000",
-        "is_confirmed": true
+        "is_confirmed": True
     }
 ]
 
@@ -470,11 +470,11 @@ def render_team_column(team_name, container):
 
 if len(teams) >= 2:
     with col1:
-        render_team_column(teams[0], st)
+        render_team_column(teams[0], col1)
     with col2:
-        render_team_column(teams[1], st)
+        render_team_column(teams[1], col2)
 elif len(teams) == 1:
-    render_team_column(teams[0], st)
+    render_team_column(teams[0], col1)
 
 st.markdown("---")
 st.markdown("### 🔬 StarWorld Pitcher Arsenal & Batter Deep-Dive")
