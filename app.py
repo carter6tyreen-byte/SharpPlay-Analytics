@@ -57,31 +57,49 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Lineup & Analytics Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Tap a game below to load lineups, weather impact, and batter pitch-mix metrics</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Tap a game below to load matchups, starting pitcher arsenals, and batter pitch-mix metrics</div>', unsafe_allow_html=True)
 
 # Initialize Session State
 if "selected_matchup" not in st.session_state:
     st.session_state.selected_matchup = "Washington Nationals @ Colorado Rockies"
 
-# Game Slate Data Dictionary
+# Game Slate Data Dictionary with Detailed Pitcher Arsenals
 slate_games = {
     "Washington Nationals @ Colorado Rockies": {
-        "time": "8:40 PM EDT", "weather": "84°F | Wind 12 mph Out to CF", "grade": "BOOSTED +18% (A+)", "away": "Washington Nationals", "home": "Colorado Rockies"
+        "time": "8:40 PM EDT", "weather": "84°F | Wind 12 mph Out to CF", "grade": "BOOSTED +18% (A+)", "away": "Washington Nationals", "home": "Colorado Rockies",
+        "away_starter": "Washington Starter", "home_starter": "Colorado Starter",
+        "away_arsenal": {"4-Seam Fastball": "45%", "Curveball": "30%", "Slider": "15%", "Sinker": "10%"},
+        "home_arsenal": {"Fastball": "42%", "Slider": "28%", "Changeup": "18%", "Curveball": "12%"}
     },
     "San Diego Padres @ Atlanta Braves": {
-        "time": "BOT 5th", "weather": "72°F | Wind 8 mph In", "grade": "Neutral (C)", "away": "San Diego Padres", "home": "Atlanta Braves"
+        "time": "BOT 5th", "weather": "72°F | Wind 8 mph In", "grade": "Neutral (C)", "away": "San Diego Padres", "home": "Atlanta Braves",
+        "away_starter": "Padres Starter", "home_starter": "Braves Starter",
+        "away_arsenal": {"Sinker": "40%", "Slider": "30%", "Changeup": "20%", "4-Seam Fastball": "10%"},
+        "home_arsenal": {"4-Seam Fastball": "50%", "Slider": "25%", "Splitter": "15%", "Curveball": "10%"}
     },
     "New York Mets @ Milwaukee Brewers": {
-        "time": "TOP 3RD", "weather": "Dome (Closed)", "grade": "Neutral (C)", "away": "New York Mets", "home": "Milwaukee Brewers"
+        "time": "TOP 3RD", "weather": "Dome (Closed)", "grade": "Neutral (C)", "away": "New York Mets", "home": "Milwaukee Brewers",
+        "away_starter": "Mets Starter", "home_starter": "Brewers Starter",
+        "away_arsenal": {"4-Seam Fastball": "48%", "Sweeper": "25%", "Splitter": "17%", "Curveball": "10%"},
+        "home_arsenal": {"Sinker": "42%", "Slider": "32%", "Changeup": "16%", "Curveball": "10%"}
     },
     "Cincinnati Reds @ Seattle Mariners": {
-        "time": "9:40 PM EDT", "weather": "58°F | Wind 11 mph In", "grade": "SUPPRESSED -12% (D)", "away": "Cincinnati Reds", "home": "Seattle Mariners"
+        "time": "9:40 PM EDT", "weather": "58°F | Wind 11 mph In", "grade": "SUPPRESSED -12% (D)", "away": "Cincinnati Reds", "home": "Seattle Mariners",
+        "away_starter": "Reds Starter", "home_starter": "Mariners Starter",
+        "away_arsenal": {"Fastball": "44%", "Slider": "30%", "Curveball": "16%", "Changeup": "10%"},
+        "home_arsenal": {"4-Seam Fastball": "52%", "Sweeper": "26%", "Sinker": "12%", "Curveball": "10%"}
     },
     "Boston Red Sox @ New York Yankees": {
-        "time": "7:05 PM EDT", "weather": "78°F | Wind 9 mph Out to RF", "grade": "BOOSTED +8% (B+)", "away": "Boston Red Sox", "home": "New York Yankees"
+        "time": "7:05 PM EDT", "weather": "78°F | Wind 9 mph Out to RF", "grade": "BOOSTED +8% (B+)", "away": "Boston Red Sox", "home": "New York Yankees",
+        "away_starter": "Red Sox Starter", "home_starter": "Yankees Starter",
+        "away_arsenal": {"Fastball": "40%", "Slider": "30%", "Changeup": "20%", "Curveball": "10%"},
+        "home_arsenal": {"4-Seam Fastball": "46%", "Slider": "30%", "Sinker": "14%", "Changeup": "10%"}
     },
     "Los Angeles Dodgers @ San Francisco Giants": {
-        "time": "10:10 PM EDT", "weather": "55°F | Wind 14 mph Out from Bay", "grade": "SUPPRESSED -15% (D-)", "away": "Los Angeles Dodgers", "home": "San Francisco Giants"
+        "time": "10:10 PM EDT", "weather": "55°F | Wind 14 mph Out from Bay", "grade": "SUPPRESSED -15% (D-)", "away": "Los Angeles Dodgers", "home": "San Francisco Giants",
+        "away_starter": "Dodgers Starter", "home_starter": "Giants Starter",
+        "away_arsenal": {"4-Seam Fastball": "45%", "Slider": "30%", "Curveball": "15%", "Sinker": "10%"},
+        "home_arsenal": {"Sinker": "38%", "Slider": "32%", "Changeup": "20%", "Curveball": "10%"}
     }
 }
 
@@ -144,25 +162,45 @@ with col_home_lineup:
 
 st.markdown("---")
 
-# INTERACTIVE BATTER VS PITCH MIX SECTION
-st.markdown('<div class="section-title">🔍 Batter vs. Pitch Mix Performance Lookup</div>', unsafe_allow_html=True)
+# PITCHER PITCH MIX VS BATTER HITTING MIX COMPARISON
+st.markdown('<div class="section-title">📊 Pitcher Pitch Mix vs. Batter Hitting Performance</div>', unsafe_allow_html=True)
+st.markdown("<p style='color: #9ba1a6; font-size: 0.85rem;'>Select a batter to match their performance metrics directly against the starting pitcher's exact pitch frequency.</p>", unsafe_allow_html=True)
 
-# Combine all players from both teams into a single list for selection
-all_batters = [row["Bat"] for row in away_lineup_data] + [row["Bat"] for row in home_lineup_data]
+# Selection controls
+col_sel1, col_sel2 = st.columns(2)
+with col_sel1:
+    all_batters = [row["Bat"] for row in away_lineup_data] + [row["Bat"] for row in home_lineup_data]
+    selected_batter = st.selectbox("Select Batter:", options=all_batters)
 
-selected_batter = st.selectbox("Select Batter to Analyze vs Pitch Mix:", options=all_batters)
+with col_sel2:
+    # Determine opposing pitcher arsenal based on whether batter is away or home team
+    is_away_batter = selected_batter in [row["Bat"] for row in away_lineup_data]
+    opposing_pitcher_name = home_team + " Starter" if is_away_batter else away_team + " Starter"
+    opposing_arsenal = current_game_info["home_arsenal"] if is_away_batter else current_game_info["away_arsenal"]
+    
+    st.markdown(f"""
+    <div style="background-color: #161b22; padding: 8px 12px; border-radius: 8px; border: 1px solid #222632; margin-top: 24px;">
+        <span style="color: #9ba1a6; font-size: 0.8rem;">Opposing Starting Pitcher:</span><br/>
+        <b style="color: #00ffcc; font-size: 0.95rem;">{opposing_pitcher_name}</b>
+    </div>
+    """, unsafe_allow_html=True)
 
-# Mock sample pitch-mix data generator based on selected batter
-pitch_mix_breakdown = [
-    {"Pitch Type": "4-Seam Fastball", "Usage%": "42%", "BA": ".295", "SLG": ".530", "wOBA": ".385", "Whiff%": "21.4%"},
-    {"Pitch Type": "Slider / Sweeper", "Usage%": "28%", "BA": ".230", "SLG": ".390", "wOBA": ".302", "Whiff%": "34.2%"},
-    {"Pitch Type": "Curveball", "Usage%": "15%", "BA": ".215", "SLG": ".350", "wOBA": ".280", "Whiff%": "38.9%"},
-    {"Pitch Type": "Changeup / Splitter", "Usage%": "15%", "BA": ".270", "SLG": ".440", "wOBA": ".340", "Whiff%": "24.5%"}
-]
+# Build direct comparison dataframe matching pitcher pitch mix against batter stats
+comparison_rows = []
+for pitch, usage in opposing_arsenal.items():
+    # Mocking sample dependent stats matching the pitch type
+    comparison_rows.append({
+        "Pitch Type": pitch,
+        "Pitcher Usage%": usage,
+        "Batter BA": ".285" if "Fastball" in pitch else ".230",
+        "Batter SLG": ".510" if "Fastball" in pitch else ".390",
+        "Batter wOBA": ".370" if "Fastball" in pitch else ".305",
+        "Whiff%": "18.5%" if "Fastball" in pitch else "34.0%"
+    })
 
-st.markdown(f"<p style='color: #00ffcc; font-weight: 600;'>Performance Breakdown for {selected_batter}:</p>", unsafe_allow_html=True)
-df_pitch_mix = pd.DataFrame(pitch_mix_breakdown)
-st.dataframe(df_pitch_mix, use_container_width=True, hide_index=True)
+df_comparison = pd.DataFrame(comparison_rows)
+st.markdown(f"<p style='color: #00ffcc; font-weight: 600; margin-top: 15px;'>Matchup Matrix: {selected_batter} vs. {opposing_pitcher_name} Arsenal</p>", unsafe_allow_html=True)
+st.dataframe(df_comparison, use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
@@ -170,19 +208,21 @@ st.markdown("---")
 st.markdown('<div class="section-title">🎯 Starting Pitcher Matchup Breakdown</div>', unsafe_allow_html=True)
 p_cols = st.columns(2)
 with p_cols[0]:
+    away_mix_str = ", ".join([f"{k} ({v})" for k, v in current_game_info["away_arsenal"].items()])
     st.markdown(f"""
     <div class="card-box">
         <h4 style="color: #00ffcc; margin-top:0;">Away Starter ({away_team})</h4>
         <p style="color: #9ba1a6; font-size: 0.85rem; margin-bottom: 5px;">ERA: 3.84 | WHIP: 1.22 | K/9: 8.9 | FIP: 4.10</p>
-        <p style="font-size: 0.85rem;"><b>Pitch Arsenal:</b> 4-Seam (45%), Curveball (30%), Slider (15%), Sinker (10%)</p>
+        <p style="font-size: 0.85rem;"><b>Pitch Arsenal:</b> {away_mix_str}</p>
     </div>
     """, unsafe_allow_html=True)
 with p_cols[1]:
+    home_mix_str = ", ".join([f"{k} ({v})" for k, v in current_game_info["home_arsenal"].items()])
     st.markdown(f"""
     <div class="card-box">
         <h4 style="color: #00ffcc; margin-top:0;">Home Starter ({home_team})</h4>
         <p style="color: #9ba1a6; font-size: 0.85rem; margin-bottom: 5px;">ERA: 4.45 | WHIP: 1.34 | K/9: 8.2 | FIP: 4.35</p>
-        <p style="font-size: 0.85rem;"><b>Pitch Arsenal:</b> Fastball (42%), Slider (28%), Changeup (18%), Curveball (12%)</p>
+        <p style="font-size: 0.85rem;"><b>Pitch Arsenal:</b> {home_mix_str}</p>
     </div>
     """, unsafe_allow_html=True)
 
