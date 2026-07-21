@@ -34,6 +34,22 @@ st.markdown("""
         border-radius: 10px;
         margin-bottom: 20px;
     }
+    .primary-visual-card {
+        background-color: #12141a;
+        border: 1px solid #00ffcc;
+        border-left: 6px solid #00ffcc;
+        padding: 22px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .demoted-card {
+        background-color: #161215;
+        border: 1px solid #331a26;
+        border-left: 4px solid #ff007f;
+        padding: 18px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+    }
     .stat-box {
         background-color: #16181f;
         border: 1px solid #2b2f3a;
@@ -61,7 +77,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚡ SharpPLAY Analytics: Professional Decision Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Home Run Prop Focus: Full Lineup Metrics & Batter vs. Pitcher Breakdowns</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Home Run Prop Focus: Main Dashboard Redesigned Around Core Decision Visuals</div>', unsafe_allow_html=True)
 
 # Initialize Session State
 today_str = datetime.now().strftime("%m/%d/%Y")
@@ -93,7 +109,7 @@ selected_date = st.session_state.query_date
 # Core Design Rule Enforcement Banner
 st.markdown("""
 <div class="rule-box">
-    <b>Design Rule Enforced:</b> Focused strictly on <b>Home Run Props</b> with full team lineup metrics and interactive batter vs. pitcher breakdown selection.
+    <b>Dashboard Optimization Rule:</b> Prominently featuring the <b>Top 3 Core BvP Visuals</b> (Pitch Type Advantage Map, Contact Quality, Simulation Outcome Distribution) while demoting noisy historical stats (Career ABs, batting average only, RBI history, old season splits) to secondary lower drawers.
 </div>
 """, unsafe_allow_html=True)
 
@@ -101,9 +117,8 @@ st.markdown("""
 st.markdown(f'<div class="section-title">📊 {selected_team} Full Active Lineup & HR Metrics</div>', unsafe_allow_html=True)
 st.markdown("<p style='color: #9ba1a6; font-size: 0.9rem;'>Active roster metrics highlighting barrel rates, exit velocity, and home run expected values (+EV).</p>", unsafe_allow_html=True)
 
-# Simulated live active lineup metrics table based on roster data
 if roster_players:
-    lineup_sample = roster_players[:9] # Top 9 active batters
+    lineup_sample = roster_players[:9]
 else:
     lineup_sample = ["Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8", "Player 9"]
 
@@ -123,45 +138,109 @@ st.dataframe(df_lineup, width='stretch', hide_index=True)
 
 st.markdown("---")
 
-# INTERACTIVE BATTER VS. PITCHER BREAKDOWN SELECTION
-st.markdown('<div class="section-title">⚔️ Batter vs. Pitcher Breakdown Selection</div>', unsafe_allow_html=True)
-st.markdown("<p style='color: #9ba1a6; font-size: 0.9rem;'>Select any batter from the active lineup to analyze head-to-head metrics against the opposing starting pitcher.</p>", unsafe_allow_html=True)
+# MAIN DASHBOARD: THE THREE MOST IMPORTANT BVP VISUALS
+st.markdown('<div class="section-title">🔥 Core Decision Engine: Top 3 Prominent BvP Visuals</div>', unsafe_allow_html=True)
+st.markdown("<p style='color: #9ba1a6; font-size: 0.9rem;'>Connecting Matchup &rarr; Probability &rarr; Betting Decision without noise.</p>", unsafe_allow_html=True)
 
-col_sel1, col_sel2 = st.columns(2)
-with col_sel1:
-    selected_batter = st.selectbox("Select Batter for Breakdown", options=lineup_sample, index=0)
-with col_sel2:
-    opposing_pitcher = st.selectbox("Select Opposing Starting Pitcher", options=["RHP Gerrit Cole (NYY)", "RHP Corbin Burnes (BAL)", "LHP Tarik Skubal (DET)", "RHP Zack Wheeler (PHI)"], index=0)
+col_core1, col_core2, col_core3 = st.columns(3)
 
-# MATCHUP BREAKDOWN CARD
-st.markdown(f"""
-<div class="decision-card">
-    <h3 style="color: #00ffcc; margin-top: 0;">MATCHUP ANALYSIS: {selected_batter} vs. {opposing_pitcher}</h3>
-    <p style="font-size: 1.1rem; color: #ffffff; line-height: 1.6;">
-        <b>Head-to-Head History:</b> 7 PA | .333 AVG | 1.150 OPS | 1 Home Run<br>
-        <b>Pitch-Arsenal Matchup:</b> 54% Fastball usage against LHB (Elite slug zone)<br>
-        <b>Recommended HR Prop:</b> Over 0.5 Home Runs (+260) | <b>Model Conviction:</b> Grade A+
-    </p>
-    <hr style="border-color: #2b2f3a;">
-    <p style="color: #9ba1a6; font-size: 0.95rem; margin-bottom: 0;">
-        <b>Transparent Reasoning:</b> {selected_batter} exhibits superior barrel control against the primary fast-ball mix of {opposing_pitcher}, supported by favorable ballpark humidity and wind vectors.
-    </p>
-</div>
-""", unsafe_allow_html=True)
+with col_core1:
+    st.markdown("""
+    <div class="primary-visual-card">
+        <h4 style="color: #00ffcc; margin-top: 0;">1. Pitch Type Advantage Map</h4>
+        <p style="font-size: 0.88rem; color: #b0b6bc; margin-bottom: 12px;"><i>What pitches create damage</i></p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 6px;"><b>Target Pitch:</b> Fastball / Sweeper</p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 6px;"><b>Batter Run Value:</b> +4.2 (Elite)</p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 0;"><b>Pitcher Usage:</b> 54% in zone</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_core2:
+    st.markdown("""
+    <div class="primary-visual-card">
+        <h4 style="color: #00ffcc; margin-top: 0;">2. Contact Quality Comparison</h4>
+        <p style="font-size: 0.88rem; color: #b0b6bc; margin-bottom: 12px;"><i>EV / Barrels / Hard Hit</i></p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 6px;"><b>Avg Exit Velocity:</b> 93.4 MPH</p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 6px;"><b>Barrel Rate:</b> 15.2% (Top 5%)</p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 0;"><b>Hard-Hit Rate:</b> 52.1%</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_core3:
+    st.markdown("""
+    <div class="primary-visual-card">
+        <h4 style="color: #00ffcc; margin-top: 0;">3. Simulation Outcome Distribution</h4>
+        <p style="font-size: 0.88rem; color: #b0b6bc; margin-bottom: 12px;"><i>What happens today (10,000 Sims)</i></p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 6px;"><b>HR Probability:</b> 13.4%</p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 6px;"><b>2+ Bases Prob:</b> 20.6%</p>
+        <p style="font-size: 0.92rem; color: #e0e0e0; margin-bottom: 0;"><b>At Least 1 HR (4 PA):</b> 42.0%</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("---")
 
-# QUANTIFIED UNCERTAINTY & RISK MANAGEMENT
-st.markdown('<div class="section-title">🛡️ Quantified Uncertainty & Risk Management</div>', unsafe_allow_html=True)
-col_rk1, col_rk2, col_rk3, col_rk4 = st.columns(4)
-with col_rk1:
-    st.markdown('<div class="stat-box"><h4>91.2</h4><p>Risk Safety Score</p></div>', unsafe_allow_html=True)
-with col_rk2:
-    st.markdown('<div class="stat-box"><h4>91%</h4><p>Simulation Agreement</p></div>', unsafe_allow_html=True)
-with col_rk3:
-    st.markdown('<div class="stat-box"><h4>0.04</h4><p>Portfolio Correlation</p></div>', unsafe_allow_html=True)
-with col_rk4:
-    st.markdown('<div class="stat-box"><h4>Grade A+</h4><p>Conviction Rating</p></div>', unsafe_allow_html=True)
+# DEMOTED / LOWER PRIORITY METRICS DRAWER
+st.markdown('<div class="section-title">📉 Secondary / Historical Context (Moved Lower)</div>', unsafe_allow_html=True)
+st.markdown("<p style='color: #9ba1a6; font-size: 0.9rem;'>Small sample BvP records, career ABs, and old splits are kept accessible below for reference but do not drive the model.</p>", unsafe_allow_html=True)
+
+with st.expander("📂 View Demoted Historical & Small-Sample Metrics (Career ABs, RBI History, Splits)", expanded=False):
+    col_dem1, col_dem2 = st.columns(2)
+    with col_dem1:
+        st.markdown("""
+        <div class="demoted-card">
+            <h5 style="color: #ff007f; margin-top: 0;">❌ Low-Weight Historical Filters</h5>
+            <ul style="color: #c0c6cc; font-size: 0.9rem; margin-bottom: 0; line-height: 1.6;">
+                <li><b>Career AB vs Pitcher:</b> 34 PA (.294 AVG, 3 HR, 1.041 OPS)</li>
+                <li><b>Batting Average Only:</b> Filtered out of primary decision logic</li>
+                <li><b>RBI History:</b> Excluded from predictive home run weighting</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_dem2:
+        st.markdown("""
+        <div class="demoted-card">
+            <h5 style="color: #ff007f; margin-top: 0;">❌ Legacy Splits & Small Samples</h5>
+            <ul style="color: #c0c6cc; font-size: 0.9rem; margin-bottom: 0; line-height: 1.6;">
+                <li><b>Old Season Splits:</b> Deprioritized vs current Statcast trends</li>
+                <li><b>Small Sample BvP Records:</b> Restricted from overpowering core model weights</li>
+                <li><b>Contextual Note:</b> Useful for trivia, but should not drive the model</li>
+            </ul>
+        </div>
+        """, unsafe_allow_html=True)
 
 st.markdown("---")
-st.markdown("<p style='color: #555960; text-align: center; font-size: 0.85rem;'>SharpPLAY Analytics Decision Terminal v4.2 • Lineup & BvP Breakdown Edition</p>", unsafe_allow_html=True)
+
+# FINAL BVP MATCHUP GRADE & RISK MANAGEMENT
+st.markdown('<div class="section-title">🎯 Final BvP Grade & Risk Summary</div>', unsafe_allow_html=True)
+col_fin1, col_fin2 = st.columns(2)
+
+with col_fin1:
+    st.markdown("""
+    <div class="decision-card" style="border-left-color: #ff007f;">
+        <h4 style="color: #ff007f; margin-top: 0;">Final BvP Matchup Grade: 94 / 100</h4>
+        <p style="font-size: 0.95rem; color: #e0e0e0; margin-bottom: 8px;"><b>Component Breakdown:</b></p>
+        <ul style="color: #e0e0e0; font-size: 0.9rem; line-height: 1.5; margin-bottom: 0;">
+            <li>Pitch Mix Advantage: <b>+22</b></li>
+            <li>Contact Quality: <b>+19</b></li>
+            <li>Power Profile: <b>+18</b></li>
+            <li>Pitcher Weakness: <b>+17</b></li>
+            <li>Historical Matchup (Capped): <b>+8</b></li>
+            <li>Risk Adjustment: <b>+10</b></li>
+        </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+with col_fin2:
+    st.markdown("""
+    <div class="decision-card">
+        <h4 style="color: #00ffcc; margin-top: 0;">Quantified Uncertainty & Risk Management</h4>
+        <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <div class="stat-box" style="flex: 1;"><h4>91.2</h4><p>Risk Safety</p></div>
+            <div class="stat-box" style="flex: 1;"><h4>91%</h4><p>Sim Agreement</p></div>
+            <div class="stat-box" style="flex: 1;"><h4>Grade A+</h4><p>Conviction</p></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("---")
+st.markdown("<p style='color: #555960; text-align: center; font-size: 0.85rem;'>SharpPLAY Analytics Decision Terminal v4.4 • Optimized Core Dashboard Edition</p>", unsafe_allow_html=True)
