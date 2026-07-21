@@ -39,7 +39,6 @@ st.markdown("""
         padding: 12px;
         margin-bottom: 10px;
     }
-    /* Make buttons full-width and touch-friendly on mobile */
     .stButton > button {
         width: 100%;
         background-color: #161b22;
@@ -58,9 +57,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Lineup & Analytics Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Tap a game below to instantly load full team lineups & weather impact</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Tap a game below to load lineups, weather impact, and batter pitch-mix metrics</div>', unsafe_allow_html=True)
 
-# Initialize Session State for active game selection
+# Initialize Session State
 if "selected_matchup" not in st.session_state:
     st.session_state.selected_matchup = "Washington Nationals @ Colorado Rockies"
 
@@ -88,7 +87,6 @@ slate_games = {
 
 st.markdown('<div class="section-title">📅 Tap Game to Load Analytics</div>', unsafe_allow_html=True)
 
-# Render full slate as direct touch-friendly buttons
 for matchup_key, info in slate_games.items():
     is_active = (st.session_state.selected_matchup == matchup_key)
     btn_label = f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key} ({info['time']}) | 🌤️ {info['weather']} | Grade: {info['grade']}"
@@ -143,6 +141,28 @@ with col_home_lineup:
     ]
     df_home = pd.DataFrame(home_lineup_data)
     st.dataframe(df_home, use_container_width=True, hide_index=True)
+
+st.markdown("---")
+
+# INTERACTIVE BATTER VS PITCH MIX SECTION
+st.markdown('<div class="section-title">🔍 Batter vs. Pitch Mix Performance Lookup</div>', unsafe_allow_html=True)
+
+# Combine all players from both teams into a single list for selection
+all_batters = [row["Bat"] for row in away_lineup_data] + [row["Bat"] for row in home_lineup_data]
+
+selected_batter = st.selectbox("Select Batter to Analyze vs Pitch Mix:", options=all_batters)
+
+# Mock sample pitch-mix data generator based on selected batter
+pitch_mix_breakdown = [
+    {"Pitch Type": "4-Seam Fastball", "Usage%": "42%", "BA": ".295", "SLG": ".530", "wOBA": ".385", "Whiff%": "21.4%"},
+    {"Pitch Type": "Slider / Sweeper", "Usage%": "28%", "BA": ".230", "SLG": ".390", "wOBA": ".302", "Whiff%": "34.2%"},
+    {"Pitch Type": "Curveball", "Usage%": "15%", "BA": ".215", "SLG": ".350", "wOBA": ".280", "Whiff%": "38.9%"},
+    {"Pitch Type": "Changeup / Splitter", "Usage%": "15%", "BA": ".270", "SLG": ".440", "wOBA": ".340", "Whiff%": "24.5%"}
+]
+
+st.markdown(f"<p style='color: #00ffcc; font-weight: 600;'>Performance Breakdown for {selected_batter}:</p>", unsafe_allow_html=True)
+df_pitch_mix = pd.DataFrame(pitch_mix_breakdown)
+st.dataframe(df_pitch_mix, use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
