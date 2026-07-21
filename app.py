@@ -159,7 +159,7 @@ def color_code_metrics(val):
         return 'background-color: #4a1525; color: #ff4d4d;'
     return 'background-color: #12141a; color: #ffffff;'
 
-st.dataframe(df_pit.style.applymap(color_code_metrics, subset=['AVG', 'SLG', 'ISO', 'HR', 'BRL%', 'HH%']), use_container_width=True, hide_index=True)
+st.dataframe(df_pit.style.map(color_code_metrics, subset=['AVG', 'SLG', 'ISO', 'HR', 'BRL%', 'HH%']), use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
@@ -175,7 +175,7 @@ batter_data = [
 ]
 
 df_bat = pd.DataFrame(batter_data)
-st.dataframe(df_bat.style.applymap(color_code_metrics, subset=['AVG', 'SLG', 'ISO', 'HR', 'BRL%', 'HH%']), use_container_width=True, hide_index=True)
+st.dataframe(df_bat.style.map(color_code_metrics, subset=['AVG', 'SLG', 'ISO', 'HR', 'BRL%', 'HH%']), use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
