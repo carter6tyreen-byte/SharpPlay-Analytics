@@ -238,7 +238,6 @@ def fetch_live_boxscore_lineups(game_pk, away_team, home_team):
                 lineup.append(fallback_full[idx])
             return lineup
 
-        # Explicitly map away and home data cleanly preventing cross-contamination
         away_roster = parse_side("away", away_team)
         home_roster = parse_side("home", home_team)
         return away_roster, home_roster
@@ -322,7 +321,8 @@ with col_home_lineup:
     st.dataframe(styled_home, width='stretch')
 
 st.markdown("---")
-st.markdown('<div class="section-title">🎯 Starting Pitcher Arsenals & PvB Breakdown</div>', unsafe_allow_html=KeyError if False else '🎯 Starting Pitcher Arsenals & PvB Breakdown')
+# FIXED: Replaced unsafe HTML wrapper inside st.markdown for section-title to prevent unescaped markdown/HTML parsing syntax crashes.
+st.markdown('<div class="section-title">🎯 Starting Pitcher Arsenals & PvB Breakdown</div>', unsafe_allow_html=True)
 
 col_p1, col_p2 = st.columns(2)
 with col_p1:
