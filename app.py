@@ -30,7 +30,6 @@ def log_learning_loop(player_name, team, opp_pitcher, rec_prop, metrics_dict):
         except Exception:
             history = []
     
-    # Avoid duplicate exact consecutive logs for the same user session view
     if not history or history[-1].get("player") != player_name or history[-1].get("recommendation") != rec_prop:
         history.append(entry)
         try:
@@ -47,7 +46,6 @@ def determine_best_prop(b_data):
     brl_pct = b_data.get('brl_pct', 0.0)
     hr_odds = b_data.get('odds', '+500')
     
-    # Logic matrix to evaluate Home Run, Total Bases, or Hit props
     if ab >= 3 and avg >= 0.500 and slg >= 0.800:
         return f"HR Over ({hr_odds}) - Elite SLG & Average"
     elif ab >= 3 and avg >= 0.400:
@@ -307,50 +305,62 @@ teams = game_df["team"].unique().tolist() if "team" in game_df.columns else []
 st.markdown(f"## ⚔️ Game Matchup View: {selected_game}")
 
 col1, col2 = st.columns(2)
-selected_batter = None
 
+# Independent state storage keys per team column to prevent widget key collisions
 def render_team_column(team_name, container):
-    global selected_batter
     with container:
         team_df = game_df[game_df["team"] == team_name]
         opp_sp = team_df.iloc[0].get("opp_pitcher", "TBD") if not team_df.empty else "TBD"
         st.subheader(f"{team_name}")
         st.caption(f"Facing Opposing Pitcher: {opp_sp}")
         
+        selected_batter = None
         if not team_df.empty:
             display_cols = ["batting_order", "player", "bats", "ab", "h", "hr", "avg", "slg", "odds"]
             available_cols = [c for c in display_cols if c in team_df.columns]
             st.dataframe(team_df[available_cols], use_container_width=True, hide_index=True)
             
             player_list = team_df["player"].tolist()
-            chosen = st.selectbox(f"Select Batter ({team_name})", player_list, key=f"sel_{team_name}")
+            chosen = st.selectbox(f"Select Batter ({team_name})", player_list, key=f"sel_batter_{team_name}")
             if chosen:
                 selected_batter = chosen
+        return selected_batter
+
+sel_batter_col1 = None
+sel_batter_col2 = None
 
 if len(teams) >= 2:
     with col1:
-        render_team_column(teams[0], col1)
+        sel_batter_col1 = render_team_column(teams[0], col1)
     with col2:
-        render_team_column(teams[1], col2)
+        sel_batter_col2 = render_team_column(teams[1], col2)
 elif len(teams) == 1:
-    render_team_column(teams[0], col1)
+    sel_batter_col1 = render_team_column(teams[0], col1)
+
+# Determine active selection using Streamlit session state widget keys directly
+active_batter = None
+active_team = None
+
+for t in teams:
+    key_name = f"sel_batter_{t}"
+    if key_name in st.session_state and st.session_state[key_name]:
+        active_batter = st.session_state[key_name]
+        active_team = t
 
 st.markdown("---")
 st.markdown("### 🔬 StarWorld Pitcher Arsenal & Batter Deep-Dive")
 
-if selected_batter:
-    batter_row = game_df[game_df["player"] == selected_batter]
+if active_batter and active_team:
+    batter_row = game_df[(game_df["player"] == active_batter) & (game_df["team"] == active_team)]
     if not batter_row.empty:
         b_data = batter_row.iloc[0].to_dict()
         
-        # Determine best true prop across HR, Hits, or Bases
         best_prop = determine_best_prop(b_data)
         b_data['true_prop'] = best_prop
         
-        # Log to local learning loop history file automatically
         log_learning_loop(
-            player_name=selected_batter,
-            team=b_data.get('team', ''),
+            player_name=active_batter,
+            team=active_team,
             opp_pitcher=b_data.get('opp_pitcher', ''),
             rec_prop=best_prop,
             metrics_dict={
@@ -362,14 +372,14 @@ if selected_batter:
             }
         )
 
-        st.success(f"Loaded Deep-Dive for **{selected_batter}** ({b_data.get('team', '')}) vs {b_data.get('opp_pitcher', '')}")
+        st.success(f"Loaded Deep-Dive for **{active_batter}** ({active_team}) vs {b_data.get('opp_pitcher', '')}")
         
         if "Pass" in best_prop:
             st.warning(f"🎯 **StarWorld True Prop Recommendation:** `{best_prop}`")
         else:
             st.balloons()
             st.success(f"🔥 **StarWorld True Prop Recommendation:** `{best_prop}`")
-            st.toast("Learning Loop Recorded: Successful playable prop recommendation saved!", icon="📊")
+            st.toast("Learning Loop Recorded: Playable prop recommendation saved!", icon="📊")
         
         col_a, col_b, col_c = st.columns(3)
         with col_a:
