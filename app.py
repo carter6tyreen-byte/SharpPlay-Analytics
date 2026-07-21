@@ -61,34 +61,51 @@ class StrictLiveMLBEngine:
             sched_data = sched_resp.json()
             
             dates = sched_data.get("dates", [])
-            if not dates:
-                return None
-                
-            games = dates[0].get("games", [])
-            if not games:
-                return None
-                
-            game_pk = games[0].get("gamePk")
-            box_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
-            box_resp = requests.get(box_url, timeout=3)
-            box_data = box_resp.json()
+            players_dict = {}
+            batting_order = []
             
-            teams_data = box_data.get("teams", {})
-            target_side = None
-            for side in ["away", "home"]:
-                s_name = teams_data.get(side, {}).get("team", {}).get("name", "")
-                if s_name.lower() == team_name.lower():
-                    target_side = side
-                    break
-            
-            if not target_side:
-                return None
+            if dates and dates[0].get("games"):
+                game_pk = dates[0]["games"][0].get("gamePk")
+                box_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
+                box_resp = requests.get(box_url, timeout=3)
+                box_data = box_resp.json()
+                teams_data = box_data.get("teams", {})
                 
-            side_info = teams_data.get(target_side, {})
-            batting_order = side_info.get("battingOrder", [])
-            players_dict = side_info.get("players", {})
-            
-            # CRITICAL FIX: Only accept IDs explicitly present in official battingOrder array or valid non-pitcher starters
+                target_side = None
+                for side in ["away", "home"]:
+                    s_name = teams_data.get(side, {}).get("team", {}).get("name", "")
+                    if s_name.lower() == team_name.lower():
+                        target_side = side
+                        break
+                
+                if target_side:
+                    side_info = teams_data.get(target_side, {})
+                    batting_order = side_info.get("battingOrder", [])
+                    players_dict = side_info.get("players", {})
+
+            # Fallback to team active roster if boxscore feed doesn't have batting order yet
+            if not batting_order or len(batting_order) == 0:
+                roster_url = f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster?rosterType=active"
+                roster_resp = requests.get(roster_url, timeout=3)
+                roster_data = roster_resp.json()
+                roster_list = roster_data.get("roster", [])
+                
+                candidate_ids = []
+                for entry in roster_list:
+                    pos_code = entry.get("position", {}).get("abbreviation", "").upper()
+                    # Exclude pitchers, collect hitters
+                    if pos_code and pos_code != "P":
+                        p_id = entry.get("person", {}).get("id")
+                        if p_id:
+                            candidate_ids.append(p_id)
+                            # Pre-fill players_dict structure for seamless loop processing
+                            players_dict[f"ID{p_id}"] = {
+                                "person": {"fullName": entry.get("person", {}).get("fullName")},
+                                "primaryPosition": {"abbreviation": pos_code}
+                            }
+                batting_order = candidate_ids[:9]
+
+            # Final filter to guarantee zero pitchers enter the batting slots
             valid_batting_order = []
             for p_id in batting_order:
                 p_key = f"ID{p_id}"
@@ -97,18 +114,6 @@ class StrictLiveMLBEngine:
                 if pos != "P":
                     valid_batting_order.append(p_id)
 
-            # If battingOrder is missing or empty, filter strictly for actual non-pitcher batters from the roster
-            if not valid_batting_order:
-                for p_key, p_info in players_dict.items():
-                    pos = p_info.get("primaryPosition", {}).get("abbreviation", "").upper()
-                    # Exclude pitchers and require actual hitter position code
-                    if pos and pos != "P":
-                        p_id_clean = p_key.replace("ID", "")
-                        if p_id_clean not in valid_batting_order:
-                            valid_batting_order.append(p_id_clean)
-                    if len(valid_batting_order) >= 9:
-                        break
-
             ordered_players = []
             for slot_idx, p_id_raw in enumerate(valid_batting_order[:9]):
                 p_id = int(p_id_raw) if str(p_id_raw).isdigit() else p_id_raw
@@ -116,10 +121,9 @@ class StrictLiveMLBEngine:
                 p_data = players_dict.get(p_key, {})
                 person = p_data.get("person", {})
                 name = person.get("fullName")
-                pos = p_data.get("primaryPosition", {}).get("abbreviation", "DH")
+                pos = p_data.get("primaryPosition", {}).get("abbreviation", "UTIL")
                 
-                # Double-check safety guard: Hard skip if position is pitcher
-                if pos == "P" or not name:
+                if not name or pos == "P":
                     continue
 
                 f_avg, f_slg, f_woba, f_barrel = None, None, None, None
