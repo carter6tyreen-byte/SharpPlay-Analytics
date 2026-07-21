@@ -7,7 +7,7 @@ st.set_page_config(page_title="SharpPLAY Dashboard", layout="wide")
 
 st.title("⚾ SharpPLAY Live Lineup & HR Prop Verdicts")
 
-# Load real data from odds_matrix.json or provide structured fallback defaults
+# Load real data from odds_matrix.json or fallback to defaults
 json_path = "odds_matrix.json"
 if os.path.exists(json_path):
     try:
@@ -18,7 +18,6 @@ if os.path.exists(json_path):
 else:
     data = []
 
-# Fallback if file is empty or missing so the UI is immediately populated and responsive
 if not data:
     data = [
         {"slot": 1, "player": "Hunter Goodman", "team": "Colorado Rockies", "matchup": "Poor (0.318 wOBA)", "verdict": "Pass", "confidence": "83%", "hr_1_odds": "+186", "hr_2_odds": "+1500", "last_5_total": 3},
@@ -38,18 +37,22 @@ st.header(f"Starting Lineup Analysis: {selected_team}")
 
 filtered_df = df[df["team"] == selected_team] if "team" in df.columns else df
 
+# Comprehensive column config mapping to ensure every column displays cleanly with custom labels
+column_configuration = {
+    "slot": st.column_config.NumberColumn("Lineup Slot", format="%d"),
+    "player": "Batter",
+    "team": "Team",
+    "matchup": "Matchup Rating",
+    "verdict": "Model Verdict",
+    "confidence": "Confidence",
+    "hr_1_odds": "1+ HR Odds",
+    "hr_2_odds": "2+ HR Odds",
+    "last_5_total": st.column_config.NumberColumn("Last 5 HR", format="%d")
+}
+
 st.dataframe(
     filtered_df,
-    column_config={
-        "slot": "Lineup Slot",
-        "player": "Batter",
-        "matchup": "Matchup Rating",
-        "verdict": "Model Verdict",
-        "confidence": "Confidence",
-        "hr_1_odds": "1+ HR",
-        "hr_2_odds": "2+ HR",
-        "last_5_total": "Last 5 HR"
-    },
+    column_config=column_configuration,
     use_container_width=True,
     hide_index=True
 )
@@ -58,17 +61,7 @@ st.markdown("---")
 st.subheader("Full Master Tracking Matrix")
 st.dataframe(
     df, 
-    column_config={
-        "slot": "Slot",
-        "player": "Batter",
-        "team": "Team",
-        "matchup": "Matchup Rating",
-        "verdict": "Model Verdict",
-        "confidence": "Confidence",
-        "hr_1_odds": "1+ HR",
-        "hr_2_odds": "2+ HR",
-        "last_5_total": "Last 5 HR"
-    },
+    column_config=column_configuration,
     use_container_width=True,
     hide_index=True
 )
