@@ -88,11 +88,18 @@ class StrictLiveMLBEngine:
             batting_order = side_info.get("battingOrder", [])
             players_dict = side_info.get("players", {})
             
+            # Strict fallback: Exclude pitchers entirely from filling batting slots
             if not batting_order:
-                batting_order = [p_key.replace("ID", "") for p_key, p_info in players_dict.items() if p_info.get("stats", {}).get("batting") or p_info.get("gameStatus", {}).get("isStarter")]
-            
+                candidate_ids = []
+                for p_key, p_info in players_dict.items():
+                    pos = p_info.get("primaryPosition", {}).get("abbreviation", "").upper()
+                    if pos != "P":
+                        p_id_clean = p_key.replace("ID", "")
+                        candidate_ids.append(p_id_clean)
+                batting_order = candidate_ids[:9]
+
             if not batting_order:
-                batting_order = [p_key.replace("ID", "") for p_key in players_dict.keys()][:9]
+                batting_order = [p_key.replace("ID", "") for p_key, p_info in players_dict.items() if p_info.get("primaryPosition", {}).get("abbreviation", "").upper() != "P"][:9]
 
             ordered_players = []
             for slot_idx, p_id_raw in enumerate(batting_order[:9]):
@@ -101,8 +108,12 @@ class StrictLiveMLBEngine:
                 p_data = players_dict.get(p_key, {})
                 person = p_data.get("person", {})
                 name = person.get("fullName")
-                pos = p_data.get("primaryPosition", {}).get("abbreviation", "DH")
+                pos = p_data.get("primaryPosition", {}).get("abbreviation", "UTIL")
                 
+                # Safety guard: Skip if player is a pitcher or missing name
+                if pos == "P" or not name:
+                    continue
+
                 f_avg, f_slg, f_woba, f_barrel = None, None, None, None
                 if p_id:
                     try:
@@ -132,18 +143,17 @@ class StrictLiveMLBEngine:
                 prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
                 confidence_val = 82 + (slot_idx % 3) + (seed % 12)
 
-                if name:
-                    ordered_players.append({
-                        "Batting Slot": slot_idx + 1,
-                        "Batter": f"{name} ({pos})",
-                        "Matchup": f"{prefix} ({f_woba:.3f} wOBA)",
-                        "AVG": f"{f_avg:.3f}".lstrip('0'),
-                        "SLG": f"{f_slg:.3f}".lstrip('0'),
-                        "wOBA": f"{f_woba:.3f}",
-                        "Barrel%": f"{f_barrel}%",
-                        "HR Prop Verdict": prop_status,
-                        "Confidence": f"{confidence_val}%"
-                    })
+                ordered_players.append({
+                    "Batting Slot": len(ordered_players) + 1,
+                    "Batter": f"{name} ({pos})",
+                    "Matchup": f"{prefix} ({f_woba:.3f} wOBA)",
+                    "AVG": f"{f_avg:.3f}".lstrip('0'),
+                    "SLG": f"{f_slg:.3f}".lstrip('0'),
+                    "wOBA": f"{f_woba:.3f}",
+                    "Barrel%": f"{f_barrel}%",
+                    "HR Prop Verdict": prop_status,
+                    "Confidence": f"{confidence_val}%"
+                })
             
             if len(ordered_players) > 0:
                 return ordered_players[:9]
@@ -202,7 +212,6 @@ for matchup_key in slate_games:
 
 current = slate_games[st.session_state.selected_matchup]
 
-# Lazy-load lineups ONLY for the active matchup to prevent UI lockups and callback loops
 current_away_lineup = StrictLiveMLBEngine.fetch_live_lineup(current["away"], current["away_id"])
 current_home_lineup = StrictLiveMLBEngine.fetch_live_lineup(current["home"], current["home_id"])
 
