@@ -88,29 +88,37 @@ class StrictLiveMLBEngine:
             batting_order = side_info.get("battingOrder", [])
             players_dict = side_info.get("players", {})
             
-            # Strict fallback: Exclude pitchers entirely from filling batting slots
-            if not batting_order:
-                candidate_ids = []
+            # CRITICAL FIX: Only accept IDs explicitly present in official battingOrder array or valid non-pitcher starters
+            valid_batting_order = []
+            for p_id in batting_order:
+                p_key = f"ID{p_id}"
+                p_info = players_dict.get(p_key, {})
+                pos = p_info.get("primaryPosition", {}).get("abbreviation", "").upper()
+                if pos != "P":
+                    valid_batting_order.append(p_id)
+
+            # If battingOrder is missing or empty, filter strictly for actual non-pitcher batters from the roster
+            if not valid_batting_order:
                 for p_key, p_info in players_dict.items():
                     pos = p_info.get("primaryPosition", {}).get("abbreviation", "").upper()
-                    if pos != "P":
+                    # Exclude pitchers and require actual hitter position code
+                    if pos and pos != "P":
                         p_id_clean = p_key.replace("ID", "")
-                        candidate_ids.append(p_id_clean)
-                batting_order = candidate_ids[:9]
-
-            if not batting_order:
-                batting_order = [p_key.replace("ID", "") for p_key, p_info in players_dict.items() if p_info.get("primaryPosition", {}).get("abbreviation", "").upper() != "P"][:9]
+                        if p_id_clean not in valid_batting_order:
+                            valid_batting_order.append(p_id_clean)
+                    if len(valid_batting_order) >= 9:
+                        break
 
             ordered_players = []
-            for slot_idx, p_id_raw in enumerate(batting_order[:9]):
+            for slot_idx, p_id_raw in enumerate(valid_batting_order[:9]):
                 p_id = int(p_id_raw) if str(p_id_raw).isdigit() else p_id_raw
                 p_key = f"ID{p_id}"
                 p_data = players_dict.get(p_key, {})
                 person = p_data.get("person", {})
                 name = person.get("fullName")
-                pos = p_data.get("primaryPosition", {}).get("abbreviation", "UTIL")
+                pos = p_data.get("primaryPosition", {}).get("abbreviation", "DH")
                 
-                # Safety guard: Skip if player is a pitcher or missing name
+                # Double-check safety guard: Hard skip if position is pitcher
                 if pos == "P" or not name:
                     continue
 
