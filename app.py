@@ -408,7 +408,6 @@ if not data:
 
 df_raw = pd.DataFrame(data)
 
-# Ensure required columns exist safely regardless of json format
 p_col = 'player' if 'player' in df_raw.columns else ('Player' if 'Player' in df_raw.columns else None)
 if not p_col:
     df_raw['player'] = "Unknown"
@@ -422,6 +421,8 @@ live_confirmed = fetch_live_rotowire_lineups()
 rotowire_ref_df = df_raw[[p_col, 'is_confirmed']].copy()
 rotowire_ref_df.rename(columns={p_col: 'player'}, inplace=True)
 
+# Only apply live scraped filter if live_confirmed actually returned players; 
+# otherwise, retain the default/fallback confirmation status from the dataset.
 if live_confirmed:
     rotowire_ref_df['is_confirmed'] = rotowire_ref_df['player'].apply(
         lambda x: ''.join([c for c in str(x) if c.isalpha() or c == ' ']).strip().lower() in live_confirmed
