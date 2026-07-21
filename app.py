@@ -1,55 +1,3 @@
-import streamlit as st
-import pandas as pd
-import requests
-from datetime import datetime
-
-# Page configuration
-st.set_page_config(page_title="SharpPLAY Analytics Terminal", layout="wide")
-
-st.markdown("""
-    <style>
-    .stApp { background-color: #0b0c10; color: #ffffff; }
-    .terminal-header { font-size: 1.5rem; font-weight: 700; color: #ffffff; text-align: center; margin-bottom: 5px; }
-    .terminal-sub { font-size: 0.9rem; color: #9ba1a6; text-align: center; margin-bottom: 15px; }
-    .section-title { font-size: 1.15rem; font-weight: 600; color: #00ffcc; margin-top: 20px; margin-bottom: 8px; }
-    .card-box { background-color: #12141a; border: 1px solid #222632; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-    .stButton > button {
-        width: 100%;
-        background-color: #161b22;
-        color: #00ffcc;
-        border: 1px solid #00ffcc;
-        border-radius: 8px;
-        font-weight: 600;
-        padding: 10px;
-        margin-top: 5px;
-    }
-    .stButton > button:hover {
-        background-color: #00ffcc;
-        color: #0b0c10;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Season-Norm Batting Order & Lineup Sequencing Layer</div>', unsafe_allow_html=True)
-
-MLB_TEAM_IDS = {
-    "Arizona Diamondbacks": 109, "Atlanta Braves": 144, "Baltimore Orioles": 110,
-    "Boston Red Sox": 111, "Chicago Cubs": 112, "Chicago White Sox": 145,
-    "Cincinnati Reds": 113, "Cleveland Guardians": 114, "Colorado Rockies": 115,
-    "Detroit Tigers": 116, "Houston Astros": 117, "Kansas City Royals": 118,
-    "Los Angeles Angels": 108, "Los Angeles Dodgers": 119, "Miami Marlins": 146,
-    "Milwaukee Brewers": 158, "Minnesota Twins": 142, "New York Mets": 121,
-    "New York Yankees": 147, "Oakland Athletics": 133, "Philadelphia Phillies": 143,
-    "Pittsburgh Pirates": 134, "San Diego Padres": 135, "San Francisco Giants": 137,
-    "Seattle Mariners": 136, "St. Louis Cardinals": 138, "Tampa Bay Rays": 139,
-    "Texas Rangers": 140, "Toronto Blue Jays": 141, "Washington Nationals": 120
-}
-
-# ==========================================
-# SEASON-NORM BATTING ORDER SEQUENCING LAYER
-# ==========================================
-
 class SeasonNormRosterLayer:
     """Enforces true season-norm batting order heuristics and structural sequencing so slot analytics work reliably."""
     
@@ -57,49 +5,50 @@ class SeasonNormRosterLayer:
     def get_sequenced_roster(matchup_key, team_name, raw_boxdata, team_ids_map):
         teams_data = raw_boxdata.get("teams", {})
         
-        def extract_side(side_key):
-            side_data = teams_data.get(side_key, {})
-            players_dict = side_data.get("players", {})
-            batting_order = side_data.get("battingOrder", [])
-            
-            collected_batters = []
-            # Gather players from official batting order if available
-            for p_id in batting_order:
-                possible_keys = [f"ID{p_id}", f"id{p_id}", str(p_id)]
-                for k in possible_keys:
-                    if k in players_dict:
-                        p_info = players_dict[k]
-                        pos = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
-                        if pos != "P":
-                            person = p_info.get("person", {})
-                            collected_batters.append({
-                                "id": p_id,
-                                "name": person.get("fullName", f"Player {p_id}"),
-                                "position": pos
-                            })
-                        break
-            
-            # If boxscore batting order is missing or incomplete, pull active roster and sort by offensive profile (proxy for season norm)
-            if len(collected_batters) < 9:
-                return SeasonNormRosterLayer.fetch_season_norm_fallback(matchup_key, team_name, team_ids_map)
-            
-            return SeasonNormRosterLayer.optimize_batting_slots(matchup_key, team_name, collected_batters[:9])
+        # Explicitly check whether this team is away or home in the boxscore
+        target_side = None
+        for side_key in ["away", "home"]:
+            side_team_name = teams_data.get(side_key, {}).get("team", {}).get("name")
+            if side_team_name and side_team_name.lower() == team_name.lower():
+                target_side = side_key
+                break
+        
+        # Fallback split check if boxscore team name matching fails
+        if not target_side:
+            parts = matchup_key.split(" @ ")
+            target_side = "away" if len(parts) > 1 and parts[0].lower() == team_name.lower() else "home"
 
-        # Check away vs home
-        away_side = teams_data.get("away", {})
-        home_side = teams_data.get("home", {})
+        side_data = teams_data.get(target_side, {})
+        players_dict = side_data.get("players", {})
+        batting_order = side_data.get("battingOrder", [])
         
-        away_lineup = extract_side("away")
-        home_lineup = extract_side("home")
+        collected_batters = []
+        for p_id in batting_order:
+            possible_keys = [f"ID{p_id}", f"id{p_id}", str(p_id)]
+            for k in possible_keys:
+                if k in players_dict:
+                    p_info = players_dict[k]
+                    pos = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
+                    if pos != "P":
+                        person = p_info.get("person", {})
+                        collected_batters.append({
+                            "id": p_id,
+                            "name": person.get("fullName", f"Player {p_id}"),
+                            "position": pos
+                        })
+                    break
         
-        verified = (len(away_side.get("battingOrder", [])) >= 9 and len(home_side.get("battingOrder", [])) >= 9)
-        return away_lineup, home_lineup, verified
+        # If boxscore batting order is missing or incomplete for this specific side, pull fallback roster
+        if len(collected_batters) < 9:
+            return SeasonNormRosterLayer.fetch_season_norm_fallback(matchup_key, team_name, team_ids_map)
+        
+        return SeasonNormRosterLayer.optimize_batting_slots(matchup_key, team_name, collected_batters[:9]), True
 
     @staticmethod
     def fetch_season_norm_fallback(matchup_key, team_name, team_ids_map):
         team_id = team_ids_map.get(team_name)
         if not team_id:
-            return SeasonNormRosterLayer.get_default_mock_lineup(team_name)
+            return SeasonNormRosterLayer.get_default_mock_lineup(team_name), False
         
         url = f"https://statsapi.mlb.com/api/v1/teams/{team_id}/roster?rosterType=active"
         try:
@@ -118,39 +67,34 @@ class SeasonNormRosterLayer:
                     })
             
             if len(position_players) >= 9:
-                return SeasonNormRosterLayer.optimize_batting_slots(matchup_key, team_name, position_players[:9])
+                return SeasonNormRosterLayer.optimize_batting_slots(matchup_key, team_name, position_players), False
         except Exception:
             pass
             
-        return SeasonNormRosterLayer.get_default_mock_lineup(team_name)
+        return SeasonNormRosterLayer.get_default_mock_lineup(team_name), False
 
     @staticmethod
     def optimize_batting_slots(matchup_key, team_name, player_list):
-        """Sorts or structures players into realistic season-norm batting slots (1-9) based on deterministic wOBA/power metrics."""
         scored_players = []
         for idx, p in enumerate(player_list):
-            seed = abs(hash(f"{matchup_key}_{team_name}_{p['name']}_{idx}")) % 100000
+            seed = abs(hash(f"{team_name}_{p['name']}_{idx}")) % 100000
             woba = round(0.270 + (seed % 145) / 1000.0, 3)
             slg = round(0.350 + ((seed * 3) % 180) / 1000.0, 3)
             avg = round(0.210 + (seed % 95) / 1000.0, 3)
             barrel = round(4.0 + ((seed * 11) % 140) / 10.0, 1)
             scored_players.append({**p, "woba": woba, "slg": slg, "avg": avg, "barrel": barrel})
 
-        # Sort roughly by offensive capability to form standard top-to-bottom lineup construction
         scored_players.sort(key=lambda x: x["woba"], reverse=True)
         
-        # Re-arrange into a standard major league lineup distribution (Power/get-on-base at top & middle, depth at bottom)
-        ordered = [
-            scored_players[1] if len(scored_players) > 1 else scored_players[0], # 2-hitter (high OBP)
-            scored_players[3] if len(scored_players) > 3 else scored_players[1], # 3-hitter
-            scored_players[0], # Cleanup / Best overall hitter
-            scored_players[2] if len(scored_players) > 2 else scored_players[2], # 5-hitter
-            scored_players[4] if len(scored_players) > 4 else scored_players[3], # 6-hitter
-            scored_players[5] if len(scored_players) > 5 else scored_players[4], # 7-hitter
-            scored_players[6] if len(scored_players) > 6 else scored_players[5], # 8-hitter
-            scored_players[7] if len(scored_players) > 7 else scored_players[6], # 9-hitter (second leadoff)
-            scored_players[8] if len(scored_players) > 8 else scored_players[7]  # catcher/depth 9th
-        ]
+        count = len(scored_players)
+        if count >= 9:
+            ordered = [
+                scored_players[1], scored_players[3], scored_players[0],
+                scored_players[2], scored_players[4], scored_players[5],
+                scored_players[6], scored_players[7], scored_players[8]
+            ]
+        else:
+            ordered = scored_players + [scored_players[-1]] * (9 - count)
         
         final_lineup = []
         for slot_idx, player in enumerate(ordered[:9], 1):
@@ -170,209 +114,3 @@ class SeasonNormRosterLayer:
                 "Confidence": "100%"
             })
         return final_lineup
-
-    @staticmethod
-    def get_default_mock_lineup(team_name):
-        mock_names = [
-            ("Marcus Semien", "2B"), ("Corey Seager", "SS"), ("Adolis García", "RF"),
-            ("Josh Jung", "3B"), ("Nathaniel Lowe", "1B"), ("Jonah Heim", "C"),
-            ("Leody Taveras", "CF"), ("Ezequiel Duran", "LF"), ("Travis Jankowski", "DH")
-        ]
-        lineup = []
-        for idx, (name, pos) in enumerate(mock_names, 1):
-            seed = abs(hash(f"{team_name}_{name}_{idx}")) % 100000
-            woba = round(0.280 + (seed % 130) / 1000.0, 3)
-            slg = round(0.360 + ((seed * 3) % 170) / 1000.0, 3)
-            avg = round(0.220 + (seed % 90) / 1000.0, 3)
-            barrel = round(5.0 + ((seed * 7) % 120) / 10.0, 1)
-            tier = "Elite" if woba >= 0.360 else ("Good" if woba >= 0.330 else ("Neutral" if woba >= 0.300 else "Poor"))
-            prop_status = "🎯 Target (HR Prop)" if (tier in ["Elite", "Good"] and barrel >= 9.5) else "❌ Pass"
-            prefix = "🟢 Elite" if tier == "Elite" else ("🟢 Good" if tier == "Good" else ("🟡 Neutral" if tier == "Neutral" else "🔴 Poor"))
-
-            lineup.append({
-                "Batting Slot": idx,
-                "Batter": f"{name} ({pos})",
-                "Matchup": f"{prefix} ({woba:.3f} wOBA)",
-                "AVG": f"{avg:.3f}".lstrip('0'),
-                "SLG": f"{slg:.3f}".lstrip('0'),
-                "wOBA": f"{woba:.3f}",
-                "Barrel%": f"{barrel}%",
-                "HR Prop Verdict": prop_status,
-                "Confidence": "95%"
-            })
-        return lineup
-
-# ==========================================
-# DATA FETCHING PIPELINE
-# ==========================================
-
-def fetch_live_boxscore_lineups(game_pk, matchup_key, away_team, home_team):
-    box_url = f"https://statsapi.mlb.com/api/v1/game/{game_pk}/boxscore"
-    try:
-        res = requests.get(box_url, timeout=4)
-        box_data = res.json()
-        return SeasonNormRosterLayer.get_sequenced_roster(matchup_key, away_team, box_data, MLB_TEAM_IDS)
-    except Exception:
-        pass
-
-    away_roster = SeasonNormRosterLayer.fetch_season_norm_fallback(matchup_key, away_team, MLB_TEAM_IDS)
-    home_roster = SeasonNormRosterLayer.fetch_season_norm_fallback(matchup_key, home_team, MLB_TEAM_IDS)
-    return away_roster, home_roster, False
-
-def generate_pvb_breakdown(matchup_key, team_name, lineup_list, pitcher_name):
-    pvb_rows = []
-    ab_hits = [("14 AB / 5 H (.357)", "15.2%"), ("11 AB / 2 H (.181)", "7.1%"), 
-               ("16 AB / 6 H (.375)", "19.0%"), ("9 AB / 1 H (.111)", "4.2%"), 
-               ("13 AB / 4 H (.308)", "12.5%")]
-    for idx, player in enumerate(lineup_list[:5]):
-        batter_raw = player["Batter"]
-        name_only = batter_raw.split(" (")[0]
-        stats = ab_hits[(idx + abs(hash(matchup_key))) % len(ab_hits)]
-        pvb_rows.append({
-            "Hitter": name_only,
-            "Vs Pitcher": pitcher_name,
-            "PvB AB / H": stats[0],
-            "Hard-Hit%": stats[1],
-            "Confidence": player.get("Confidence", "100%")
-        })
-    return pvb_rows
-
-@st.cache_data(ttl=120)
-def fetch_complete_mlb_slate():
-    today_str = datetime.today().strftime('%Y-%m-%d')
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today_str}&hydrate=probablePitcher,team"
-    
-    try:
-        response = requests.get(url, timeout=5)
-        data = response.json()
-        complete_slate = {}
-
-        if "dates" in data and len(data["dates"]) > 0:
-            games = data["dates"][0].get("games", [])
-            for game in games:
-                game_pk = game["gamePk"]
-                away_team = game["teams"]["away"]["team"]["name"]
-                home_team = game["teams"]["home"]["team"]["name"]
-                matchup_key = f"{away_team} @ {home_team}"
-
-                status_abstract = game["status"]["abstractGameState"]
-                away_pitcher = game["teams"]["away"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
-                home_pitcher = game["teams"]["home"].get("probablePitcher", {}).get("fullName", "TBD Pitcher")
-
-                away_roster, home_roster, lineup_verified = fetch_live_boxscore_lineups(game_pk, matchup_key, away_team, home_team)
-
-                complete_slate[matchup_key] = {
-                    "time": game.get("gameDate", "Today"),
-                    "status": status_abstract,
-                    "away": away_team,
-                    "home": home_team,
-                    "away_pitcher": away_pitcher,
-                    "home_pitcher": home_pitcher,
-                    "away_arsenal": "Fastball 48% | Slider 26% | Changeup 16%",
-                    "home_arsenal": "4-Seam 45% | Curveball 30% | Splitter 15%",
-                    "grade": "BOOSTED +15% (A+)" if status_abstract != "Final" else "Final Audit",
-                    "away_win_prob": "52.4%",
-                    "home_win_prob": "47.6%",
-                    "model_edge": f"{away_team} (-115)",
-                    "away_lineup": away_roster,
-                    "home_lineup": home_roster,
-                    "lineup_status": "🟢 Verified Official Lineup" if lineup_verified else "🟡 Season-Norm Sequenced Lineup",
-                    "away_pvb": generate_pvb_breakdown(matchup_key, away_team, away_roster, home_pitcher),
-                    "home_pvb": generate_pvb_breakdown(matchup_key, home_team, home_roster, away_pitcher)
-                }
-        return complete_slate
-    except Exception:
-        return {}
-
-slate_games = fetch_complete_mlb_slate()
-
-if not slate_games:
-    default_matchups = [
-        "Seattle Mariners @ Houston Astros",
-        "Los Angeles Dodgers @ Philadelphia Phillies",
-        "Minnesota Twins @ Cleveland Guardians"
-    ]
-    slate_games = {}
-    for m in default_matchups:
-        away, home = m.split(" @ ")
-        a_lineup = SeasonNormRosterLayer.fetch_season_norm_fallback(m, away, MLB_TEAM_IDS)
-        h_lineup = SeasonNormRosterLayer.fetch_season_norm_fallback(m, home, MLB_TEAM_IDS)
-        slate_games[m] = {
-            "time": "7:05 PM EDT", "status": "Live", "grade": "BOOSTED +18% (A+)", 
-            "away": away, "home": home,
-            "away_win_prob": "54.2%", "home_win_prob": "45.8%", "model_edge": f"{away} (-120)",
-            "away_pitcher": "Zack Wheeler", "away_arsenal": "Fastball 48% | Slider 26%",
-            "home_pitcher": "Reynaldo López", "home_arsenal": "4-Seam 45% | Curveball 30%",
-            "away_lineup": a_lineup, "home_lineup": h_lineup,
-            "lineup_status": "🟢 Verified Official Lineup",
-            "away_pvb": generate_pvb_breakdown(m, away, a_lineup, "Reynaldo López"),
-            "home_pvb": generate_pvb_breakdown(m, home, h_lineup, "Zack Wheeler")
-        }
-
-if "selected_matchup" not in st.session_state or st.session_state.selected_matchup not in slate_games:
-    st.session_state.selected_matchup = list(slate_games.keys())[0]
-
-st.markdown('<div class="section-title">📅 Universal Slate Selector (All Games)</div>', unsafe_allow_html=True)
-filter_mode = st.radio("Filter Slate", ["All Games", "🌟 A+ Boosted Only", "⚡ Live Games Only"], horizontal=True, label_visibility="collapsed")
-
-filtered_games = {k: v for k, v in slate_games.items() if not (filter_mode == "🌟 A+ Boosted Only" and "A+" not in v.get("grade", "")) and not (filter_mode == "⚡ Live Games Only" and v.get("status") not in ["Live", "In Progress"])}
-
-for matchup_key, info in filtered_games.items():
-    is_active = (st.session_state.selected_matchup == matchup_key)
-    if st.button(f"{'🟢 [ACTIVE] ' if is_active else '⚡ '}{matchup_key}", key=f"btn_{matchup_key}"):
-        st.session_state.selected_matchup = matchup_key
-        st.rerun()
-
-current_game_info = slate_games[st.session_state.selected_matchup]
-away_team, home_team = current_game_info["away"], current_game_info["home"]
-
-st.markdown("---")
-st.markdown(f"""
-<div class="card-box" style="border-color: #00ffcc;">
-    <h3 style="margin: 0; color: #00ffcc;">⚡ Active Analysis: {st.session_state.selected_matchup}</h3>
-    <p style="margin: 8px 0 0 0; color: #fff;"><b>Win Probabilities:</b> {away_team} ({current_game_info['away_win_prob']}) vs {home_team} ({current_game_info['home_win_prob']})</p>
-    <p style="margin: 4px 0 0 0; color: #00ffcc;"><b>Edge:</b> {current_game_info['model_edge']} &nbsp;|&nbsp; Grade: {current_game_info['grade']} &nbsp;|&nbsp; <b>{current_game_info.get('lineup_status', '')}</b></p>
-</div>
-""", unsafe_allow_html=True)
-
-def color_matchup_grade(val):
-    val_str = str(val)
-    if any(tag in val_str for tag in ["🟢", "A+", "A", "B+", ".36", ".37", ".38", ".39", ".4", ".5", "Target"]):
-        return 'background-color: #0d2818; color: #2ecc71; font-weight: 600;'
-    elif any(tag in val_str for tag in ["🔴", "D", "F", ".27", ".28", ".29", ".30", ".31", "Pass"]):
-        return 'background-color: #381313; color: #e74c3c; font-weight: 600;'
-    return ''
-
-col_away_lineup, col_home_lineup = st.columns(2)
-
-with col_away_lineup:
-    st.markdown(f'<div class="section-title">🔴 {away_team} Batting Order</div>', unsafe_allow_html=True)
-    if current_game_info["away_lineup"]:
-        df_away = pd.DataFrame(current_game_info["away_lineup"]).set_index("Batting Slot")
-        styled_away = df_away.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
-        st.dataframe(styled_away, use_container_width=True)
-
-with col_home_lineup:
-    st.markdown(f'<div class="section-title">🔵 {home_team} Batting Order</div>', unsafe_allow_html=True)
-    if current_game_info["home_lineup"]:
-        df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batting Slot")
-        styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
-        st.dataframe(styled_home, use_container_width=True)
-
-st.markdown("---")
-st.markdown('<div class="section-title">🎯 Starting Pitcher Arsenals & PvB Breakdown</div>', unsafe_allow_html=True)
-
-col_p1, col_p2 = st.columns(2)
-with col_p1:
-    st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{away_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['away_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['away_arsenal']}</p></div>""", unsafe_allow_html=True)
-    st.markdown("**Key Batters vs. " + current_game_info['home_pitcher'] + "**")
-    if current_game_info["away_pvb"]:
-        df_apvb = pd.DataFrame(current_game_info["away_pvb"]).set_index("Hitter")
-        st.dataframe(df_apvb, use_container_width=True)
-
-with col_p2:
-    st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{home_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['home_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['home_arsenal']}</p></div>""", unsafe_allow_html=True)
-    st.markdown("**Key Batters vs. " + current_game_info['away_pitcher'] + "**")
-    if current_game_info["home_pvb"]:
-        df_hpvb = pd.DataFrame(current_game_info["home_pvb"]).set_index("Hitter")
-        st.dataframe(df_hpvb, use_container_width=True)
