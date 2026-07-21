@@ -316,7 +316,7 @@ with col_away_lineup:
     st.dataframe(styled_away, width='stretch')
 
 with col_home_lineup:
-    st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)`, unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">🔵 {home_team} Full Lineup (1-9)</div>', unsafe_allow_html=True)
     df_home = pd.DataFrame(current_game_info["home_lineup"]).set_index("Batter")
     styled_home = df_home.style.map(color_matchup_grade, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict'])
     st.dataframe(styled_home, width='stretch')
