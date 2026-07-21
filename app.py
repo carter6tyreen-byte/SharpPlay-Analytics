@@ -132,63 +132,6 @@ fallback_data = [
     },
     {
         "game": "PHI @ LAD",
-        "team": "Philadelphia Phillies",
-        "opp_pitcher": "Justin Wrobleski (LHP)",
-        "batting_order": 3,
-        "player": "B. Harper",
-        "bats": "L",
-        "ab": 4,
-        "h": 1,
-        "hr": 0,
-        "avg": 0.250,
-        "slg": 0.500,
-        "k_pct": 50.0,
-        "brl_pct": 0.0,
-        "prop_type": "Multi",
-        "prop_line": 0.5,
-        "odds": "+475",
-        "is_confirmed": True
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Philadelphia Phillies",
-        "opp_pitcher": "Justin Wrobleski (LHP)",
-        "batting_order": 4,
-        "player": "A. Bohm",
-        "bats": "R",
-        "ab": 3,
-        "h": 0,
-        "hr": 0,
-        "avg": 0.000,
-        "slg": 0.000,
-        "k_pct": 0.0,
-        "brl_pct": 0.0,
-        "prop_type": "Multi",
-        "prop_line": 0.5,
-        "odds": "+650",
-        "is_confirmed": True
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Philadelphia Phillies",
-        "opp_pitcher": "Justin Wrobleski (LHP)",
-        "batting_order": 6,
-        "player": "B. Marsh",
-        "bats": "L",
-        "ab": 3,
-        "h": 1,
-        "hr": 1,
-        "avg": 0.333,
-        "slg": 1.333,
-        "k_pct": 66.7,
-        "brl_pct": 100.0,
-        "prop_type": "Multi",
-        "prop_line": 0.5,
-        "odds": "+625",
-        "is_confirmed": True
-    },
-    {
-        "game": "PHI @ LAD",
         "team": "Los Angeles Dodgers",
         "opp_pitcher": "Zack Wheeler (RHP)",
         "batting_order": 1,
@@ -204,45 +147,62 @@ fallback_data = [
         "prop_type": "Multi",
         "prop_line": 0.5,
         "odds": "+251",
-        "is_confirmed": True
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 3,
-        "player": "F. Freeman",
-        "bats": "L",
-        "ab": 28,
-        "h": 8,
-        "hr": 1,
-        "avg": 0.286,
-        "slg": 0.429,
-        "k_pct": 14.3,
-        "brl_pct": 0.0,
-        "prop_type": "Multi",
-        "prop_line": 0.5,
-        "odds": "+500",
-        "is_confirmed": True
-    },
-    {
-        "game": "PHI @ LAD",
-        "team": "Los Angeles Dodgers",
-        "opp_pitcher": "Zack Wheeler (RHP)",
-        "batting_order": 5,
-        "player": "M. Muncy",
-        "bats": "L",
-        "ab": 4,
-        "h": 1,
-        "hr": 1,
-        "avg": 0.250,
-        "slg": 1.000,
-        "k_pct": 50.0,
-        "brl_pct": 0.0,
-        "prop_type": "Multi",
-        "prop_line": 0.5,
-        "odds": "+430",
-        "is_confirmed": True
+        "is_confirmed": True,
+        # Expanded Pitch-Mix Breakdown Data Structure
+        "pitch_mix_breakdown": [
+            {
+                "pitch_type": "4-Seam Fastball",
+                "pitch_usage_pct": 42.5,
+                "pitcher_hr": 14,
+                "batter_ab": 18,
+                "avg": 0.389,
+                "iso": 0.333,
+                "hard_hit_pct": 52.1,
+                "barrel_pct": 18.2,
+                "fly_ball_pct": 45.0,
+                "line_drive_pct": 25.0,
+                "batter_hr": 3
+            },
+            {
+                "pitch_type": "Sweeper",
+                "pitch_usage_pct": 28.0,
+                "pitcher_hr": 7,
+                "batter_ab": 12,
+                "avg": 0.250,
+                "iso": 0.250,
+                "hard_hit_pct": 40.0,
+                "barrel_pct": 15.0,
+                "fly_ball_pct": 35.0,
+                "line_drive_pct": 20.0,
+                "batter_hr": 1
+            },
+            {
+                "pitch_type": "Sinker",
+                "pitch_usage_pct": 15.5,
+                "pitcher_hr": 9,
+                "batter_ab": 8,
+                "avg": 0.500,
+                "iso": 0.625,
+                "hard_hit_pct": 66.7,
+                "barrel_pct": 30.0,
+                "fly_ball_pct": 50.0,
+                "line_drive_pct": 30.0,
+                "batter_hr": 2
+            },
+            {
+                "pitch_type": "Splitter",
+                "pitch_usage_pct": 14.0,
+                "pitcher_hr": 3,
+                "batter_ab": 6,
+                "avg": 0.167,
+                "iso": 0.167,
+                "hard_hit_pct": 20.0,
+                "barrel_pct": 5.0,
+                "fly_ball_pct": 20.0,
+                "line_drive_pct": 15.0,
+                "batter_hr": 0
+            }
+        ]
     }
 ]
 
@@ -304,7 +264,6 @@ teams = game_df["team"].unique().tolist() if "team" in game_df.columns else []
 
 st.markdown(f"## ⚔️ Game Matchup View: {selected_game}")
 
-# Multi-select / selectbox approach via form-free direct state key
 st.markdown("### 🎯 Batter Selection & Deep-Dive Matrix")
 selected_batter = st.selectbox(
     "Choose Batter from Full Slate Matrix", 
@@ -312,7 +271,6 @@ selected_batter = st.selectbox(
     key="global_slate_batter_selector"
 )
 
-# Render team tables side-by-side for reference
 col1, col2 = st.columns(2)
 def render_team_table(team_name, container):
     with container:
@@ -373,12 +331,22 @@ if selected_batter:
             st.metric("Batting Average vs Pitcher Type", f"{b_data.get('avg', 0.0):.3f}")
             st.metric("At-Bats Sample Size", int(b_data.get('ab', 0)))
         with col_b:
-            st.metric("Slugging Percentage", f"{b_data.get('slg', 0.0):.3f}")
+            st.metric("Slug Percentage", f"{b_data.get('slg', 0.0):.3f}")
             st.metric("Home Run Prop Odds", b_data.get('odds', 'N/A'))
         with col_c:
-            st.metric("Strikeout Rate (K%)", f"{b_data.get('k%:', b_data.get('k_pct', 0.0))}%")
+            st.metric("Strikeout Rate (K%)", f"{b_data.get('k_pct', 0.0)}%")
             st.metric("Barrel Rate", f"{b_data.get('brl_pct', 0.0)}%")
         
-        st.info("💡 **StarWorld Arsenal Insight:** Tracking pitch-mix tracking metrics, velocity splits, and optimal launch angle zones against opposing starter's primary pitch catalog.")
+        st.markdown("---")
+        st.markdown("#### ⚡ Pitcher Arsenal Breakdown vs. Batter Metrics (This Season)")
+        
+        pitch_mix = b_data.get("pitch_mix_breakdown", [])
+        if pitch_mix:
+            pm_df = pd.DataFrame(pitch_mix)
+            st.dataframe(pm_df, use_container_width=True, hide_index=True)
+        else:
+            st.info("Detailed pitch-mix breakdown data is currently pending or updating for this matchup.")
+            
+        st.info("💡 **StarWorld Arsenal Insight:** Tracking pitch-mix usage percentages, velocity splits, ISO, hard-hit metrics, fly-ball/line-drive rates, and total home runs conceded/hit per pitch type.")
 else:
     st.info("Select a batter from the dropdown above to load the StarWorld pitch-arsenal breakdown.")
