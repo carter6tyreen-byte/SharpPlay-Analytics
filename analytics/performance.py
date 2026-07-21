@@ -1,34 +1,33 @@
-import json
-import glob
-import logging
+name: Daily Sports Analytics Backtest
 
-def calculate_weekly_brier():
-    """
-    Scans the archive/ directory and calculates the average Brier Score
-    to provide a 'sharpness' report for the week.
-    """
-    archive_files = glob.glob("archive/predictions_*.json")
-    total_brier = 0
-    count = 0
-    
-    for file in archive_files:
-        with open(file, 'r') as f:
-            for line in f:
-                data = json.loads(line)
-                # Brier Score = (predicted_prob - actual_outcome)^2
-                # Note: 'actual' must be reconciled from your results_collector
-                if 'actual_outcome' in data:
-                    score = (data['win_prob'] - data['actual_outcome'])**2
-                    total_brier += score
-                    count += 1
-    
-    avg_brier = total_brier / count if count > 0 else 0
-    logging.info(f"--- Weekly Performance Report ---")
-    logging.info(f"Average Brier Score: {avg_brier:.3f}")
-    logging.info(f"Interpretation: {'Excellent' if avg_brier < 0.2 else 'Needs Tuning'}")
-    
-    return avg_brier
+on:
+  schedule:
+    - cron: '0 9 * * *' # Runs every morning at 9:00 AM UTC
+  workflow_dispatch:
 
-# Interpretation guide:
-# 0.0 = Perfect prediction
-# 0.25 = Equivalent to a random guess (0.5 probability)
+jobs:
+  run-backtest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Dependencies
+        run: pip install pandas
+
+      - name: Execute Backtest Verification
+        run: python backtest_tracker.py
+
+      - name: Commit Updated Audit Logs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add backtest_results_log.csv
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Automated backtest log update [skip ci]" && git push)
