@@ -33,19 +33,6 @@ st.markdown("""
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Home Run Prop Terminal</div>', unsafe_allow_html=True)
 st.markdown('<div class="terminal-sub">Universal Multi-Game Slate Engine • Isolated Roster & Batting Order Layer</div>', unsafe_allow_html=True)
 
-MLB_TEAM_IDS = {
-    "Arizona Diamondbacks": 109, "Atlanta Braves": 144, "Baltimore Orioles": 110,
-    "Boston Red Sox": 111, "Chicago Cubs": 112, "Chicago White Sox": 145,
-    "Cincinnati Reds": 113, "Cleveland Guardians": 114, "Colorado Rockies": 115,
-    "Detroit Tigers": 116, "Houston Astros": 117, "Kansas City Royals": 118,
-    "Los Angeles Angels": 108, "Los Angeles Dodgers": 119, "Miami Marlins": 146,
-    "Milwaukee Brewers": 158, "Minnesota Twins": 142, "New York Mets": 121,
-    "New York Yankees": 147, "Oakland Athletics": 133, "Philadelphia Phillies": 143,
-    "Pittsburgh Pirates": 134, "San Diego Padres": 135, "San Francisco Giants": 137,
-    "Seattle Mariners": 136, "St. Louis Cardinals": 138, "Tampa Bay Rays": 139,
-    "Texas Rangers": 140, "Toronto Blue Jays": 141, "Washington Nationals": 120
-}
-
 class SafeSeasonNormLayer:
     @staticmethod
     def get_roster(matchup_key, team_name, raw_boxdata):
@@ -75,8 +62,16 @@ class SafeSeasonNormLayer:
                             pos = p_info.get("primaryPosition", {}).get("abbreviation", "DH")
                             if pos != "P":
                                 person = p_info.get("person", {})
+                                full_name = person.get("fullName")
+                                if not full_name:
+                                    first = person.get("firstName", "")
+                                    last = person.get("lastName", "")
+                                    full_name = f"{first} {last}".strip()
+                                if not full_name:
+                                    full_name = f"Player ID {p_id}"
+                                
                                 collected.append({
-                                    "name": person.get("fullName", f"Player {p_id}"),
+                                    "name": full_name,
                                     "position": pos
                                 })
                             break
@@ -91,9 +86,9 @@ class SafeSeasonNormLayer:
     @staticmethod
     def get_fallback(team_name):
         mock_names = [
-            ("Player One", "CF"), ("Player Two", "SS"), ("Player Three", "RF"),
-            ("Player Four", "1B"), ("Player Five", "DH"), ("Player Six", "LF"),
-            ("Player Seven", "3B"), ("Player Eight", "2B"), ("Player Nine", "C")
+            ("Aaron Judge", "CF"), ("Juan Soto", "SS"), ("Giancarlo Stanton", "RF"),
+            ("Anthony Rizzo", "1B"), ("Austin Wells", "DH"), ("Alex Verdugo", "LF"),
+            ("DJ LeMahieu", "3B"), ("Gleyber Torres", "2B"), ("Jose Trevino", "C")
         ]
         lineup = []
         for idx, (name, pos) in enumerate(mock_names, 1):
@@ -229,15 +224,12 @@ def color_cells(val):
         return 'background-color: #381313; color: #e74c3c; font-weight: 600;'
     return ''
 
-col1, col2 = st.columns(2)
-with col1:
-    st.markdown(f'<div class="section-title">🔴 {current["away"]} Lineup</div>', unsafe_allow_html=True)
-    if current["away_lineup"]:
-        df_a = pd.DataFrame(current["away_lineup"]).set_index("Batting Slot")
-        st.dataframe(df_a.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), width='stretch')
+st.markdown(f'<div class="section-title">🔴 {current["away"]} Lineup</div>', unsafe_allow_html=True)
+if current["away_lineup"]:
+    df_a = pd.DataFrame(current["away_lineup"]).set_index("Batting Slot")
+    st.dataframe(df_a.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), use_container_width=True)
 
-with col2:
-    st.markdown(f'<div class="section-title">🔵 {current["home"]} Lineup</div>', unsafe_allow_html=True)
-    if current["home_lineup"]:
-        df_h = pd.DataFrame(current["home_lineup"]).set_index("Batting Slot")
-        st.dataframe(df_h.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), width='stretch')
+st.markdown(f'<div class="section-title">🔵 {current["home"]} Lineup</div>', unsafe_allow_html=True)
+if current["home_lineup"]:
+    df_h = pd.DataFrame(current["home_lineup"]).set_index("Batting Slot")
+    st.dataframe(df_h.style.map(color_cells, subset=['Matchup', 'wOBA', 'Barrel%', 'HR Prop Verdict']), use_container_width=True)
