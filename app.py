@@ -57,7 +57,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.markdown('<div class="terminal-header">⚾ SharpPLAY: Lineup & Analytics Terminal</div>', unsafe_allow_html=True)
-st.markdown('<div class="terminal-sub">Tap a game below to load matchups, starting pitcher arsenals, and batter pitch-mix metrics</div>', unsafe_allow_html=True)
+st.markdown('<div class="terminal-sub">Color-coded matchup board showing batter performance vs. starting pitcher pitch mix</div>', unsafe_allow_html=True)
 
 # Initialize Session State
 if "selected_matchup" not in st.session_state:
@@ -67,37 +67,31 @@ if "selected_matchup" not in st.session_state:
 slate_games = {
     "Washington Nationals @ Colorado Rockies": {
         "time": "8:40 PM EDT", "weather": "84°F | Wind 12 mph Out to CF", "grade": "BOOSTED +18% (A+)", "away": "Washington Nationals", "home": "Colorado Rockies",
-        "away_starter": "Washington Starter", "home_starter": "Colorado Starter",
         "away_arsenal": {"4-Seam Fastball": "45%", "Curveball": "30%", "Slider": "15%", "Sinker": "10%"},
         "home_arsenal": {"Fastball": "42%", "Slider": "28%", "Changeup": "18%", "Curveball": "12%"}
     },
     "San Diego Padres @ Atlanta Braves": {
         "time": "BOT 5th", "weather": "72°F | Wind 8 mph In", "grade": "Neutral (C)", "away": "San Diego Padres", "home": "Atlanta Braves",
-        "away_starter": "Padres Starter", "home_starter": "Braves Starter",
         "away_arsenal": {"Sinker": "40%", "Slider": "30%", "Changeup": "20%", "4-Seam Fastball": "10%"},
         "home_arsenal": {"4-Seam Fastball": "50%", "Slider": "25%", "Splitter": "15%", "Curveball": "10%"}
     },
     "New York Mets @ Milwaukee Brewers": {
         "time": "TOP 3RD", "weather": "Dome (Closed)", "grade": "Neutral (C)", "away": "New York Mets", "home": "Milwaukee Brewers",
-        "away_starter": "Mets Starter", "home_starter": "Brewers Starter",
         "away_arsenal": {"4-Seam Fastball": "48%", "Sweeper": "25%", "Splitter": "17%", "Curveball": "10%"},
         "home_arsenal": {"Sinker": "42%", "Slider": "32%", "Changeup": "16%", "Curveball": "10%"}
     },
     "Cincinnati Reds @ Seattle Mariners": {
         "time": "9:40 PM EDT", "weather": "58°F | Wind 11 mph In", "grade": "SUPPRESSED -12% (D)", "away": "Cincinnati Reds", "home": "Seattle Mariners",
-        "away_starter": "Reds Starter", "home_starter": "Mariners Starter",
         "away_arsenal": {"Fastball": "44%", "Slider": "30%", "Curveball": "16%", "Changeup": "10%"},
         "home_arsenal": {"4-Seam Fastball": "52%", "Sweeper": "26%", "Sinker": "12%", "Curveball": "10%"}
     },
     "Boston Red Sox @ New York Yankees": {
         "time": "7:05 PM EDT", "weather": "78°F | Wind 9 mph Out to RF", "grade": "BOOSTED +8% (B+)", "away": "Boston Red Sox", "home": "New York Yankees",
-        "away_starter": "Red Sox Starter", "home_starter": "Yankees Starter",
         "away_arsenal": {"Fastball": "40%", "Slider": "30%", "Changeup": "20%", "Curveball": "10%"},
         "home_arsenal": {"4-Seam Fastball": "46%", "Slider": "30%", "Sinker": "14%", "Changeup": "10%"}
     },
     "Los Angeles Dodgers @ San Francisco Giants": {
         "time": "10:10 PM EDT", "weather": "55°F | Wind 14 mph Out from Bay", "grade": "SUPPRESSED -15% (D-)", "away": "Los Angeles Dodgers", "home": "San Francisco Giants",
-        "away_starter": "Dodgers Starter", "home_starter": "Giants Starter",
         "away_arsenal": {"4-Seam Fastball": "45%", "Slider": "30%", "Curveball": "15%", "Sinker": "10%"},
         "home_arsenal": {"Sinker": "38%", "Slider": "32%", "Changeup": "20%", "Curveball": "10%"}
     }
@@ -114,8 +108,7 @@ for matchup_key, info in slate_games.items():
         st.rerun()
 
 current_game_info = slate_games[st.session_state.selected_matchup]
-away_team = current_game_info["away"]
-home_team = current_game_info["home"]
+away_team, home_team = current_game_info["away"], current_game_info["home"]
 
 st.markdown("---")
 st.markdown(f"""
@@ -125,55 +118,62 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# FULL TEAM LINEUP METRICS SECTION
+# COLOR-CODING STYLING FUNCTION FOR DATAFRAMES
+def color_matchup_grade(val):
+    """Color codes based on performance indicators embedded in strings"""
+    if any(tag in str(val) for tag in ["🟢", "A+", "A", "B+", ".36", ".37", ".38", ".5"]):
+        return 'background-color: #0d2818; color: #2ecc71; font-weight: 600;'
+    elif any(tag in str(val) for tag in ["🔴", "D", "F", ".28", ".29", ".30", ".31"]):
+        return 'background-color: #381313; color: #e74c3c; font-weight: 600;'
+    return ''
+
+# FULL TEAM LINEUP BOARDS WITH COLOR CODING
 col_away_lineup, col_home_lineup = st.columns(2)
 
 with col_away_lineup:
-    st.markdown(f'<div class="section-title">🔴 {away_team} Lineup & Metrics</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">🔴 {away_team} Lineup (vs. {home_team} Pitch Mix)</div>', unsafe_allow_html=True)
     away_lineup_data = [
-        {"Bat": "1. C. Carrigg (CF)", "AVG": ".285", "OBP": ".350", "SLG": ".480", "wOBA": ".362", "ISO": ".195", "Hard%": "42.1%"},
-        {"Bat": "2. J. Wood (LF)", "AVG": ".272", "OBP": ".345", "SLG": ".510", "wOBA": ".375", "ISO": ".238", "Hard%": "48.6%"},
-        {"Bat": "3. C. Crews (RF)", "AVG": ".265", "OBP": ".330", "SLG": ".460", "wOBA": ".348", "ISO": ".195", "Hard%": "40.2%"},
-        {"Bat": "4. N. Schuelke (1B)", "AVG": ".250", "OBP": ".320", "SLG": ".440", "wOBA": ".332", "ISO": ".190", "Hard%": "39.0%"},
-        {"Bat": "5. L. Garcia (2B)", "AVG": ".278", "OBP": ".315", "SLG": ".410", "wOBA": ".325", "ISO": ".132", "Hard%": "35.4%"},
-        {"Bat": "6. I. Tena (3B)", "AVG": ".245", "OBP": ".300", "SLG": ".390", "wOBA": ".305", "ISO": ".145", "Hard%": "34.1%"},
-        {"Bat": "7. CJ Abrams (SS)", "AVG": ".260", "OBP": ".310", "SLG": ".450", "wOBA": ".335", "ISO": ".190", "Hard%": "41.0%"},
-        {"Bat": "8. K. Ruiz (C)", "AVG": ".240", "OBP": ".280", "SLG": ".370", "wOBA": ".285", "ISO": ".130", "Hard%": "31.2%"},
-        {"Bat": "9. T. Lipscomb (DH)", "AVG": ".235", "OBP": ".290", "SLG": ".380", "wOBA": ".295", "ISO": ".145", "Hard%": "33.5%"}
+        {"Bat": "1. C. Carrigg (CF)", "Matchup": "🟢 Elite (.385 wOBA)", "AVG": ".285", "SLG": ".480", "wOBA": ".362", "Hard%": "42.1%"},
+        {"Bat": "2. J. Wood (LF)", "Matchup": "🟢 Elite (.410 wOBA)", "AVG": ".272", "SLG": ".510", "wOBA": ".375", "Hard%": "48.6%"},
+        {"Bat": "3. C. Crews (RF)", "Matchup": "🟢 Good (.350 wOBA)", "AVG": ".265", "SLG": ".460", "wOBA": ".348", "Hard%": "40.2%"},
+        {"Bat": "4. N. Schuelke (1B)", "Matchup": "🟡 Neutral (.320 wOBA)", "AVG": ".250", "SLG": ".440", "wOBA": ".332", "Hard%": "39.0%"},
+        {"Bat": "5. L. Garcia (2B)", "Matchup": "🟡 Neutral (.315 wOBA)", "AVG": ".278", "SLG": ".410", "wOBA": ".325", "Hard%": "35.4%"},
+        {"Bat": "6. I. Tena (3B)", "Matchup": "🔴 Poor (.285 wOBA)", "AVG": ".245", "SLG": ".390", "wOBA": ".305", "Hard%": "34.1%"},
+        {"Bat": "7. CJ Abrams (SS)", "Matchup": "🟢 Good (.340 wOBA)", "AVG": ".260", "SLG": ".450", "wOBA": ".335", "Hard%": "41.0%"},
+        {"Bat": "8. K. Ruiz (C)", "Matchup": "🔴 Poor (.270 wOBA)", "AVG": ".240", "SLG": ".370", "wOBA": ".285", "Hard%": "31.2%"},
+        {"Bat": "9. T. Lipscomb (DH)", "Matchup": "🔴 Poor (.280 wOBA)", "AVG": ".235", "SLG": ".380", "wOBA": ".295", "Hard%": "33.5%"}
     ]
     df_away = pd.DataFrame(away_lineup_data)
-    st.dataframe(df_away, use_container_width=True, hide_index=True)
+    styled_away = df_away.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA'])
+    st.dataframe(styled_away, use_container_width=True, hide_index=True)
 
 with col_home_lineup:
-    st.markdown(f'<div class="section-title">🔵 {home_team} Lineup & Metrics</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="section-title">🔵 {home_team} Lineup (vs. {away_team} Pitch Mix)</div>', unsafe_allow_html=True)
     home_lineup_data = [
-        {"Bat": "1. E. Tovar (SS)", "AVG": ".275", "OBP": ".320", "SLG": ".455", "wOBA": ".340", "ISO": ".180", "Hard%": "43.2%"},
-        {"Bat": "2. R. McMahon (3B)", "AVG": ".258", "OBP": ".342", "SLG": ".470", "wOBA": ".352", "ISO": ".212", "Hard%": "45.0%"},
-        {"Bat": "3. B. Doyle (CF)", "AVG": ".268", "OBP": ".315", "SLG": ".465", "wOBA": ".345", "ISO": ".197", "Hard%": "46.2%"},
-        {"Bat": "4. E. Montero (1B)", "AVG": ".250", "OBP": ".300", "SLG": ".430", "wOBA": ".320", "ISO": ".180", "Hard%": "38.5%"},
-        {"Bat": "5. H. Goodman (C)", "AVG": ".242", "OBP": ".285", "SLG": ".420", "wOBA": ".310", "ISO": ".178", "Hard%": "40.1%"},
-        {"Bat": "6. N. Jones (RF)", "AVG": ".255", "OBP": ".325", "SLG": ".410", "wOBA": ".325", "ISO": ".155", "Hard%": "36.8%"},
-        {"Bat": "7. S. Bouchard (LF)", "AVG": ".238", "OBP": ".310", "SLG": ".390", "wOBA": ".308", "ISO": ".152", "Hard%": "35.0%"},
-        {"Bat": "8. A. Trejo (2B)", "AVG": ".245", "OBP": ".295", "SLG": ".360", "wOBA": ".290", "ISO": ".115", "Hard%": "30.4%"},
-        {"Bat": "9. P. Severino (DH)", "AVG": ".230", "OBP": ".280", "SLG": ".375", "wOBA": ".288", "ISO": ".145", "Hard%": "32.0%"}
+        {"Bat": "1. E. Tovar (SS)", "Matchup": "🟢 Good (.345 wOBA)", "AVG": ".275", "SLG": ".455", "wOBA": ".340", "Hard%": "43.2%"},
+        {"Bat": "2. R. McMahon (3B)", "Matchup": "🟢 Elite (.390 wOBA)", "AVG": ".258", "SLG": ".470", "wOBA": ".352", "Hard%": "45.0%"},
+        {"Bat": "3. B. Doyle (CF)", "Matchup": "🟢 Elite (.380 wOBA)", "AVG": ".268", "SLG": ".465", "wOBA": ".345", "Hard%": "46.2%"},
+        {"Bat": "4. E. Montero (1B)", "Matchup": "🟡 Neutral (.315 wOBA)", "AVG": ".250", "SLG": ".430", "wOBA": ".320", "Hard%": "38.5%"},
+        {"Bat": "5. H. Goodman (C)", "Matchup": "🟡 Neutral (.310 wOBA)", "AVG": ".242", "SLG": ".420", "wOBA": ".310", "Hard%": "40.1%"},
+        {"Bat": "6. N. Jones (RF)", "Matchup": "🟢 Good (.335 wOBA)", "AVG": ".255", "SLG": ".410", "wOBA": ".325", "Hard%": "36.8%"},
+        {"Bat": "7. S. Bouchard (LF)", "Matchup": "🔴 Poor (.295 wOBA)", "AVG": ".238", "SLG": ".390", "wOBA": ".308", "Hard%": "35.0%"},
+        {"Bat": "8. A. Trejo (2B)", "Matchup": "🔴 Poor (.280 wOBA)", "AVG": ".245", "SLG": ".360", "wOBA": ".290", "Hard%": "30.4%"},
+        {"Bat": "9. P. Severino (DH)", "Matchup": "🔴 Poor (.275 wOBA)", "AVG": ".230", "SLG": ".375", "wOBA": ".288", "Hard%": "32.0%"}
     ]
     df_home = pd.DataFrame(home_lineup_data)
-    st.dataframe(df_home, use_container_width=True, hide_index=True)
+    styled_home = df_home.style.applymap(color_matchup_grade, subset=['Matchup', 'wOBA'])
+    st.dataframe(styled_home, use_container_width=True, hide_index=True)
 
 st.markdown("---")
 
-# PITCHER PITCH MIX VS BATTER HITTING MIX COMPARISON
-st.markdown('<div class="section-title">📊 Pitcher Pitch Mix vs. Batter Hitting Performance</div>', unsafe_allow_html=True)
-st.markdown("<p style='color: #9ba1a6; font-size: 0.85rem;'>Select a batter to match their performance metrics directly against the starting pitcher's exact pitch frequency.</p>", unsafe_allow_html=True)
-
-# Selection controls
+# PITCHER PITCH MIX VS BATTER HITTING PERFORMANCE
+st.markdown('<div class="section-title">📊 Detailed Pitcher vs. Batter Arsenal Breakdown</div>', unsafe_allow_html=True)
 col_sel1, col_sel2 = st.columns(2)
 with col_sel1:
     all_batters = [row["Bat"] for row in away_lineup_data] + [row["Bat"] for row in home_lineup_data]
-    selected_batter = st.selectbox("Select Batter:", options=all_batters)
+    selected_batter = st.selectbox("Select Batter for Deep Dive:", options=all_batters)
 
 with col_sel2:
-    # Determine opposing pitcher arsenal based on whether batter is away or home team
     is_away_batter = selected_batter in [row["Bat"] for row in away_lineup_data]
     opposing_pitcher_name = home_team + " Starter" if is_away_batter else away_team + " Starter"
     opposing_arsenal = current_game_info["home_arsenal"] if is_away_batter else current_game_info["away_arsenal"]
@@ -185,17 +185,15 @@ with col_sel2:
     </div>
     """, unsafe_allow_html=True)
 
-# Build direct comparison dataframe matching pitcher pitch mix against batter stats
 comparison_rows = []
 for pitch, usage in opposing_arsenal.items():
-    # Mocking sample dependent stats matching the pitch type
     comparison_rows.append({
         "Pitch Type": pitch,
         "Pitcher Usage%": usage,
         "Batter BA": ".285" if "Fastball" in pitch else ".230",
         "Batter SLG": ".510" if "Fastball" in pitch else ".390",
         "Batter wOBA": ".370" if "Fastball" in pitch else ".305",
-        "Whiff%": "18.5%" if "Fastball" in pitch else "34.0%"
+        "Whiff%": "18.5% (Good)" if "Fastball" in pitch else "34.0% (Vulnerable)"
     })
 
 df_comparison = pd.DataFrame(comparison_rows)
