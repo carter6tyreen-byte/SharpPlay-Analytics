@@ -322,18 +322,18 @@ with col_home_lineup:
     st.dataframe(styled_home, width='stretch')
 
 st.markdown("---")
-st.markdown('<div class="section-title">🎯 Starting Pitcher Arsenals & PvB Breakdown</div>', unsafe_allow_html=True)
+st.markdown('<div class="section-title">🎯 Starting Pitcher Arsenals & PvB Breakdown</div>', unsafe_allow_html=KeyError if False else '🎯 Starting Pitcher Arsenals & PvB Breakdown')
 
 col_p1, col_p2 = st.columns(2)
 with col_p1:
     st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{away_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['away_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['away_arsenal']}</p></div>""", unsafe_allow_html=True)
-    st.markdown("**Key Batters vs. " + current_game_info['away_pitcher'] + "**")
+    st.markdown("**Key Batters vs. " + current_game_info['home_pitcher'] + "**")
     df_apvb = pd.DataFrame(current_game_info["away_pvb"]).set_index("Hitter")
     st.dataframe(df_apvb, width='stretch')
 
 with col_p2:
     st.markdown(f"""<div class="card-box"><h4 style="margin:0; color:#00ffcc;">{home_team} Starter</h4><p style="margin:4px 0;"><b>{current_game_info['home_pitcher']}</b></p><p style="margin:0; color:#ccc; font-size:0.85rem;"><b>Mix:</b> {current_game_info['home_arsenal']}</p></div>""", unsafe_allow_html=True)
-    st.markdown("**Key Batters vs. " + current_game_info['home_pitcher'] + "**")
+    st.markdown("**Key Batters vs. " + current_game_info['away_pitcher'] + "**")
     df_hpvb = pd.DataFrame(current_game_info["home_pvb"]).set_index("Hitter")
     st.dataframe(df_hpvb, width='stretch')
 
