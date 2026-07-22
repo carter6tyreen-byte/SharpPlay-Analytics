@@ -1,34 +1,59 @@
+import csv
 import datetime
-import json
 import os
-import requests
 
-# Calculate tomorrow's date
-tomorrow_date = (
-    datetime.date.today() + datetime.timedelta(days=1)
-).strftime("%Y-%m-%d")
 
-# Example API call structure to MLB Stats API for schedule & probable pitchers
-url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={tomorrow_date}&hydrate=probablePitcher,lineups"
-response = requests.get(url)
-data = response.json()
+def log_model_predictions_and_results(slate_date, matchup_data):
+  """Appends model projections and actual outcomes to a CSV file
 
-games_list = []
-for date_entry in data.get("dates", []):
-  for game in date_entry.get("games", []):
-    games_list.append({
-        "game_pk": game.get("gamePk"),
-        "game_time": game.get("gameDate"),
-        "away_team": game.get("teams", {}).get("away", {}).get("team", {}).get("name"),
-        "home_team": game.get("teams", {}).get("home", {}).get("team", {}).get("name"),
-        "away_probable_pitcher": game.get("teams", {}).get("away", {}).get("probablePitcher", {}).get("fullName", "TBD"),
-        "home_probable_pitcher": game.get("teams", {}).get("home", {}).get("probablePitcher", {}).get("fullName", "TBD"),
-    })
+  to build a historical learning loop dataset.
+  """
+  directory = "data/learning_loop"
+  os.makedirs(directory, exist_ok=True)
+  file_path = os.path.join(directory, f"evaluation_log_{slate_date}.csv")
 
-# Ensure data directory exists
-os.makedirs("data", exist_ok=True)
+  file_exists = os.path.exists(file_path)
 
-# Save out to the exact path your Streamlit app is looking for
-output_path = f"data/slate_{tomorrow_date}.json"
-with open(output_path, "w") as f:
-  json.dump(games_list, f, indent=4)
+  headers = [
+      "date",
+      "matchup",
+      "pitcher",
+      "sharpplay_proj",
+      "propalytics_proj",
+      "line",
+      "actual_stats",
+      "result",
+  ]
+
+  with open(file_path, mode="a", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+
+    # Write header if file is newly created
+    if not file_exists:
+      writer.writerow(headers)
+
+    for item in matchup_data:
+      writer.writerow([
+          slate_date,
+          item["matchup"],
+          item["pitcher"],
+          item["sharpplay_proj"],
+          item["propalytics_proj"],
+          item["line"],
+          item.get("actual_stats", "Pending"),
+          item.get("result", "Pending"),
+      ])
+
+
+# Example usage for today's slate (July 22, 2026)
+today_data = [{
+    "matchup": "PIT @ NYY",
+    "pitcher": "Gerrit Cole",
+    "sharpplay_proj": 8.1,
+    "propalytics_proj": 8.0,
+    "line": 6.5,
+    "actual_stats": 9,  # Populated post-game via MLB API
+    "result": "HIT",  # Automatically graded: Over hit
+}]
+
+log_model_predictions_and_results("2026-07-22", today_data)
