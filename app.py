@@ -1,61 +1,34 @@
 import datetime
 import json
 import os
-import streamlit as st
+import requests
 
-# Define tabs at the top
-tab_today, tab_tomorrow = st.tabs(
-    ["⚡ Today's Slate & Grades", "🔮 Tomorrow's Preview & Lineups"]
-)
+# Calculate tomorrow's date
+tomorrow_date = (
+    datetime.date.today() + datetime.timedelta(days=1)
+).strftime("%Y-%m-%d")
 
-with tab_today:
-  st.subheader("⚡ Today's Live Slate & Scoreboard")
-  # Your existing today view code goes here...
+# Example API call structure to MLB Stats API for schedule & probable pitchers
+url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={tomorrow_date}&hydrate=probablePitcher,lineups"
+response = requests.get(url)
+data = response.json()
 
-with tab_tomorrow:
-  st.subheader("📋 Next Slate Matchups & Projected Lineups")
+games_list = []
+for date_entry in data.get("dates", []):
+  for game in date_entry.get("games", []):
+    games_list.append({
+        "game_pk": game.get("gamePk"),
+        "game_time": game.get("gameDate"),
+        "away_team": game.get("teams", {}).get("away", {}).get("team", {}).get("name"),
+        "home_team": game.get("teams", {}).get("home", {}).get("team", {}).get("name"),
+        "away_probable_pitcher": game.get("teams", {}).get("away", {}).get("probablePitcher", {}).get("fullName", "TBD"),
+        "home_probable_pitcher": game.get("teams", {}).get("home", {}).get("probablePitcher", {}).get("fullName", "TBD"),
+    })
 
-  # Calculate tomorrow's date dynamically
-  tomorrow_date = (
-      datetime.date.today() + datetime.timedelta(days=1)
-  ).strftime("%Y-%m-%d")
-  st.caption(f"Loading scheduled games and lineups for: {tomorrow_date}")
+# Ensure data directory exists
+os.makedirs("data", exist_ok=True)
 
-  # Safe file loader matching your data directory structure
-  file_path = f"data/slate_{tomorrow_date}.json"
-
-  upcoming_games = []
-  if os.path.exists(file_path):
-    try:
-      with open(file_path, "r") as f:
-        upcoming_games = json.load(f)
-    except Exception as e:
-      st.error(f"Error parsing schedule file: {e}")
-
-  if not upcoming_games:
-    st.info(
-        f"Projected lineups and data for {tomorrow_date} are still pending or"
-        " awaiting the scheduled GitHub Actions workflow update."
-    )
-  else:
-    for game in upcoming_games:
-      away_team = game.get("away_team", "Away")
-      home_team = game.get("home_team", "Home")
-      game_time = game.get("game_time", "TBD")
-
-      with st.expander(f"{away_team} @ {home_team} ({game_time})"):
-        col1, col2 = st.columns(2)
-
-        with col1:
-          st.markdown(
-              f"**Away Lineup ({away_team})**<br>Starting Pitcher: *"
-              f"{game.get('away_probable_pitcher', 'TBD')}*",
-              unsafe_allow_html=True,
-          )
-
-        with col2:
-          st.markdown(
-              f"**Home Lineup ({home_team})**<br>Starting Pitcher: *"
-              f"{game.get('home_probable_pitcher', 'TBD')}*",
-              unsafe_allow_html=True,
-          )
+# Save out to the exact path your Streamlit app is looking for
+output_path = f"data/slate_{tomorrow_date}.json"
+with open(output_path, "w") as f:
+  json.dump(games_list, f, indent=4)
