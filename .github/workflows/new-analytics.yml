@@ -1,15 +1,18 @@
-name: Daily MLB Odds Sync
+name: Daily MLB Prop Analytics Pipeline
 
 on:
   schedule:
-    - cron: '0 12 * * *' # Executes daily at 12:00 PM UTC
-  workflow_dispatch:
+    - cron: '0 12 * * *' # Runs daily at 12:00 PM UTC
+  workflow_dispatch: # Allows manual trigger from GitHub UI
 
 jobs:
-  sync-data:
+  run-pipeline:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -17,14 +20,19 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
-        run: pip install requests
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Run Odds Ingest Script
-        run: python update_matrix.py
+      - name: Run static report generator
+        run: |
+          python generate_static_report.py
 
-      - name: Commit and Push Changes
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "Auto-update MLB player props matrix and web index"
-          branch: main
+      - name: Commit and push updated report
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add index.html || echo "No index.html to add"
+          git commit -m "Auto-update daily MLB prop report" || echo "No changes to commit"
+          git push
