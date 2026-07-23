@@ -27,7 +27,6 @@ if view_mode == "Live Matchups":
     
     with st.spinner("Fetching live data from MLB Stats API..."):
         try:
-            # Get today's date in YYYY-MM-DD format
             today_str = datetime.now().strftime("%Y-%m-%d")
             api_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today_str}"
             
@@ -35,25 +34,36 @@ if view_mode == "Live Matchups":
             data = response.json()
             
             games_list = []
-            if data.get("totalItems", 0) > 0:
-                dates = data.get("dates", [])
-                if dates:
-                    for game in dates[0].get("games", []):
+            dates = data.get("dates", [])
+            
+            if dates:
+                for date_entry in dates:
+                    for game in date_entry.get("games", []):
                         away_team = game["teams"]["away"]["team"]["name"]
                         home_team = game["teams"]["home"]["team"]["name"]
                         status = game["status"]["detailedState"]
-                        game_time = game.get("gameDate", "")
+                        game_time_utc = game.get("gameDate", "")
+                        
+                        # Convert UTC string to a cleaner local/readable format if possible
+                        if game_time_utc:
+                            try:
+                                dt_obj = datetime.strptime(game_time_utc, "%Y-%m-%dT%H:%M:%SZ")
+                                time_formatted = dt_obj.strftime("%I:%M %p UTC")
+                            except:
+                                time_formatted = game_time_utc
+                        else:
+                            time_formatted = "TBD"
                         
                         games_list.append({
                             "Matchup": f"{away_team} @ {home_team}",
-                            "UTC Time": game_time,
+                            "Time": time_formatted,
                             "Status": status
                         })
             
             if games_list:
                 df_games = pd.DataFrame(games_list)
                 st.success(f"Successfully loaded {len(games_list)} games for today!")
-                st.table(df_games)
+                st.dataframe(df_games, use_container_width=True)
             else:
                 st.info("No MLB games scheduled for today or off-season.")
                 
