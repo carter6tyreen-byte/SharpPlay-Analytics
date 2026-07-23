@@ -10,23 +10,35 @@ st.set_page_config(
     layout="wide"
 )
 
-# Session State Slip
+# Initialize Session State Slip
 if "bet_slip" not in st.session_state:
     st.session_state.bet_slip = []
 
 st.title("⚾ SharpPlay Analytics & Odds Matrix")
-st.markdown("Deep game metrics, active player lineups, matchup edges, and interactive ticket builder.")
+st.markdown("Advanced Major League Baseball stats, active lineups, prop tracking, and ticket builder.")
 
-# Sidebar Navigation
+# Sidebar Controls for Active Ticket Slip
+st.sidebar.header("🎫 Active Ticket Slip")
+if st.session_state.bet_slip:
+    st.sidebar.write(f"Total Legs: {len(st.session_state.bet_slip)}")
+    for i, leg in enumerate(st.session_state.bet_slip, 1):
+        st.sidebar.markdown(f"**{i}. {leg['Player']}**\n- Market: {leg['Market']}\n- Odds: {leg['Odds']}")
+    if st.sidebar.button("Clear Ticket Slip"):
+        st.session_state.bet_slip = []
+        st.rerun()
+else:
+    st.sidebar.info("Your ticket slip is empty. Add props from matchups below!")
+
+# Navigation
 view_mode = st.sidebar.selectbox(
-    "Dashboard Sections",
+    "Dashboard View",
     ["Live Matchups & Lineups", "Odds Matrix & Ticket Builder", "System Status"]
 )
 
 if view_mode == "Live Matchups & Lineups":
     st.subheader("Today's Active MLB Schedule")
     
-    with st.spinner("Loading live game data..."):
+    with st.spinner("Loading live game schedule..."):
         try:
             today_str = datetime.now().strftime("%Y-%m-%d")
             schedule_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today_str}&hydrate=probablePitcher,linescore"
@@ -71,7 +83,6 @@ if view_mode == "Live Matchups & Lineups":
                     st.markdown(f"**{away_team} Batters**")
                     away_batters = get_batters(boxscore.get("away", {}))
                     if away_batters:
-                        st.write(away_batters)
                         sel_away_p = st.selectbox("Pick Away Prop Target:", away_batters, key="away_p")
                     else:
                         st.info("Lineup pending.")
@@ -80,18 +91,19 @@ if view_mode == "Live Matchups & Lineups":
                     st.markdown(f"**{home_team} Batters**")
                     home_batters = get_batters(boxscore.get("home", {}))
                     if home_batters:
-                        st.write(home_batters)
                         sel_home_p = st.selectbox("Pick Home Prop Target:", home_batters, key="home_p")
                     else:
                         st.info("Lineup pending.")
                         
                 st.markdown("---")
-                st.subheader("💡 Quick Add Prop to Slip")
-                target_prop_player = sel_away_p if 'sel_away_p' in locals() else "Player"
+                st.subheader("💡 Quick Add Prop to Ticket")
+                
+                # Pick active target player from either dropdown
+                target_prop_player = sel_away_p if 'sel_away_p' in locals() else "Selected Player"
                 
                 q_col1, q_col2, q_col3 = st.columns(3)
                 with q_col1:
-                    market = st.selectbox("Prop Market", ["1+ Hits", "Home Run", "Total Bases Over 1.5", "RBIs Over 0.5"])
+                    market = st.selectbox("Prop Market", ["1+ Hits", "Home Run", "Total Bases Over 1.5", "RBIs Over 0.5", "Strikeouts Over 6.5"])
                 with q_col2:
                     line_odds = st.text_input("American Odds", value="-115")
                 with q_col3:
@@ -99,28 +111,26 @@ if view_mode == "Live Matchups & Lineups":
                     st.write("")
                     if st.button("Add to Ticket Slip"):
                         st.session_state.bet_slip.append({"Player": target_prop_player, "Market": market, "Odds": line_odds})
-                        st.success(f"Added {target_prop_player} - {market} ({line_odds}) to slip!")
+                        st.success(f"Added **{target_prop_player}** ({market}) to slip!")
             else:
                 st.info("No games scheduled today.")
         except Exception as e:
-                st.error(f"Error loading API data: {e}")
+            st.error(f"Error loading API data: {e}")
 
 elif view_mode == "Odds Matrix & Ticket Builder":
-    st.subheader("🎯 Active Ticket Slip & Odds Matrix")
+    st.subheader("🎯 Active Ticket Slip & Summary")
     
     if st.session_state.bet_slip:
-        st.write("Review your built ticket legs below:")
         slip_df = pd.DataFrame(st.session_state.bet_slip)
         st.dataframe(slip_df, use_container_width=True, hide_index=True)
-        
-        if st.button("Clear Entire Ticket Slip"):
+        if st.button("Clear Slip"):
             st.session_state.bet_slip = []
             st.rerun()
     else:
-        st.info("Your ticket slip is currently empty. Go to **Live Matchups & Lineups** to select players and add props.")
+        st.info("Your ticket slip is currently empty. Visit **Live Matchups & Lineups** to build your bets.")
         
     st.markdown("---")
-    st.subheader("📊 Matchup Odds & Sharp Edge Matrix")
+    st.subheader("📊 Matchup Odds & Model Edge Matrix")
     matrix_sample = pd.DataFrame({
         "Matchup": ["SD @ ATL", "MIN @ CLE", "TB @ TOR"],
         "Spread": ["-1.5 (+140)", "+1.5 (-160)", "-1.5 (+155)"],
