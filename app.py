@@ -1,7 +1,5 @@
 import streamlit as st
 import pandas as pd
-import requests
-from datetime import datetime
 
 # Page Configuration
 st.set_page_config(
@@ -46,13 +44,13 @@ if view_mode == "Tigers Single-Player Terminal":
     
     st.success(f"🔒 Player Profile Locked: **{selected_player}** (DET)")
     
-    # Completely distinct data dictionaries per player to ensure absolute accuracy when switching
+    # Completely distinct data dictionaries per player ensuring exact data mapping matching your exact visual targets
     if selected_player == "Kevin McGonigle":
         st.markdown("### 📊 Kevin McGonigle — 2026 Season & Pitch-Type Performance Splits")
         st.caption("Position: Shortstop (SS) | Bats: Left | Throws: Right")
         
         pitch_results_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
             "AB": [87, 43, 46, 16, 14, 13],
             "H": [21, 13, 19, 4, 5, 1],
             "AVG": [".241", ".302", ".413", ".250", ".357", ".077"],
@@ -61,7 +59,7 @@ if view_mode == "Tigers Single-Player Terminal":
         })
         
         statcast_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
             "BBE": [75, 37, 39, 13, 12, 8],
             "BRL%": ["16.0%", "2.7%", "15.4%", "23.1%", "16.7%", "0.0%"],
             "HH%": ["41.3%", "24.3%", "59.0%", "38.5%", "41.7%", "12.5%"],
@@ -74,7 +72,7 @@ if view_mode == "Tigers Single-Player Terminal":
         st.caption("Position: First Base (1B) | Bats: Right | Throws: Right")
         
         pitch_results_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
             "AB": [95, 38, 42, 20, 11, 9],
             "H": [22, 10, 14, 6, 3, 2],
             "AVG": [".232", ".263", ".333", ".300", ".273", ".222"],
@@ -83,7 +81,7 @@ if view_mode == "Tigers Single-Player Terminal":
         })
         
         statcast_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
             "BBE": [82, 33, 36, 17, 10, 8],
             "BRL%": ["18.5%", "5.1%", "16.7%", "23.5%", "10.0%", "0.0%"],
             "HH%": ["48.2%", "30.3%", "52.8%", "47.1%", "40.0%", "25.0%"],
@@ -96,7 +94,7 @@ if view_mode == "Tigers Single-Player Terminal":
         st.caption("Position: Outfield (OF) | Bats: Left | Throws: Left")
         
         pitch_results_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
             "AB": [102, 45, 50, 22, 16, 12],
             "H": [31, 14, 18, 8, 6, 4],
             "AVG": [".304", ".311", ".360", ".364", ".375", ".333"],
@@ -105,7 +103,7 @@ if view_mode == "Tigers Single-Player Terminal":
         })
         
         statcast_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
             "BBE": [88, 39, 43, 19, 14, 10],
             "BRL%": ["19.2%", "7.7%", "20.9%", "26.3%", "21.4%", "10.0%"],
             "HH%": ["52.3%", "38.5%", "58.1%", "47.4%", "50.0%", "40.0%"],
@@ -118,19 +116,19 @@ if view_mode == "Tigers Single-Player Terminal":
         st.caption("Active Detroit Tigers Starter")
         
         pitch_results_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
-            "AB": [75, 30, 35, 14, 10, 8],
-            "H": [18, 9, 13, 4, 3, 1],
-            "AVG": [".240", ".300", ".371", ".285", ".300", ".125"],
-            "SLG": [".400", ".330", ".620", ".500", ".500", ".200"],
-            "ISO": [".160", ".030", ".249", ".215", ".200", ".075"]
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "AB": [90, 40, 45, 20, 15, 10],
+            "H": [23, 11, 16, 6, 5, 2],
+            "AVG": [".256", ".275", ".356", ".300", ".333", ".200"],
+            "SLG": [".422", ".375", ".578", ".500", ".467", ".300"],
+            "ISO": [".167", ".100", ".222", ".200", ".133", ".100"]
         })
         
         statcast_df = pd.DataFrame({
-            "Pitch Type": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
-            "BBE": [65, 26, 30, 11, 9, 7],
-            "BRL%": ["14.0%", "3.5%", "13.0%", "20.0%", "12.0%", "0.0%"],
-            "HH%": ["40.0%", "26.0%", "50.0%", "35.0%", "38.0%", "20.0%"],
+            "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
+            "BBE": [74, 32, 36, 16, 12, 8],
+            "BRL%": ["15.0%", "4.0%", "14.0%", "18.8%", "16.7%", "0.0%"],
+            "HH%": ["41.9%", "28.1%", "50.0%", "37.5%", "41.7%", "25.0%"],
             "EV (mph)": ["90.5", "84.2", "91.8", "86.0", "88.1", "80.0"],
             "FB%": ["45.0%", "28.0%", "36.0%", "42.0%", "52.0%", "25.0%"]
         })
@@ -138,21 +136,27 @@ if view_mode == "Tigers Single-Player Terminal":
     # Savant Color Coding
     def savant_color_map(val):
         if isinstance(val, str) and "%" in val:
-            num = float(val.replace("%", ""))
-            if num >= 30.0:
-                return 'background-color: #1b4332; color: #52b788;' # Deep green
-            elif num >= 15.0:
-                return 'background-color: #2d6a4f; color: #b7e4c7;' # Medium green
-            else:
-                return 'background-color: #582f0e; color: #f3c68f;' # Red/brown
+            try:
+                num = float(val.replace("%", ""))
+                if num >= 30.0:
+                    return 'background-color: #1b4332; color: #52b788;' # Deep green
+                elif num >= 15.0:
+                    return 'background-color: #2d6a4f; color: #b7e4c7;' # Medium green
+                else:
+                    return 'background-color: #582f0e; color: #f3c68f;' # Red/brown
+            except:
+                return ''
         elif isinstance(val, str) and val.startswith("."):
-            num = float(val)
-            if num >= 0.350:
-                return 'background-color: #1b4332; color: #52b788;'
-            elif num >= 0.250:
-                return 'background-color: #2d6a4f; color: #b7e4c7;'
-            else:
-                return 'background-color: #582f0e; color: #f3c68f;'
+            try:
+                num = float(val)
+                if num >= 0.350:
+                    return 'background-color: #1b4332; color: #52b788;'
+                elif num >= 0.250:
+                    return 'background-color: #2d6a4f; color: #b7e4c7;'
+                else:
+                    return 'background-color: #582f0e; color: #f3c68f;'
+            except:
+                return ''
         return ''
 
     styled_results = pitch_results_df.style.map(savant_color_map, subset=["AVG", "SLG", "ISO"])
@@ -197,3 +201,4 @@ elif view_mode == "Odds Matrix & Projections":
 else:
     st.subheader("System Status")
     st.success("Environment running cleanly on Python 3.11 with isolated player dictionaries active.")
+
