@@ -112,7 +112,7 @@ if view_mode == "Pre-Game Matchup Terminal":
                 "H": [21 + h_val, 12, 18 - h_val, 4, 5, 1],
                 "AVG": [f".{241 + (h_val*12):03d}", f".{302 - (h_val*8):03d}", f".{413 + (h_val*5):03d}", f".{250 + h_val:03d}", f".{357 - h_val:03d}", ".077"],
                 "SLG": [f".{379 + (h_val*10):03d}", f".{326 - (h_val*5):03d}", f".{717 - (h_val*10):03d}", f".{563 + h_val:03d}", f".{643 - h_val:03d}", ".154"],
-                "ISO": [f".{138 + h_val:03d}", f".{023}", f".{304 - h_val:03d}", f".{313}", f".{286}", ".077"]
+                "ISO": [f".{138 + h_val:03d}", ".023", f".{304 - h_val:03d}", ".313", ".286", ".077"]
             })
             
             # 2. Statcast Batted-Ball Profile Table (BBE, BRL%, HH%, EV, FB%)
@@ -120,10 +120,10 @@ if view_mode == "Pre-Game Matchup Terminal":
             statcast_df = pd.DataFrame({
                 "Pitch": ["Four-seam FB", "Changeup", "Sinker", "Slider", "Curveball", "Sweeper"],
                 "BBE": [75 + h_val*2, 37, 39 + h_val, 13, 12, 8],
-                "BRL%": [f"{16.0 + (h_val * 0.5):.1f}%", f"{2.7}%", f"{15.4 + (h_val * 0.4):.1f}%", f"{23.1}%", f"{16.7}%", "0.0%"],
-                "HH%": [f"{41.3 + h_val}%", f"{24.3}%", f"{59.0 - h_val}%", f"{38.5}%", f"{41.7}%", "12.5%"],
-                "EV (mph)": [f"{91.1 + (h_val * 0.2):.1f}", f"{83.1}", f"{93.5 + (h_val * 0.3):.1f}", f"{85.4}", f"{89.2}", f"{79.2}"],
-                "FB%": [f"{46.7 + h_val}%", f"{27.0}%", f"{38.5}%", f"{46.2}%", f"{58.3}%", f"{25.0}%"]
+                "BRL%": [f"{16.0 + (h_val * 0.5):.1f}%", "2.7%", f"{15.4 + (h_val * 0.4):.1f}%", "23.1%", "16.7%", "0.0%"],
+                "HH%": [f"{41.3 + h_val}%", "24.3%", f"{59.0 - h_val}%", "38.5%", "41.7%", "12.5%"],
+                "EV (mph)": [f"{91.1 + (h_val * 0.2):.1f}", "83.1", f"{93.5 + (h_val * 0.3):.1f}", "85.4", "89.2", "79.2"],
+                "FB%": [f"{46.7 + h_val}%", "27.0%", "38.5%", "46.2%", "58.3%", "25.0%"]
             })
             
             # Professional Savant Color Coding
@@ -155,7 +155,7 @@ if view_mode == "Pre-Game Matchup Terminal":
             st.markdown("---")
             st.subheader("🎯 Pre-Game Ticket Builder")
             
-            with st.form("terminal_ticket_form_v5"):
+            with st.form("terminal_ticket_form_v6"):
                 t1, t2, t3 = st.columns(3)
                 with t1:
                     prop_choice = st.selectbox("Market Prop", ["Player Hits Over 0.5", "Total Bases Over 1.5", "Home Run Prop", "RBIs Over 0.5"])
@@ -188,4 +188,4 @@ elif view_mode == "Odds Matrix & Projections":
 
 else:
     st.subheader("System Status")
-    st.success("Environment running cleanly on Python 3.11 with updated Streamlit width specifications active.")
+    st.success("Environment running cleanly on Python 3.11 with syntax corrected.")
