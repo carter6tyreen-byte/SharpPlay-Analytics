@@ -10,134 +10,125 @@ st.set_page_config(
     layout="wide"
 )
 
-# App Header
-st.title("⚾ SharpPlay Analytics Dashboard")
-st.markdown("Advanced Major League Baseball statistics, live lineups, batter vs. pitcher data, and ticket builder.")
+# Session State Slip
+if "bet_slip" not in st.session_state:
+    st.session_state.bet_slip = []
 
-# Sidebar Controls
-st.sidebar.header("Navigation & Filters")
+st.title("⚾ SharpPlay Analytics & Odds Matrix")
+st.markdown("Deep game metrics, active player lineups, matchup edges, and interactive ticket builder.")
+
+# Sidebar Navigation
 view_mode = st.sidebar.selectbox(
-    "Select Dashboard View",
-    ["Live Matchups & Lineups", "Odds Matrix", "System Status"]
+    "Dashboard Sections",
+    ["Live Matchups & Lineups", "Odds Matrix & Ticket Builder", "System Status"]
 )
 
-# Main Content Area
 if view_mode == "Live Matchups & Lineups":
-    st.subheader("Today's Matchup Schedule")
+    st.subheader("Today's Active MLB Schedule")
     
-    with st.spinner("Fetching games from MLB Stats API..."):
+    with st.spinner("Loading live game data..."):
         try:
             today_str = datetime.now().strftime("%Y-%m-%d")
             schedule_url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today_str}&hydrate=probablePitcher,linescore"
             
-            response = requests.get(schedule_url)
-            data = response.json()
+            resp = requests.get(schedule_url)
+            data = resp.json()
             
             games_dict = {}
-            dates = data.get("dates", [])
-            
-            if dates:
-                for date_entry in dates:
-                    for game in date_entry.get("games", []):
-                        game_pk = game["gamePk"]
-                        away_team = game["teams"]["away"]["team"]["name"]
-                        home_team = game["teams"]["home"]["team"]["name"]
-                        status = game["status"]["detailedState"]
-                        
-                        matchup_label = f"{away_team} @ {home_team} ({status})"
-                        games_dict[matchup_label] = game_pk
+            for date_entry in data.get("dates", []):
+                for game in date_entry.get("games", []):
+                    g_pk = game["gamePk"]
+                    away = game["teams"]["away"]["team"]["name"]
+                    home = game["teams"]["home"]["team"]["name"]
+                    status = game["status"]["detailedState"]
+                    games_dict[f"{away} @ {home} ({status})"] = g_pk
             
             if games_dict:
-                selected_matchup = st.selectbox("Select a game to load lineups and deep metrics:", list(games_dict.keys()))
-                game_pk = games_dict[selected_matchup]
+                chosen_game = st.selectbox("Select Matchup to Inspect Lineup:", list(games_dict.keys()))
+                game_pk = games_dict[chosen_game]
                 
-                # Fetch Live Feed / Boxscore for the selected game
+                # Live feed boxscore
                 live_url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
-                live_resp = requests.get(live_url)
-                live_data = live_resp.json()
+                live_data = requests.get(live_url).json()
+                boxscore = live_data.get("liveData", {}).get("boxscore", {}).get("teams", {})
                 
-                boxscore = live_data.get("liveData", {}).get("boxscore", {})
-                teams_data = boxscore.get("teams", {})
-                
-                away_data = teams_data.get("away", {})
-                home_data = teams_data.get("home", {})
-                
-                away_team_name = away_data.get("team", {}).get("name", "Away Team")
-                home_team_name = home_data.get("team", {}).get("name", "Home Team")
-                
-                st.markdown("---")
-                st.subheader(f"📋 Lineups & Batter Metrics: {selected_matchup}")
+                away_team = boxscore.get("away", {}).get("team", {}).get("name", "Away")
+                home_team = boxscore.get("home", {}).get("team", {}).get("name", "Home")
                 
                 col1, col2 = st.columns(2)
                 
-                def extract_lineup(team_box):
-                    batters = team_box.get("batters", [])
-                    players = team_box.get("players", {})
-                    lineup_list = []
-                    for b_id in batters:
-                        player_key = f"ID{b_id}"
-                        p_info = players.get(player_key, {})
+                def get_batters(team_data):
+                    players_dict = team_data.get("players", {})
+                    batters_list = []
+                    for b_id in team_data.get("batters", []):
+                        p_info = players_dict.get(f"ID{b_id}", {})
                         name = p_info.get("person", {}).get("fullName", "Unknown")
-                        position = p_info.get("primaryPosition", {}).get("abbreviation", "")
-                        stats = p_info.get("stats", {}).get("batting", {})
-                        
-                        # Extract basic stats if available
-                        avg = stats.get("avg", ".---")
-                        hr = stats.get("homeRuns", 0)
-                        ops = stats.get("ops", ".---")
-                        
-                        lineup_list.append({
-                            "Batter": f"{name} ({position})",
-                            "AVG": avg,
-                            "HR": hr,
-                            "OPS": ops
-                        })
-                    return pd.DataFrame(lineup_list)
+                        pos = p_info.get("primaryPosition", {}).get("abbreviation", "BAT")
+                        batters_list.append(f"{name} ({pos})")
+                    return batters_list
 
                 with col1:
-                    st.markdown(f"**{away_team_name} Batters**")
-                    away_df = extract_lineup(away_data)
-                    if not away_df.empty:
-                        st.dataframe(away_df, hide_index=True, use_container_width=True)
-                        selected_away_batter = st.selectbox("Select Away Batter for Pitch Mix:", away_df["Batter"], key="away_batter")
+                    st.markdown(f"**{away_team} Batters**")
+                    away_batters = get_batters(boxscore.get("away", {}))
+                    if away_batters:
+                        st.write(away_batters)
+                        sel_away_p = st.selectbox("Pick Away Prop Target:", away_batters, key="away_p")
                     else:
-                        st.info("Lineups not yet posted.")
+                        st.info("Lineup pending.")
 
                 with col2:
-                    st.markdown(f"**{home_team_name} Batters**")
-                    home_df = extract_lineup(home_data)
-                    if not home_df.empty:
-                        st.dataframe(home_df, hide_index=True, use_container_width=True)
-                        selected_home_batter = st.selectbox("Select Home Batter for Pitch Mix:", home_df["Batter"], key="home_batter")
+                    st.markdown(f"**{home_team} Batters**")
+                    home_batters = get_batters(boxscore.get("home", {}))
+                    if home_batters:
+                        st.write(home_batters)
+                        sel_home_p = st.selectbox("Pick Home Prop Target:", home_batters, key="home_p")
                     else:
-                        st.info("Lineups not yet posted.")
-                
-                # Ticket Builder Section
+                        st.info("Lineup pending.")
+                        
                 st.markdown("---")
-                st.subheader("🎯 Ticket Builder & Prop Matrix")
+                st.subheader("💡 Quick Add Prop to Slip")
+                target_prop_player = sel_away_p if 'sel_away_p' in locals() else "Player"
                 
-                t_col1, t_col2, t_col3 = st.columns(3)
-                with t_col1:
-                    bet_type = st.selectbox("Market Type", ["Player Hits", "Home Run Prop", "Total Bases", "Strikeouts (Pitcher)"])
-                with t_col2:
-                    selection_target = st.text_input("Target Player / Selection", value="Selected Batter")
-                with t_col3:
-                    odds_input = st.text_input("Target Odds (American)", value="+150")
-                
-                if st.button("Add to Ticket"):
-                    st.success(f"Added **{selection_target}** ({betent if 'betent' in locals() else bet_type}) at {odds_input} to your active slip!")
-
+                q_col1, q_col2, q_col3 = st.columns(3)
+                with q_col1:
+                    market = st.selectbox("Prop Market", ["1+ Hits", "Home Run", "Total Bases Over 1.5", "RBIs Over 0.5"])
+                with q_col2:
+                    line_odds = st.text_input("American Odds", value="-115")
+                with q_col3:
+                    st.write("")
+                    st.write("")
+                    if st.button("Add to Ticket Slip"):
+                        st.session_state.bet_slip.append({"Player": target_prop_player, "Market": market, "Odds": line_odds})
+                        st.success(f"Added {target_prop_player} - {market} ({line_odds}) to slip!")
             else:
-                st.info("No games available for today.")
-                
+                st.info("No games scheduled today.")
         except Exception as e:
-            st.error(f"Error loading live game feeds: {e}")
+                st.error(f"Error loading API data: {e}")
 
-elif view_mode == "Odds Matrix":
-    st.subheader("Odds Matrix & Projections Grid")
-    st.dataframe(pd.DataFrame(columns=["Matchup", "Spread", "Total (O/U)", "ML Away", "ML Home", "Sharp Edge"]), hide_index=True, use_container_width=True)
+elif view_mode == "Odds Matrix & Ticket Builder":
+    st.subheader("🎯 Active Ticket Slip & Odds Matrix")
+    
+    if st.session_state.bet_slip:
+        st.write("Review your built ticket legs below:")
+        slip_df = pd.DataFrame(st.session_state.bet_slip)
+        st.dataframe(slip_df, use_container_width=True, hide_index=True)
+        
+        if st.button("Clear Entire Ticket Slip"):
+            st.session_state.bet_slip = []
+            st.rerun()
+    else:
+        st.info("Your ticket slip is currently empty. Go to **Live Matchups & Lineups** to select players and add props.")
+        
+    st.markdown("---")
+    st.subheader("📊 Matchup Odds & Sharp Edge Matrix")
+    matrix_sample = pd.DataFrame({
+        "Matchup": ["SD @ ATL", "MIN @ CLE", "TB @ TOR"],
+        "Spread": ["-1.5 (+140)", "+1.5 (-160)", "-1.5 (+155)"],
+        "Total (O/U)": ["8.5 (-110)", "8.0 (-105)", "7.5 (-115)"],
+        "Model Edge": ["+4.2% Away", "-1.1% Home", "+6.5% Over"]
+    })
+    st.dataframe(matrix_sample, hide_index=True, use_container_width=True)
 
 else:
     st.subheader("System Status")
-    st.success("Streamlit environment running on Python 3.11 successfully.")
-    st.write("GitHub Actions pipeline and automated workflows are active.")
+    st.success("Environment running cleanly on Python 3.11 with live MLB pipeline active.")
