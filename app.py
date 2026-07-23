@@ -44,7 +44,6 @@ if view_mode == "Live Matchups":
                         status = game["status"]["detailedState"]
                         game_time_utc = game.get("gameDate", "")
                         
-                        # Convert UTC string to a cleaner local/readable format if possible
                         if game_time_utc:
                             try:
                                 dt_obj = datetime.strptime(game_time_utc, "%Y-%m-%dT%H:%M:%SZ")
@@ -63,7 +62,8 @@ if view_mode == "Live Matchups":
             if games_list:
                 df_games = pd.DataFrame(games_list)
                 st.success(f"Successfully loaded {len(games_list)} games for today!")
-                st.dataframe(df_games, use_container_width=True)
+                # Hide index and use full width for clean mobile viewing
+                st.dataframe(df_games, hide_index=True, use_container_width=True)
             else:
                 st.info("No MLB games scheduled for today or off-season.")
                 
