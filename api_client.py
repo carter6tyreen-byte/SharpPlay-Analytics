@@ -2,6 +2,7 @@ import os
 import requests
 import pandas as pd
 from jinja2 import Template
+import json
 import logging
 
 # Configure logging
@@ -17,7 +18,7 @@ def fetch_sports_data():
         "X-RapidAPI-Host": "tank01-mlb-live-in-game-real-time-statistics.p.rapidapi.com"
     }
     try:
-        response = requests.get(url, headers=headers, params={"gameDate": "20260724"})
+        response = requests.get(url, headers=headers, params={"gameDate": "20260724"}, timeout=10)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -32,7 +33,7 @@ def fetch_market_odds():
         "X-RapidAPI-Host": "odds.p.rapidapi.com"
     }
     try:
-        response = requests.get(url, headers=headers, params={"regions": "us", "markets": "h2h,spreads,totals"})
+        response = requests.get(url, headers=headers, params={"regions": "us", "markets": "h2h,spreads,totals"}, timeout=10)
         response.raise_for_status()
         return response.json()
     except Exception as e:
@@ -50,6 +51,15 @@ def generate_report():
     matchups_list = [
         {"game": "Kansas City Royals @ Detroit Tigers", "time": "7:10 PM EST", "edge": "+6.4% Value"}
     ]
+    
+    # Save structured json dataset for Streamlit frontend consumption
+    try:
+        json_output_path = "analytics_data.json"
+        with open(json_output_path, "w") as json_file:
+            json.dump(matchups_list, json_file, indent=4)
+        logging.info(f"Successfully saved structured JSON data to {json_output_path}")
+    except Exception as json_err:
+        logging.error(f"Error saving JSON data: {json_err}")
     
     matchups_df = pd.DataFrame(matchups_list)
     matchups_html = matchups_df.to_html(index=False, classes="table table-striped")
