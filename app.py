@@ -9,8 +9,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# Your RapidAPI Key inserted directly
-API_KEY = "Eb8a7ef9ccmsh67f8b9de12e7315p1d9560jsn11fc258de105"
+# Retrieve API Key securely from Streamlit Secrets with direct fallback
+try:
+    API_KEY = st.secrets["RAPIDAPI_KEY"]
+except Exception:
+    API_KEY = "Eb8a7ef9ccmsh67f8b9de12e7315p1d9560jsn11fc258de105"
 
 # API Fetch Functions
 def fetch_sports_data(endpoint_url, host):
@@ -208,4 +211,4 @@ elif view_mode == "Odds Matrix & Projections":
 
 else:
     st.subheader("System Status")
-    st.success("Environment running cleanly on Python 3.12 with RapidAPI key integrated directly.")
+    st.success("Environment running cleanly on Python 3.12 with RapidAPI key integrated successfully.")
