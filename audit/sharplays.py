@@ -1,5 +1,3 @@
-# audit/sharplays.py
-
 class SharplaysAudit:
     def __init__(self):
         print("Audit engine initialized.")
