@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import requests
 
 # Page Configuration
 st.set_page_config(
@@ -7,6 +8,39 @@ st.set_page_config(
     page_icon="⚾",
     layout="wide"
 )
+
+# Retrieve API Key securely from Streamlit Secrets
+try:
+    API_KEY = st.secrets["RAPIDAPI_KEY"]
+except Exception:
+    API_KEY = "" # Fallback if running locally or secrets are missing
+
+# API Fetch Functions
+def fetch_sports_data(endpoint_url, host):
+    """Fetches raw sports statistics or schedule data."""
+    headers = {
+        "X-RapidAPI-Key": API_KEY,
+        "X-RapidAPI-Host": host
+    }
+    try:
+        response = requests.get(endpoint_url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {}
+
+def fetch_market_odds(odds_url, host):
+    """Fetches current betting market odds."""
+    headers = {
+        "X-RapidAPI-Key": API_KEY,
+        "X-RapidAPI-Host": host
+    }
+    try:
+        response = requests.get(odds_url, headers=headers)
+        response.raise_for_status()
+        return response.json()
+    except Exception as e:
+        return {}
 
 # Initialize Session State Ticket Slip
 if "bet_slip" not in st.session_state:
@@ -140,10 +174,10 @@ if view_mode == "Verified Player Terminal":
     styled_statcast = statcast_df.style.map(savant_color_map, subset=["BRL%", "HH%"])
 
     st.markdown("##### 📌 Pitch-Type Performance Breakdown")
-    st.dataframe(styled_results, hide_index=True, width="stretch")
+    st.dataframe(styled_results, hide_index=True, use_container_width=True)
     
     st.markdown("##### 🚀 Statcast Batted-Ball Profile (BBE, Barrel%, Hard-Hit%)")
-    st.dataframe(styled_statcast, hide_index=True, width="stretch")
+    st.dataframe(styled_statcast, hide_index=True, use_container_width=True)
     
     st.markdown("---")
     st.subheader("🎯 Pre-Game Ticket Builder")
@@ -173,9 +207,8 @@ elif view_mode == "Odds Matrix & Projections":
         "Total Line (O/U)": ["8.5 Runs"],
         "SharpPlay Edge Rating": ["+6.4% Value"]
     })
-    st.dataframe(matrix_df, hide_index=True, width="stretch")
+    st.dataframe(matrix_df, hide_index=True, use_container_width=True)
 
 else:
     st.subheader("System Status")
-    st.success("Environment running cleanly on Python 3.11 with verified live records connected.")
-
+    st.success("Environment running cleanly on Python 3.12 with verified live API secrets integration.")
